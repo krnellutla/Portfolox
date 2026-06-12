@@ -4,19 +4,30 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint .",
     "dev": "tsx watch src/index.ts",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "db:generate": "tsx node_modules/drizzle-kit/bin.cjs generate",
+    "db:bootstrap-roles": "tsx src/scripts/bootstrap-roles.ts",
+    "db:migrate": "tsx src/scripts/migrate.ts",
+    "db:seed": "tsx src/scripts/seed.ts"
   },
   "dependencies": {
     "@portfoliohub/shared": "workspace:*",
-    "express": "^4.21.2"
+    "dotenv": "^16.4.7",
+    "drizzle-orm": "^0.38.3",
+    "drizzle-zod": "^0.5.1",
+    "express": "^4.21.2",
+    "pg": "^8.13.1",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
     "@types/node": "^20.17.10",
+    "@types/pg": "^8.11.10",
+    "drizzle-kit": "^0.30.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
