@@ -5,4 +5,5 @@ export * from './schemas/user.js';
 export * from './schemas/token.js';
 export * from './schemas/node.js';
 export * from './schemas/media-asset.js';
+export * from './schemas/auth.js';
 export * from './types.js';
