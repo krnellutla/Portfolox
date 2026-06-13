@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { RequireAuth } from './auth/RequireAuth.js';
 import { SessionProvider } from './auth/SessionProvider.js';
+import { StateView } from './components/ui/StateView.js';
 import AuthCallback from './pages/auth/AuthCallback.js';
 import Login from './pages/login/Login.js';
 
@@ -10,11 +11,7 @@ const DashboardLayout = lazy(() => import('./pages/dashboard/DashboardLayout.js'
 const DashboardHome = lazy(() => import('./pages/dashboard/DashboardHome.js'));
 
 function RouteFallback() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-900 text-slate-100">
-      <p className="text-sm text-slate-400">Loading…</p>
-    </div>
-  );
+  return <StateView variant="loading" title="Loading…" fullScreen />;
 }
 
 function App() {

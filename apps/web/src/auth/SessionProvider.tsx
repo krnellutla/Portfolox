@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from 'react';
 import { refreshAccessToken } from '../api/auth.js';
 import { setAccessToken } from '../api/client.js';
+import { StateView } from '../components/ui/StateView.js';
 import { useAuthStore } from '../stores/auth-store.js';
 
 /**
@@ -32,11 +33,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   if (status === 'idle' || status === 'loading') {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-900 text-slate-100">
-        <p className="text-sm text-slate-400">Loading…</p>
-      </div>
-    );
+    return <StateView variant="loading" title="Loading…" fullScreen />;
   }
 
   return <>{children}</>;

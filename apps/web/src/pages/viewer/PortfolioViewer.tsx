@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { listNodes } from '../../api/nodes.js';
 import { ApiError } from '../../api/client.js';
+import { StateView } from '../../components/ui/StateView.js';
 import { buildNodeTree, type NodeTreeItem } from '../../lib/build-tree.js';
 import { NodeGrid } from './NodeGrid.js';
 
@@ -31,12 +32,16 @@ export default function PortfolioViewer() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-slate-900 p-6 text-slate-100">
-      <h1 className="mb-6 text-xl font-semibold">Portfolio</h1>
+    <main className="min-h-screen bg-slate-900 text-slate-100">
+      <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+        <h1 className="mb-8 text-2xl font-semibold tracking-tight">Portfolio</h1>
 
-      {state.status === 'loading' && <p className="text-sm text-slate-400">Loading…</p>}
-      {state.status === 'error' && <p className="text-sm text-red-400">{state.message}</p>}
-      {state.status === 'ready' && <NodeGrid nodes={state.tree} />}
+        {state.status === 'loading' && <StateView variant="loading" title="Loading…" />}
+        {state.status === 'error' && (
+          <StateView variant="error" title="Couldn't load this portfolio" description={state.message} />
+        )}
+        {state.status === 'ready' && <NodeGrid nodes={state.tree} />}
+      </div>
     </main>
   );
 }

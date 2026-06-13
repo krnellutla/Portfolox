@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { refreshAccessToken } from '../../api/auth.js';
 import { setAccessToken } from '../../api/client.js';
+import { StateView } from '../../components/ui/StateView.js';
 import { useAuthStore } from '../../stores/auth-store.js';
 
 /**
@@ -38,9 +39,5 @@ export default function AuthCallback() {
     return <Navigate to="/login" replace />;
   }
 
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-900 text-slate-100">
-      <p className="text-sm text-slate-400">Signing in…</p>
-    </div>
-  );
+  return <StateView variant="loading" title="Signing in…" fullScreen />;
 }
