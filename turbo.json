@@ -20,8 +20,12 @@
       "cache": false,
       "persistent": true
     },
-    "build:desktop": {
-      "dependsOn": ["@portfoliohub/web#build"],
+    "@portfoliohub/web#build:desktop": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "@portfoliohub/desktop#build:desktop": {
+      "dependsOn": ["@portfoliohub/web#build:desktop"],
       "outputs": ["src-tauri/target/release/bundle/**"]
     }
   }

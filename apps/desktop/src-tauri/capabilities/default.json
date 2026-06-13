@@ -11,7 +11,12 @@
     "deep-link:default",
     {
       "identifier": "opener:allow-open-url",
-      "allow": [{ "url": "https://accounts.google.com/*" }, { "url": "https://github.com/login/oauth/*" }]
+      "allow": [
+        { "url": "http://localhost:3001/auth/google*" },
+        { "url": "http://localhost:3001/auth/github*" },
+        { "url": "https://api.portfoliohub.example.com/auth/google*" },
+        { "url": "https://api.portfoliohub.example.com/auth/github*" }
+      ]
     }
   ]
 }

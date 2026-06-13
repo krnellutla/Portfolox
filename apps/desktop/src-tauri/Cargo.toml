@@ -26,3 +26,10 @@ tauri-plugin-updater = "2"
 tauri-plugin-deep-link = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+# Windows/Linux dispatch the OAuth deep link as CLI args to a new process
+# instance; this plugin forwards them to the already-running instance so
+# tauri-plugin-deep-link's onOpenUrl listener fires (macOS handles this
+# natively via LSApplicationCategoryType / Info.plist association).
+tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
