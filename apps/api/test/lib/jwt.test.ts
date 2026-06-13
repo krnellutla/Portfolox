@@ -15,9 +15,11 @@ describe('access token sign/verify', () => {
     expect(verified).toEqual(payload);
   });
 
-  it('rejects a token signed with a different secret', async () => {
+  it('rejects a token with a tampered signature', async () => {
     const token = await signAccessToken(payload);
-    const tampered = token.slice(0, -2) + (token.endsWith('a') ? 'b' : 'a') + token.slice(-1);
+    const [header, body, signature] = token.split('.');
+    const tamperedChar = signature?.[0] === 'A' ? 'B' : 'A';
+    const tampered = `${header}.${body}.${tamperedChar}${signature?.slice(1)}`;
 
     await expect(verifyAccessToken(tampered)).rejects.toThrow();
   });

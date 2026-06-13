@@ -23,4 +23,9 @@ export const requestLogging: HttpLogger<Request, Response> = pinoHttp<Request, R
   customProps: (req) => ({
     tenantId: req.tenant?.id ?? null,
   }),
+  serializers: {
+    // Strip query strings (e.g. OAuth `code`/`state` on /auth/*/callback)
+    // before the request hits the log.
+    req: (req) => ({ ...req, url: req.url?.split('?')[0] }),
+  },
 });
