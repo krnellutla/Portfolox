@@ -94,7 +94,10 @@ export async function rotateRefreshToken(
   if (row.revoked_at || row.rotated_to) {
     // Commit the revocation before throwing: the caller's withTenant
     // transaction will roll back on this error, which would otherwise undo
-    // the family revocation we're relying on to actually block reuse.
+    // the family revocation we're relying on to actually block reuse. The
+    // subsequent ROLLBACK in withTenant's catch then runs against a
+    // connection with no open transaction, which Postgres treats as a
+    // harmless no-op warning rather than an error.
     await revokeTokenFamily(client, params.tenantId, row.family_id);
     await client.query('COMMIT');
     throw AppError.unauthorized('Refresh token reuse detected');

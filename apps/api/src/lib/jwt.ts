@@ -19,7 +19,7 @@ export async function signAccessToken(payload: AccessTokenPayload): Promise<stri
 }
 
 export async function verifyAccessToken(token: string): Promise<AccessTokenPayload> {
-  const { payload } = await jwtVerify(token, secret);
+  const { payload } = await jwtVerify(token, secret, { algorithms: ['HS256'] });
 
   if (
     typeof payload.sub !== 'string' ||
