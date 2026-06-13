@@ -13,3 +13,11 @@ export const nodeSchema = z.object({
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 });
+
+// The public node listing omits tenantId: it's an internal identifier with
+// no use to an anonymous viewer client.
+export const publicNodeSchema = nodeSchema.omit({ tenantId: true });
+export type PublicNode = z.infer<typeof publicNodeSchema>;
+
+export const nodeListResponseSchema = z.array(publicNodeSchema);
+export type NodeListResponse = z.infer<typeof nodeListResponseSchema>;
