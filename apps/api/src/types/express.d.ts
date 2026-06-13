@@ -9,6 +9,12 @@ declare global {
       };
       /** Runs `callback` inside withTenant(pool, req.tenant.id, callback). */
       withTenant?: <T>(callback: (client: PoolClient) => Promise<T>) => Promise<T>;
+      /** Set by requireAuth once the access token has been verified. */
+      user?: {
+        id: string;
+        tenantId: string;
+        email: string;
+      };
     }
   }
 }

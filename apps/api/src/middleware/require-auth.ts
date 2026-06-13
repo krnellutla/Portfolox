@@ -1,13 +1,39 @@
-import type { NextFunction, Request, Response } from 'express';
+import { AppError } from '../lib/app-error.js';
+import { asyncHandler } from '../lib/async-handler.js';
+import { verifyAccessToken } from '../lib/jwt.js';
+
+function extractBearerToken(authorization: string | undefined): string | null {
+  if (!authorization) return null;
+
+  const [scheme, token] = authorization.split(' ');
+  if (scheme !== 'Bearer' || !token) return null;
+
+  return token;
+}
 
 /**
- * Pipeline placeholder for Milestone 1.4 (OAuth/JWT auth). Currently a
- * no-op so the middleware order (tenant resolution -> auth -> logging ->
- * routes -> error handler) is established ahead of real auth.
- *
- * TODO(Milestone 1.4): validate the access token, attach req.user, and
- * reject unauthenticated requests to protected routes.
+ * Verifies the access token and attaches req.user. Rejects tokens issued
+ * for a different tenant than the one resolved for this host, preventing a
+ * token from tenant A being used against tenant B's host.
  */
-export function requireAuth(_req: Request, _res: Response, next: NextFunction): void {
+export const requireAuth = asyncHandler(async (req, _res, next) => {
+  const token = extractBearerToken(req.headers.authorization);
+  if (!token) {
+    throw AppError.unauthorized('Missing or invalid Authorization header');
+  }
+
+  let payload;
+  try {
+    payload = await verifyAccessToken(token);
+  } catch {
+    throw AppError.unauthorized('Invalid or expired access token');
+  }
+
+  if (payload.tenantId !== req.tenant?.id) {
+    throw AppError.unauthorized('Token is not valid for this tenant');
+  }
+
+  req.user = { id: payload.sub, tenantId: payload.tenantId, email: payload.email };
+
   next();
-}
+});
