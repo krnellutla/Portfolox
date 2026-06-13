@@ -10,6 +10,19 @@ export const refreshResponseSchema = z.object({
 });
 export type RefreshResponse = z.infer<typeof refreshResponseSchema>;
 
+/**
+ * Returned instead of `refreshResponseSchema` for desktop clients (no
+ * httpOnly cookie support across the tauri:// origin): the rotated refresh
+ * token is returned in the body so the client can persist it to the OS
+ * keychain.
+ */
+export const desktopRefreshResponseSchema = z.object({
+  accessToken: z.string(),
+  refreshToken: z.string(),
+  user: userSchema,
+});
+export type DesktopRefreshResponse = z.infer<typeof desktopRefreshResponseSchema>;
+
 export const logoutResponseSchema = z.object({
   success: z.literal(true),
 });

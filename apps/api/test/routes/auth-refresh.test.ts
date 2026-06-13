@@ -4,6 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../../src/app.js';
 import { withTenant } from '../../src/db/with-tenant.js';
 import { REFRESH_TOKEN_COOKIE } from '../../src/lib/cookies.js';
+import { DESKTOP_REFRESH_TOKEN_HEADER } from '../../src/lib/desktop-auth.js';
 import { createRefreshTokenFamily } from '../../src/lib/refresh-tokens.js';
 import { createTestMigratorPool, createTestPool } from '../db-test-utils.js';
 
@@ -154,5 +155,107 @@ describe('POST /auth/refresh and /auth/logout', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.data).toEqual({ success: true });
+  });
+
+  describe('desktop refresh transport (X-Refresh-Token header)', () => {
+    it('rotates the refresh token and returns it in the body instead of a cookie', async () => {
+      const token = await issueRefreshToken();
+
+      const res = await request(app)
+        .post('/auth/refresh')
+        .set('Host', hostA)
+        .set(DESKTOP_REFRESH_TOKEN_HEADER, token);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.accessToken).toBeTruthy();
+      expect(res.body.data.user.email).toBe(email);
+      expect(res.body.data.refreshToken).toBeTruthy();
+      expect(res.body.data.refreshToken).not.toBe(token);
+
+      // No refresh cookie set for the desktop transport.
+      expect(cookieValue(res.headers['set-cookie'] as unknown as string[] | undefined, REFRESH_TOKEN_COOKIE)).toBeUndefined();
+    });
+
+    it('rejects reuse of an already-rotated desktop refresh token and revokes the family', async () => {
+      const token = await issueRefreshToken();
+
+      const first = await request(app)
+        .post('/auth/refresh')
+        .set('Host', hostA)
+        .set(DESKTOP_REFRESH_TOKEN_HEADER, token);
+      expect(first.status).toBe(200);
+      const rotatedToken = first.body.data.refreshToken as string;
+
+      const reuse = await request(app)
+        .post('/auth/refresh')
+        .set('Host', hostA)
+        .set(DESKTOP_REFRESH_TOKEN_HEADER, token);
+      expect(reuse.status).toBe(401);
+      expect(reuse.body.error.code).toBe('UNAUTHORIZED');
+
+      const afterReuse = await request(app)
+        .post('/auth/refresh')
+        .set('Host', hostA)
+        .set(DESKTOP_REFRESH_TOKEN_HEADER, rotatedToken);
+      expect(afterReuse.status).toBe(401);
+    });
+
+    it('rejects a desktop refresh token issued for a different tenant', async () => {
+      const token = await issueRefreshToken();
+
+      const res = await request(app)
+        .post('/auth/refresh')
+        .set('Host', hostB)
+        .set(DESKTOP_REFRESH_TOKEN_HEADER, token);
+
+      expect(res.status).toBe(401);
+      expect(res.body.error.code).toBe('UNAUTHORIZED');
+    });
+
+    it('logout via header revokes the desktop refresh token family', async () => {
+      const token = await issueRefreshToken();
+
+      const logout = await request(app)
+        .post('/auth/logout')
+        .set('Host', hostA)
+        .set(DESKTOP_REFRESH_TOKEN_HEADER, token);
+
+      expect(logout.status).toBe(200);
+      expect(logout.body.data).toEqual({ success: true });
+
+      const refreshAfterLogout = await request(app)
+        .post('/auth/refresh')
+        .set('Host', hostA)
+        .set(DESKTOP_REFRESH_TOKEN_HEADER, token);
+      expect(refreshAfterLogout.status).toBe(401);
+    });
+
+    it('expired desktop refresh tokens are rejected', async () => {
+      const expired = await withTenant(pool, tenantA, (client) =>
+        createRefreshTokenFamily(client, { tenantId: tenantA, userId, ttlDays: -1 }),
+      );
+
+      const res = await request(app)
+        .post('/auth/refresh')
+        .set('Host', hostA)
+        .set(DESKTOP_REFRESH_TOKEN_HEADER, expired.token);
+
+      expect(res.status).toBe(401);
+      expect(res.body.error.code).toBe('UNAUTHORIZED');
+    });
+  });
+
+  it('a cookie refresh token takes precedence over a desktop header on the same request', async () => {
+    const token = await issueRefreshToken();
+
+    const res = await request(app)
+      .post('/auth/refresh')
+      .set('Host', hostA)
+      .set('Cookie', `${REFRESH_TOKEN_COOKIE}=${token}`)
+      .set(DESKTOP_REFRESH_TOKEN_HEADER, 'not-a-real-token');
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.refreshToken).toBeUndefined();
+    expect(cookieValue(res.headers['set-cookie'] as unknown as string[] | undefined, REFRESH_TOKEN_COOKIE)).toBeTruthy();
   });
 });

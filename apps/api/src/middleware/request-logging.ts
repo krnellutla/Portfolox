@@ -4,6 +4,22 @@ import { pinoHttp, type HttpLogger } from 'pino-http';
 import { logger } from '../lib/logger.js';
 
 /**
+ * Strips the query string from a redirect's `Location` header before it
+ * hits the log, mirroring the request-side `url` stripping below. Needed so
+ * the desktop OAuth callback's one-time refresh token
+ * (`/auth/:provider/callback?...&refresh_token=...` -> `Location:
+ * portfoliohub://auth/callback?refresh_token=...`) is never written to logs
+ * in plaintext.
+ */
+export function stripLocationQuery<T extends { headers?: { location?: unknown } }>(res: T): T {
+  const location = res.headers?.location;
+  if (typeof location === 'string' && location.includes('?')) {
+    return { ...res, headers: { ...res.headers, location: location.split('?')[0] } };
+  }
+  return res;
+}
+
+/**
  * Structured request logging via pino-http. Placed first in the pipeline so
  * req.id/req.log are available to every later middleware (including
  * resolve-tenant's error path), and an `X-Request-Id` is echoed back for
@@ -27,5 +43,6 @@ export const requestLogging: HttpLogger<Request, Response> = pinoHttp<Request, R
     // Strip query strings (e.g. OAuth `code`/`state` on /auth/*/callback)
     // before the request hits the log.
     req: (req) => ({ ...req, url: req.url?.split('?')[0] }),
+    res: stripLocationQuery,
   },
 });

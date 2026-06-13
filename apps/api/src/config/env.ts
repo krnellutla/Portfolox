@@ -23,6 +23,34 @@ const envSchema = z.object({
   GITHUB_CLIENT_SECRET: z.string().min(1).optional(),
   OAUTH_REDIRECT_BASE_URL: z.string().url().default('http://localhost:3001'),
   WEB_APP_URL: z.string().url().default('http://localhost:5173'),
+
+  // Comma-separated list of additional origins allowed to make
+  // credentialed cross-origin requests (e.g. the Tauri desktop shell's
+  // tauri://localhost / http://tauri.localhost origins). The web app's own
+  // origin does not need to be listed here: it talks to the API same-origin
+  // through the Vite dev proxy / same-origin prod serving.
+  CORS_ALLOWED_ORIGINS: z
+    .string()
+    .default('')
+    .transform((value) =>
+      value
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter((origin) => origin.length > 0),
+    ),
+
+  // Deep link the desktop app registers to receive the OAuth callback
+  // (system-browser flow): the API redirects here with a one-time refresh
+  // token instead of setting the refresh cookie. Restricted to the
+  // app's custom URL scheme so a misconfigured env can't redirect a live
+  // refresh token to an arbitrary http(s) endpoint.
+  DESKTOP_AUTH_REDIRECT_URL: z
+    .string()
+    .url()
+    .default('portfoliohub://auth/callback')
+    .refine((value) => new URL(value).protocol === 'portfoliohub:', {
+      message: 'DESKTOP_AUTH_REDIRECT_URL must use the portfoliohub: scheme',
+    }),
 });
 
 export type Env = z.infer<typeof envSchema>;

@@ -21,8 +21,13 @@ function setCookies(res: request.Response): string[] | undefined {
   return res.headers['set-cookie'] as unknown as string[] | undefined;
 }
 
-function decodeStateCookie(value: string): { provider: string; state: string; codeVerifier?: string } {
-  return JSON.parse(decodeURIComponent(value)) as { provider: string; state: string; codeVerifier?: string };
+function decodeStateCookie(value: string): { provider: string; state: string; codeVerifier?: string; client?: string } {
+  return JSON.parse(decodeURIComponent(value)) as {
+    provider: string;
+    state: string;
+    codeVerifier?: string;
+    client?: string;
+  };
 }
 
 describe('GET /auth/:provider and /auth/:provider/callback', () => {
@@ -32,6 +37,9 @@ describe('GET /auth/:provider and /auth/:provider/callback', () => {
 
   const tenantId = randomUUID();
   const host = `auth-oauth-${randomUUID()}.example.com`;
+
+  const desktopTenantId = randomUUID();
+  const desktopHost = `auth-oauth-desktop-${randomUUID()}.example.com`;
 
   let mockAgent: MockAgent;
   let originalDispatcher: ReturnType<typeof getGlobalDispatcher>;
@@ -44,13 +52,21 @@ describe('GET /auth/:provider and /auth/:provider/callback', () => {
         [tenantId, host],
       );
     });
+
+    await withTenant(migratorPool, desktopTenantId, async (client) => {
+      await client.query('INSERT INTO tenants (id, name) VALUES ($1, $2)', [desktopTenantId, 'OAuth Desktop Tenant']);
+      await client.query(
+        'INSERT INTO tenant_domains (tenant_id, host, is_primary) VALUES ($1, $2, true)',
+        [desktopTenantId, desktopHost],
+      );
+    });
   });
 
   afterAll(async () => {
-    await migratorPool.query('DELETE FROM tokens WHERE tenant_id = $1', [tenantId]);
-    await migratorPool.query('DELETE FROM users WHERE tenant_id = $1', [tenantId]);
-    await migratorPool.query('DELETE FROM tenant_domains WHERE tenant_id = $1', [tenantId]);
-    await migratorPool.query('DELETE FROM tenants WHERE id = $1', [tenantId]);
+    await migratorPool.query('DELETE FROM tokens WHERE tenant_id IN ($1, $2)', [tenantId, desktopTenantId]);
+    await migratorPool.query('DELETE FROM users WHERE tenant_id IN ($1, $2)', [tenantId, desktopTenantId]);
+    await migratorPool.query('DELETE FROM tenant_domains WHERE tenant_id IN ($1, $2)', [tenantId, desktopTenantId]);
+    await migratorPool.query('DELETE FROM tenants WHERE id IN ($1, $2)', [tenantId, desktopTenantId]);
     await pool.end();
     await migratorPool.end();
   });
@@ -194,6 +210,41 @@ describe('GET /auth/:provider and /auth/:provider/callback', () => {
       client.query('SELECT 1 FROM users WHERE tenant_id = $1 AND email = $2', [tenantId, 'unverified@example.com']),
     );
     expect(userResult.rows).toHaveLength(0);
+  });
+
+  it('completes a desktop-initiated Google OAuth round trip by redirecting to the deep link with a refresh token', async () => {
+    const start = await request(app).get('/auth/google?client=desktop').set('Host', desktopHost);
+    const stateCookie = cookieValue(setCookies(start), OAUTH_STATE_COOKIE) as string;
+    const decoded = decodeStateCookie(stateCookie);
+    expect(decoded.client).toBe('desktop');
+
+    mockAgent
+      .get('https://oauth2.googleapis.com')
+      .intercept({ path: '/token', method: 'POST' })
+      .reply(200, { access_token: 'google-access-token', token_type: 'Bearer', expires_in: 3600 });
+
+    mockAgent
+      .get('https://openidconnect.googleapis.com')
+      .intercept({ path: '/v1/userinfo', method: 'GET' })
+      .reply(200, {
+        email: 'oauth-desktop@example.com',
+        email_verified: true,
+        name: 'Desktop User',
+        picture: 'https://example.com/d.png',
+      });
+
+    const res = await request(app)
+      .get(`/auth/google/callback?code=test-code&state=${decoded.state}`)
+      .set('Host', desktopHost)
+      .set('Cookie', `${OAUTH_STATE_COOKIE}=${stateCookie}`);
+
+    expect(res.status).toBe(302);
+    const location = new URL(res.headers.location as string);
+    expect(`${location.protocol}//${location.host}${location.pathname}`).toBe('portfoliohub://auth/callback');
+    expect(location.searchParams.get('refresh_token')).toBeTruthy();
+
+    // No refresh cookie set for the desktop flow.
+    expect(cookieValue(setCookies(res), REFRESH_TOKEN_COOKIE)).toBeUndefined();
   });
 
   it('completes the GitHub OAuth round trip and upserts (not duplicates) the existing user by email', async () => {

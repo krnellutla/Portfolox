@@ -19,6 +19,10 @@
     "dev": {
       "cache": false,
       "persistent": true
+    },
+    "build:desktop": {
+      "dependsOn": ["@portfoliohub/web#build"],
+      "outputs": ["src-tauri/target/release/bundle/**"]
     }
   }
 }

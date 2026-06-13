@@ -9,6 +9,8 @@ export interface OAuthStateCookie {
   provider: AuthProvider;
   state: string;
   codeVerifier?: string;
+  /** Set when the flow was initiated by the desktop app (system-browser OAuth). */
+  client?: 'desktop';
 }
 
 function cookieOptions(): CookieOptions {

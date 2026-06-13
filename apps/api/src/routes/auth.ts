@@ -1,10 +1,11 @@
-import type { ApiEnvelope, LogoutResponse, RefreshResponse } from '@portfoliohub/shared';
+import type { ApiEnvelope, DesktopRefreshResponse, LogoutResponse, RefreshResponse } from '@portfoliohub/shared';
 import { authProvider } from '@portfoliohub/shared';
 import { Router } from 'express';
 import { env } from '../config/env.js';
 import { AppError } from '../lib/app-error.js';
 import { asyncHandler } from '../lib/async-handler.js';
 import { clearRefreshTokenCookie, getRefreshTokenCookie, setRefreshTokenCookie } from '../lib/cookies.js';
+import { getDesktopRefreshTokenHeader } from '../lib/desktop-auth.js';
 import { signAccessToken } from '../lib/jwt.js';
 import { createAuthorizationRequest, exchangeAuthorizationCode } from '../lib/oauth-providers.js';
 import { fetchOAuthProfile } from '../lib/oauth-profile.js';
@@ -28,7 +29,8 @@ authRouter.get(
     const provider = parsedProvider.data;
 
     const { url, state, codeVerifier } = createAuthorizationRequest(provider);
-    setOAuthStateCookie(res, { provider, state, codeVerifier });
+    const client = req.query.client === 'desktop' ? 'desktop' : undefined;
+    setOAuthStateCookie(res, { provider, state, codeVerifier, client });
     res.redirect(url.toString());
   }),
 );
@@ -80,6 +82,18 @@ authRouter.get(
       }),
     );
 
+    if (stateCookie.client === 'desktop') {
+      // System-browser flow: there is no cookie jar shared with the desktop
+      // app's webview, so hand off the freshly issued refresh token via the
+      // app's registered deep link. The desktop app exchanges it for an
+      // access token via /auth/refresh (X-Refresh-Token) and persists the
+      // rotated token to the OS keychain.
+      const redirectUrl = new URL(env.DESKTOP_AUTH_REDIRECT_URL);
+      redirectUrl.searchParams.set('refresh_token', issued.token);
+      res.redirect(redirectUrl.toString());
+      return;
+    }
+
     setRefreshTokenCookie(res, issued.token, issued.expiresAt);
     res.redirect(env.WEB_APP_URL);
   }),
@@ -93,7 +107,9 @@ authRouter.post(
       throw AppError.notFound('Tenant not found for this host');
     }
 
-    const refreshToken = getRefreshTokenCookie(req);
+    const cookieToken = getRefreshTokenCookie(req);
+    const desktopToken = getDesktopRefreshTokenHeader(req);
+    const refreshToken = cookieToken ?? desktopToken;
     if (!refreshToken) {
       throw AppError.unauthorized('Missing refresh token');
     }
@@ -116,9 +132,21 @@ authRouter.post(
     }
 
     const accessToken = await signAccessToken({ sub: user.id, tenantId, email: user.email });
-    setRefreshTokenCookie(res, rotated.token, rotated.expiresAt);
 
-    const body: ApiEnvelope<RefreshResponse> = { data: { accessToken, user }, error: null };
+    if (cookieToken) {
+      setRefreshTokenCookie(res, rotated.token, rotated.expiresAt);
+      const body: ApiEnvelope<RefreshResponse> = { data: { accessToken, user }, error: null };
+      res.json(body);
+      return;
+    }
+
+    // Desktop: no cookie to set across the tauri:// origin — return the
+    // rotated refresh token in the body so the client persists it to the OS
+    // keychain.
+    const body: ApiEnvelope<DesktopRefreshResponse> = {
+      data: { accessToken, refreshToken: rotated.token, user },
+      error: null,
+    };
     res.json(body);
   }),
 );
@@ -127,7 +155,7 @@ authRouter.post(
   '/auth/logout',
   asyncHandler(async (req, res) => {
     const tenantId = req.tenant?.id;
-    const refreshToken = getRefreshTokenCookie(req);
+    const refreshToken = getRefreshTokenCookie(req) ?? getDesktopRefreshTokenHeader(req);
 
     if (tenantId && refreshToken && req.withTenant) {
       const withTenant = req.withTenant;

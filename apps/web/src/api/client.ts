@@ -1,7 +1,9 @@
 import type { ApiEnvelope, RefreshResponse } from '@portfoliohub/shared';
-import { refreshResponseSchema } from '@portfoliohub/shared';
+import { desktopRefreshResponseSchema, refreshResponseSchema } from '@portfoliohub/shared';
 import type { z } from 'zod';
 import { env } from '../config/env.js';
+import { isDesktop } from '../lib/platform.js';
+import { getRefreshToken, setRefreshToken } from '../lib/secure-storage.js';
 
 let accessToken: string | null = null;
 
@@ -30,6 +32,17 @@ async function request(path: string, init: RequestInit = {}): Promise<{ status: 
     headers.set('Authorization', `Bearer ${accessToken}`);
   }
 
+  // Desktop has no shared cookie jar with the API origin: the refresh token
+  // lives in the OS keychain and is sent as a header on the two endpoints
+  // that need it (the API falls back to this header when no refresh cookie
+  // is present).
+  if (isDesktop() && (path === '/auth/refresh' || path === '/auth/logout') && !headers.has('X-Refresh-Token')) {
+    const refreshToken = await getRefreshToken();
+    if (refreshToken) {
+      headers.set('X-Refresh-Token', refreshToken);
+    }
+  }
+
   const res = await fetch(`${env.VITE_API_BASE_URL}${path}`, {
     ...init,
     headers,
@@ -49,16 +62,24 @@ async function request(path: string, init: RequestInit = {}): Promise<{ status: 
 let refreshPromise: Promise<RefreshResponse | null> | null = null;
 
 /**
- * Calls POST /auth/refresh using the httpOnly refresh cookie. Single-flight:
- * concurrent callers share one in-flight request. Never retried itself
- * (callers must not route this through apiFetch's 401 handling), to avoid an
- * infinite refresh loop.
+ * Calls POST /auth/refresh using the httpOnly refresh cookie (web) or the
+ * keychain-backed X-Refresh-Token header (desktop). Single-flight: concurrent
+ * callers share one in-flight request. Never retried itself (callers must not
+ * route this through apiFetch's 401 handling), to avoid an infinite refresh
+ * loop. On desktop, persists the rotated refresh token back to the keychain.
  */
 export function refreshAccessToken(): Promise<RefreshResponse | null> {
   if (!refreshPromise) {
     refreshPromise = (async () => {
       const { status, envelope } = await request('/auth/refresh', { method: 'POST' });
       if (status !== 200 || !envelope.data) return null;
+
+      if (isDesktop()) {
+        const parsed = desktopRefreshResponseSchema.parse(envelope.data);
+        await setRefreshToken(parsed.refreshToken);
+        return parsed;
+      }
+
       return refreshResponseSchema.parse(envelope.data);
     })().finally(() => {
       refreshPromise = null;
