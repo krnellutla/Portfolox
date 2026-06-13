@@ -1,23 +1,25 @@
-import express, { type Express } from 'express';
-import type { ApiEnvelope, Tenant } from '@portfoliohub/shared';
+import { app } from './app.js';
+import { env } from './config/env.js';
+import { assertRuntimeRoleSafe, assertTenantTablesRlsEnforced } from './db/assert-runtime-role.js';
+import { pool } from './db/client.js';
+import { logger } from './lib/logger.js';
 
-const app: Express = express();
+async function main() {
+  await assertRuntimeRoleSafe(pool);
+  await assertTenantTablesRlsEnforced(pool);
 
-app.get('/health', (_req, res) => {
-  const body: ApiEnvelope<{ status: 'ok' }> = {
-    data: { status: 'ok' },
-    error: null,
-  };
-  res.json(body);
-});
+  const port = env.PORT;
 
-const port = process.env.PORT ?? 3001;
-
-if (process.env.NODE_ENV !== 'test') {
   app.listen(port, () => {
-    console.log(`api listening on port ${port}`);
+    logger.info({ port }, 'api listening');
   });
 }
 
-export type { Tenant };
+if (env.NODE_ENV !== 'test') {
+  main().catch((err) => {
+    logger.error({ err }, 'failed to start api');
+    process.exit(1);
+  });
+}
+
 export { app };
