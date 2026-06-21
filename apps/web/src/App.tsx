@@ -21,6 +21,7 @@ const ClientGalleryPage = lazy(() => import('./features/client/ClientGalleryPage
 const UploadPage = lazy(() => import('./features/studio/UploadPage.js'));
 const AnalyticsPage = lazy(() => import('./features/studio/AnalyticsPage.js'));
 const LightboxPage = lazy(() => import('./features/lightbox/LightboxPage.js'));
+const ChatPage = lazy(() => import('./features/chat/ChatPage.js'));
 
 function RouteFallback() {
   return <StateView variant="loading" title="Loading…" fullScreen />;
@@ -49,6 +50,7 @@ function App() {
             <Route path="/studio/upload" element={<UploadPage />} />
             <Route path="/studio/analytics" element={<AnalyticsPage />} />
             <Route path="/lightbox" element={<LightboxPage />} />
+            <Route path="/chat" element={<ChatPage />} />
 
             <Route element={<RequireAuth />}>
               <Route path="/dashboard" element={<DashboardLayout />}>
