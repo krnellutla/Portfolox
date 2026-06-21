@@ -45,7 +45,7 @@ export default function DashboardLayout() {
 
           <div className="flex items-center gap-3">
             <span className="text-sm text-slate-300">{user?.displayName}</span>
-            <Button variant="secondary" onClick={handleLogout}>
+            <Button variant="outline" onClick={handleLogout}>
               Logout
             </Button>
           </div>

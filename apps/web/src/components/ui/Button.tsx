@@ -1,24 +1,21 @@
 import type { ButtonHTMLAttributes } from 'react';
 
 const VARIANT_CLASSES = {
-  primary: 'bg-slate-100 text-slate-900 hover:bg-white',
-  secondary: 'bg-slate-800 text-slate-100 hover:bg-slate-700',
-  ghost: 'bg-transparent text-slate-400 hover:bg-slate-800 hover:text-slate-100',
+  solid: 'rounded-[9px] bg-ink text-paper hover:bg-ink-2',
+  outline: 'rounded-[9px] bg-surface border border-field text-ink hover:border-ink',
+  ghost: 'rounded-[9px] bg-transparent text-ink-3 hover:bg-canvas',
+  pill: 'rounded-[999px] bg-surface border border-field text-ink-3 hover:bg-ink hover:text-paper',
 } as const;
 
 export type ButtonVariant = keyof typeof VARIANT_CLASSES;
 
 const BASE_CLASSES =
-  'inline-flex items-center justify-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ' +
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 ' +
-  'focus-visible:ring-offset-slate-900 disabled:cursor-not-allowed disabled:opacity-50';
+  'inline-flex items-center justify-center gap-2 px-[18px] py-[11px] text-sm font-semibold ' +
+  'transition-[background-color,color,border-color] duration-150 ' +
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-1 ' +
+  'disabled:cursor-not-allowed disabled:opacity-40';
 
-/**
- * Returns the shared button styling so non-<button> elements (e.g. the OAuth
- * provider links in Login, which must be real <a> tags for the browser
- * navigation that sets the refresh cookie) can match Button's appearance.
- */
-export function buttonClasses(variant: ButtonVariant = 'secondary', className = ''): string {
+export function buttonClasses(variant: ButtonVariant = 'solid', className = ''): string {
   return `${BASE_CLASSES} ${VARIANT_CLASSES[variant]} ${className}`.trim();
 }
 
@@ -26,6 +23,6 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
 }
 
-export function Button({ variant = 'secondary', className = '', ...props }: ButtonProps) {
+export function Button({ variant = 'solid', className = '', ...props }: ButtonProps) {
   return <button className={buttonClasses(variant, className)} {...props} />;
 }

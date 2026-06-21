@@ -42,14 +42,14 @@ export default function Login() {
           <a
             href={authUrl('google')}
             onClick={(event) => void handleClick(event, 'google')}
-            className={buttonClasses('primary', 'w-full')}
+            className={buttonClasses('solid', 'w-full')}
           >
             Continue with Google
           </a>
           <a
             href={authUrl('github')}
             onClick={(event) => void handleClick(event, 'github')}
-            className={buttonClasses('secondary', 'w-full')}
+            className={buttonClasses('outline', 'w-full')}
           >
             Continue with GitHub
           </a>

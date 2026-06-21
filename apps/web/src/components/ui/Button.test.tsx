@@ -8,18 +8,32 @@ describe('Button', () => {
     cleanup();
   });
 
-  it('renders a button with the secondary variant by default', () => {
+  it('renders a button with the solid variant by default', () => {
     render(<Button>Click me</Button>);
 
     const button = screen.getByRole('button', { name: 'Click me' });
-    expect(button.className).toContain('bg-slate-800');
+    expect(button.className).toContain('bg-ink');
   });
 
   it('applies the requested variant', () => {
-    render(<Button variant="primary">Continue</Button>);
+    render(<Button variant="outline">Continue</Button>);
 
     const button = screen.getByRole('button', { name: 'Continue' });
-    expect(button.className).toContain('bg-slate-100');
+    expect(button.className).toContain('border-field');
+  });
+
+  it('applies the ghost variant', () => {
+    render(<Button variant="ghost">Menu</Button>);
+
+    const button = screen.getByRole('button', { name: 'Menu' });
+    expect(button.className).toContain('bg-transparent');
+  });
+
+  it('applies the pill variant', () => {
+    render(<Button variant="pill">Filter</Button>);
+
+    const button = screen.getByRole('button', { name: 'Filter' });
+    expect(button.className).toContain('rounded-[999px]');
   });
 
   it('forwards native button attributes', () => {
@@ -31,7 +45,9 @@ describe('Button', () => {
 
 describe('buttonClasses', () => {
   it('returns shared styling for non-button elements', () => {
-    expect(buttonClasses('primary')).toContain('bg-slate-100');
+    expect(buttonClasses('solid')).toContain('bg-ink');
+    expect(buttonClasses('outline')).toContain('border-field');
     expect(buttonClasses('ghost')).toContain('bg-transparent');
+    expect(buttonClasses('pill')).toContain('rounded-[999px]');
   });
 });

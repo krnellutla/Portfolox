@@ -34,7 +34,7 @@ export default function DashboardHome() {
           <p className="mt-2 text-sm text-slate-400">
             Pick files from your computer. Uploading them to your portfolio is coming in a future update.
           </p>
-          <Button variant="secondary" className="mt-4" onClick={handlePickFiles}>
+          <Button variant="outline" className="mt-4" onClick={handlePickFiles}>
             Choose files
           </Button>
           {selectedFiles.length > 0 && (
