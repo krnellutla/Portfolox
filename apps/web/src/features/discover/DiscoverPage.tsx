@@ -31,7 +31,7 @@ export default function DiscoverPage() {
     <div className="min-h-screen bg-paper animate-pfxFade">
       <TopNav />
 
-      <div className="max-w-shell mx-auto px-8 pb-24">
+      <div className="max-w-shell mx-auto px-4 md:px-8 pb-32 md:pb-24">
         {/* Hero */}
         <div className="pt-16 pb-[46px] border-b border-line">
           <Eyebrow className="mb-[22px]">01 — Discover</Eyebrow>
@@ -85,7 +85,7 @@ export default function DiscoverPage() {
             </button>
           </div>
 
-          <div className="grid grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
             {FEATURED.map((p) => (
               <FeaturedCard
                 key={p.name}
@@ -107,7 +107,7 @@ export default function DiscoverPage() {
               UPDATED HOURLY
             </span>
           </div>
-          <PhotoGrid cols={4} gap="sm">
+          <PhotoGrid cols={2} gap="sm" className="md:[grid-template-columns:repeat(4,minmax(0,1fr))]">
             {FRESH_PHOTOS.map((photo) => (
               <PhotoTile
                 key={photo.id}

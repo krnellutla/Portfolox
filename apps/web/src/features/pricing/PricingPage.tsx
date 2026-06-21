@@ -14,7 +14,7 @@ export default function PricingPage() {
     <div className="min-h-screen bg-paper">
       <TopNav />
 
-      <div className="max-w-prose mx-auto px-8 pt-16 pb-24 animate-pfxFade">
+      <div className="max-w-prose mx-auto px-4 md:px-8 pt-16 pb-32 md:pb-24 animate-pfxFade">
         {/* Header */}
         <div className="text-center mb-12">
           <Eyebrow className="mb-5">08 — Pricing</Eyebrow>

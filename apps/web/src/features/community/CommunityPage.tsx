@@ -46,11 +46,11 @@ export default function CommunityPage() {
       <TopNav />
 
       <div
-        className="max-w-shell mx-auto px-8 pt-8 pb-24"
-        style={{ display: 'grid', gridTemplateColumns: '236px 1fr 280px', gap: '32px' }}
+        className="max-w-shell mx-auto px-4 md:px-8 pt-8 pb-32 md:pb-24 flex flex-col md:grid md:gap-8"
+        style={{ gridTemplateColumns: '236px 1fr 280px' }}
       >
         {/* Left rail */}
-        <aside className="sticky top-[72px] self-start">
+        <aside className="hidden md:block sticky top-[72px] self-start">
           <Eyebrow className="mb-5">05 — Community</Eyebrow>
 
           <button
@@ -126,7 +126,7 @@ export default function CommunityPage() {
         </div>
 
         {/* Right rail */}
-        <aside className="sticky top-[72px] self-start flex flex-col gap-6">
+        <aside className="hidden md:flex sticky top-[72px] self-start flex-col gap-6">
           {/* Trending */}
           <div className="bg-surface border border-line rounded-card p-5">
             <p className="font-mono text-[10px] uppercase tracking-label text-muted mb-3">Trending</p>

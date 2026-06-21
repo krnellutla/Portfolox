@@ -25,7 +25,7 @@ export default function CollectionsPage() {
     <div className="min-h-screen bg-paper">
       <TopNav />
 
-      <div className="max-w-shell mx-auto px-8 pt-[34px] pb-24 animate-pfxFade">
+      <div className="max-w-shell mx-auto px-4 md:px-8 pt-[34px] pb-32 md:pb-24 animate-pfxFade">
         {/* Header */}
         <div className="flex items-end justify-between mb-[30px] flex-wrap gap-3">
           <div>

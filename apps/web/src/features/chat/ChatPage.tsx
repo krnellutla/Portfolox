@@ -93,7 +93,7 @@ export default function ChatPage() {
     <div className="min-h-screen bg-paper animate-pfxFade">
       <TopNav />
 
-      <div className="max-w-shell mx-auto px-8 pt-8 pb-24">
+      <div className="max-w-shell mx-auto px-4 md:px-8 pt-8 pb-32 md:pb-24">
         <Eyebrow className="mb-4">06 — Chat</Eyebrow>
 
         <div

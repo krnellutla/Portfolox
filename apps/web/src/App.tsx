@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { RequireAuth } from './auth/RequireAuth.js';
 import { SessionProvider } from './auth/SessionProvider.js';
+import { MobileTabBar } from './components/nav/MobileTabBar.js';
 import { StateView } from './components/ui/StateView.js';
 import AuthCallback from './pages/auth/AuthCallback.js';
 import Login from './pages/login/Login.js';
@@ -62,6 +63,7 @@ function App() {
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          <MobileTabBar />
         </Suspense>
       </SessionProvider>
     </BrowserRouter>

@@ -47,7 +47,7 @@ export default function PortfolioPage() {
       </div>
 
       {/* Content */}
-      <div className="max-w-shell mx-auto px-8 pb-[84px]">
+      <div className="max-w-shell mx-auto px-4 md:px-8 pb-32 md:pb-[84px]">
         {/* Header row — avatar pulled up over cover */}
         <div className="flex gap-[22px] items-end mt-[-58px] relative">
           <Avatar
@@ -113,7 +113,7 @@ export default function PortfolioPage() {
         </div>
 
         {/* Photo grid — click opens lightbox (stub) */}
-        <PhotoGrid cols={5} gap="sm">
+        <PhotoGrid cols={2} gap="sm" className="md:[grid-template-columns:repeat(5,minmax(0,1fr))]">
           {PHOTOS.map((photo) => (
             <PhotoTile
               key={photo.id}

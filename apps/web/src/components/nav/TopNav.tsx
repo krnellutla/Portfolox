@@ -34,7 +34,7 @@ export function TopNav() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="hidden md:flex items-center gap-2">
           <NavLink
             to="/login"
             className="px-4 py-[7px] rounded-[9px] text-sm font-semibold text-ink-3 hover:text-ink transition-colors duration-150"

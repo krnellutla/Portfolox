@@ -95,11 +95,11 @@ export default function UploadPage() {
       <TopNav />
 
       <div
-        className="max-w-shell mx-auto px-8 pt-8 pb-24"
-        style={{ display: 'grid', gridTemplateColumns: '236px 1fr', gap: '32px' }}
+        className="max-w-shell mx-auto px-4 md:px-8 pt-8 pb-32 md:pb-24 flex flex-col md:grid md:gap-8"
+        style={{ gridTemplateColumns: '236px 1fr' }}
       >
         {/* Left rail — albums */}
-        <aside className="sticky top-[72px] self-start">
+        <aside className="hidden md:block sticky top-[72px] self-start">
           <Eyebrow className="mb-4">13 — Upload & manage</Eyebrow>
           <div className="flex items-center justify-between mb-2.5">
             <p className="font-mono text-[10.5px] uppercase tracking-label text-muted">Albums</p>
