@@ -13,6 +13,7 @@ const PricingPage = lazy(() => import('./features/pricing/PricingPage.js'));
 const CollectionsPage = lazy(() => import('./features/collections/CollectionsPage.js'));
 const PortfolioPage = lazy(() => import('./features/portfolio/PortfolioPage.js'));
 const DiscoverPage = lazy(() => import('./features/discover/DiscoverPage.js'));
+const OnboardingPage = lazy(() => import('./features/onboarding/OnboardingPage.js'));
 
 function RouteFallback() {
   return <StateView variant="loading" title="Loading…" fullScreen />;
@@ -29,6 +30,7 @@ function App() {
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="/collections" element={<CollectionsPage />} />
             <Route path="/discover" element={<DiscoverPage />} />
+            <Route path="/onboarding" element={<OnboardingPage />} />
             <Route path="/portfolio/:handle" element={<PortfolioPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
