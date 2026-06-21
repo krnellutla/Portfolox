@@ -5,7 +5,7 @@ import { pool } from './db/client.js';
 import { AppError } from './lib/app-error.js';
 import { corsMiddleware } from './middleware/cors.js';
 import { errorHandler } from './middleware/error-handler.js';
-import { authRateLimit, writeRateLimit } from './middleware/rate-limit.js';
+import { authRateLimit } from './middleware/rate-limit.js';
 import { requestLogging } from './middleware/request-logging.js';
 import { requireAuth } from './middleware/require-auth.js';
 import { resolveTenant } from './middleware/resolve-tenant.js';
@@ -32,6 +32,12 @@ import { nodesRouter } from './routes/nodes.js';
 export function createApp(dbPool: Pool = pool): Express {
   const app = express();
 
+  // Trust exactly one proxy hop (nginx). Required so express-rate-limit
+  // keys on the real client IP from X-Forwarded-For, not the proxy IP.
+  // Using 1 (not true) avoids trusting arbitrary X-Forwarded-For headers
+  // from clients not behind our proxy.
+  app.set('trust proxy', 1);
+
   app.use(securityHeaders);
   app.use(requestLogging);
   app.use(express.json());
@@ -45,10 +51,11 @@ export function createApp(dbPool: Pool = pool): Express {
   app.use(authRouter);
   app.use(nodesRouter);
   app.use(requireAuth);
-  app.use(writeRateLimit);
 
   // Tenant-scoped, authenticated route groups (/media, /profile) mount
   // here starting with Milestone 1.5+.
+  // Apply writeRateLimit per-router on mutating methods when Phase 2
+  // write routes are added — not as a global mount that would also hit GETs.
 
   app.use((_req, _res, next) => {
     next(AppError.notFound('Route not found'));
