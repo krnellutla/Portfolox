@@ -9,6 +9,7 @@ import Login from './pages/login/Login.js';
 const PortfolioViewer = lazy(() => import('./pages/viewer/PortfolioViewer.js'));
 const DashboardLayout = lazy(() => import('./pages/dashboard/DashboardLayout.js'));
 const DashboardHome = lazy(() => import('./pages/dashboard/DashboardHome.js'));
+const PricingPage = lazy(() => import('./features/pricing/PricingPage.js'));
 
 function RouteFallback() {
   return <StateView variant="loading" title="Loading…" fullScreen />;
@@ -22,6 +23,7 @@ function App() {
           <Routes>
             <Route path="/" element={<PortfolioViewer />} />
             <Route path="/p/*" element={<PortfolioViewer />} />
+            <Route path="/pricing" element={<PricingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
 
