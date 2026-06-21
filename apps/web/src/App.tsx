@@ -15,6 +15,7 @@ const PortfolioPage = lazy(() => import('./features/portfolio/PortfolioPage.js')
 const DiscoverPage = lazy(() => import('./features/discover/DiscoverPage.js'));
 const OnboardingPage = lazy(() => import('./features/onboarding/OnboardingPage.js'));
 const StudioDashboard = lazy(() => import('./features/studio/DashboardPage.js'));
+const SearchPage = lazy(() => import('./features/search/SearchPage.js'));
 
 function RouteFallback() {
   return <StateView variant="loading" title="Loading…" fullScreen />;
@@ -37,6 +38,7 @@ function App() {
             <Route path="/auth/callback" element={<AuthCallback />} />
 
             <Route path="/studio/dashboard" element={<StudioDashboard />} />
+            <Route path="/search" element={<SearchPage />} />
 
             <Route element={<RequireAuth />}>
               <Route path="/dashboard" element={<DashboardLayout />}>
