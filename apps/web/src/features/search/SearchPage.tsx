@@ -45,7 +45,7 @@ export default function SearchPage() {
     <div className="min-h-screen bg-paper animate-pfxFade">
       <TopNav />
 
-      <div className="max-w-shell mx-auto px-8 pt-8 pb-24 flex gap-10">
+      <div className="max-w-shell mx-auto px-4 md:px-8 pt-8 pb-32 md:pb-24 flex gap-10">
         <FilterSidebar filters={filters} onChange={updateFilters} />
 
         {/* Results column */}
