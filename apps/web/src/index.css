@@ -1,1 +1,90 @@
 @import 'tailwindcss';
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Portfolix design tokens — translated from design_ux/.../tokens.tailwind.js.
+   Tailwind v4 reads theme customization from @theme, not a JS config file.
+   PHOTO_TONES from the handoff are reference-only (replaced by real images
+   in production) and are intentionally excluded here.
+   ───────────────────────────────────────────────────────────────────────── */
+@theme {
+  /* Colors — warm-toned neutrals, never pure black/white */
+  --color-paper: #f4f3f0;
+  --color-surface: #ffffff;
+  --color-canvas: #e7e6e1;
+  --color-ink: #16150f;
+  --color-ink-2: #2a2924;
+  --color-ink-3: #56544c;
+  --color-muted: #9a988f;
+  --color-muted-2: #8c8a82;
+  --color-line: #e0ded8;
+  --color-line-2: #ecebe6;
+  --color-field: #d6d3cb;
+  --color-field-bg: #faf9f6;
+
+  /* Semantic */
+  --color-positive: #3f7a5e;
+  --color-positive-soft: #6fae8c;
+  --color-negative: #c0683f;
+
+  /* Filter color chips (only saturated swatches in the product) */
+  --color-chip-warm: #c0683f;
+  --color-chip-cool: #3f6ec0;
+  --color-chip-green: #3f7a5e;
+  --color-chip-neutral: #8c8a82;
+  --color-chip-mono: #1c1b18;
+  --color-chip-dusk: #7c4dcc;
+
+  /* Fonts */
+  --font-serif: 'Newsreader', Georgia, serif;
+  --font-sans: 'Hanken Grotesk', system-ui, sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, monospace;
+
+  /* Display type scale — Newsreader weight 500 */
+  --text-display-xl: 62px;
+  --text-display-xl--line-height: 1.03;
+  --text-display-xl--letter-spacing: -0.02em;
+  --text-display-l: 54px;
+  --text-display-l--line-height: 1.05;
+  --text-display-l--letter-spacing: -0.02em;
+  --text-display-m: 40px;
+  --text-display-m--line-height: 1;
+  --text-display-m--letter-spacing: -0.02em;
+  --text-display-s: 30px;
+  --text-display-s--line-height: 1.05;
+  --text-display-s--letter-spacing: -0.01em;
+  --text-serif-card: 22px;
+  --text-serif-card--line-height: 1.1;
+
+  /* Letter spacing — mono eyebrows / uppercase labels */
+  --tracking-eyebrow: 0.22em;
+  --tracking-label: 0.14em;
+
+  /* Border radii */
+  --radius-card: 14px;
+  --radius-panel: 16px;
+  --radius-control: 9px;
+  --radius-tile: 8px;
+
+  /* Shadows — product is mostly flat; hairlines do the work */
+  --shadow-avatar: 0 8px 24px rgba(0, 0, 0, 0.18);
+  --shadow-lightbox: 0 30px 80px rgba(0, 0, 0, 0.5);
+  --shadow-device: 0 40px 80px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.12);
+
+  /* Page content widths */
+  --container-shell: 1280px;
+  --container-prose: 1080px;
+
+  /* Screen-enter motion */
+  --animate-pfxFade: pfxFade 0.4s ease both;
+
+  @keyframes pfxFade {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
