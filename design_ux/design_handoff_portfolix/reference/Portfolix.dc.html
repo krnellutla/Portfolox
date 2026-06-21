@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#f4f3f0;font-family:'Hanken Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:#16150f}
+  input::placeholder,textarea::placeholder{color:#a9a79d}
+  ::-webkit-scrollbar{height:9px;width:9px}
+  ::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.16);border-radius:8px}
+  ::-webkit-scrollbar-track{background:transparent}
+  @keyframes pfxFade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+</style>
+</helmet>
+<div style="min-height:100vh;background:#f4f3f0">
+
+  <!-- ===== PREVIEW CHROME / NAV SWITCHER ===== -->
+  <div style="position:sticky;top:0;z-index:300;background:#16150f;color:#f4f3f0;display:flex;align-items:center;gap:16px;padding:9px 18px;border-bottom:1px solid rgba(244,243,240,0.12)">
+    <div style="display:flex;align-items:baseline;gap:7px;flex-shrink:0">
+      <span style="font-family:'Newsreader',serif;font-size:21px;font-weight:600;letter-spacing:-0.015em">Portfolix</span>
+      <span style="font-family:'Space Mono',monospace;font-size:9px;color:rgba(244,243,240,0.45);letter-spacing:0.22em">PRO</span>
+    </div>
+    <div style="width:1px;height:20px;background:rgba(244,243,240,0.15);flex-shrink:0"></div>
+    <div style="display:flex;align-items:center;gap:3px;overflow-x:auto;flex:1;scrollbar-width:none">
+      <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="6">
+        <button onClick="{{ t.onClick }}" style="{{ t.style }}">
+          <span style="{{ t.numStyle }}">{{ t.n }}</span>
+          <span>{{ t.label }}</span>
+        </button>
+      </sc-for>
+      <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.18em;color:rgba(244,243,240,0.35);padding:0 10px 0 12px;border-left:1px solid rgba(244,243,240,0.15);margin-left:8px;flex-shrink:0">ACCOUNT</span>
+      <sc-for list="{{ accountTabs }}" as="t" hint-placeholder-count="1">
+        <button onClick="{{ t.onClick }}" style="{{ t.style }}">
+          <span style="{{ t.numStyle }}">{{ t.n }}</span>
+          <span>{{ t.label }}</span>
+        </button>
+      </sc-for>
+      <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.18em;color:rgba(244,243,240,0.35);padding:0 10px 0 12px;border-left:1px solid rgba(244,243,240,0.15);margin-left:8px;flex-shrink:0">ADMIN</span>
+      <sc-for list="{{ adminTabs }}" as="t" hint-placeholder-count="2">
+        <button onClick="{{ t.onClick }}" style="{{ t.style }}">
+          <span style="{{ t.numStyle }}">{{ t.n }}</span>
+          <span>{{ t.label }}</span>
+        </button>
+      </sc-for>
+      <span style="width:1px;height:20px;background:rgba(244,243,240,0.15);margin:0 6px;flex-shrink:0"></span>
+      <button onClick="{{ mobileTab.onClick }}" style="{{ mobileTab.style }}">
+        <span style="{{ mobileTab.numStyle }}">{{ mobileTab.n }}</span>
+        <span>{{ mobileTab.label }}</span>
+      </button>
+    </div>
+    <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.18em;color:rgba(244,243,240,0.4);flex-shrink:0">{{ chromeNote }}</span>
+  </div>
+
+  <!-- ============ 01 · DISCOVER ============ -->
+  <sc-if value="{{ isDiscover }}" hint-placeholder-val="{{ true }}">
+    <div style="max-width:1280px;margin:0 auto;padding:0 32px 88px;animation:pfxFade .4s ease both">
+      <div style="padding:64px 0 46px;border-bottom:1px solid #e0ded8">
+        <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.24em;color:#9a988f;margin-bottom:22px">01 — DISCOVER</div>
+        <h1 style="font-family:'Newsreader',serif;font-weight:500;font-size:62px;line-height:1.03;letter-spacing:-0.02em;color:#16150f;max-width:15ch;margin:0 0 22px;text-wrap:balance">Where photographers keep their best work.</h1>
+        <p style="font-size:17px;line-height:1.55;color:#56544c;max-width:54ch;margin:0 0 30px;text-wrap:pretty">A home for your portfolio, a store for your prints, and a community that actually shoots. Beautifully simple — and priced so showing your work never costs more than making it.</p>
+        <div style="display:flex;gap:10px;max-width:580px;margin-bottom:20px">
+          <input placeholder="Search photographers, places, or styles" style="flex:1;padding:14px 16px;border:1px solid #d6d3cb;border-radius:9px;background:#fff;font-family:inherit;font-size:15px;color:#16150f;outline:none">
+          <button style="padding:14px 24px;background:#16150f;color:#f4f3f0;border:none;border-radius:9px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">Search</button>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <sc-for list="{{ categories }}" as="c" hint-placeholder-count="6">
+            <span style="padding:7px 14px;border:1px solid #d6d3cb;border-radius:999px;font-size:13px;color:#56544c;background:#fff;cursor:pointer">{{ c }}</span>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="padding:46px 0 8px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:24px">
+          <h2 style="font-family:'Newsreader',serif;font-weight:500;font-size:30px;margin:0;letter-spacing:-0.01em">Featured photographers</h2>
+          <span style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#56544c;cursor:pointer">VIEW ALL →</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+          <sc-for list="{{ featured }}" as="p" hint-placeholder-count="6">
+            <div onClick="{{ p.onOpen }}" style="background:#fff;border:1px solid #e0ded8;border-radius:12px;overflow:hidden;cursor:pointer">
+              <div style="position:relative;aspect-ratio:4/3;background:#dcd9d2;background-image:{{ p.cover }};background-size:cover">
+                <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(255,255,255,0.06) 0 2px,transparent 2px 8px)"></div>
+                <div style="position:absolute;inset:0;box-shadow:inset 0 -40px 60px rgba(0,0,0,0.22)"></div>
+                <span style="position:absolute;top:10px;left:10px;font-family:'Space Mono',monospace;font-size:10px;color:rgba(255,255,255,0.82);background:rgba(0,0,0,0.28);padding:3px 7px;border-radius:4px;backdrop-filter:blur(4px)">{{ p.spec }}</span>
+              </div>
+              <div style="padding:15px 16px;display:flex;gap:12px;align-items:flex-start">
+                <div style="width:42px;height:42px;border-radius:50%;background:#dcd9d2;background-image:{{ p.avatar }};background-size:cover;flex-shrink:0;border:1px solid #e0ded8"></div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-family:'Newsreader',serif;font-size:19px;color:#16150f;line-height:1.1">{{ p.name }}</div>
+                  <div style="font-family:'Space Mono',monospace;font-size:10.5px;color:#9a988f;margin-top:3px">{{ p.handle }} · {{ p.loc }}</div>
+                </div>
+                <button onClick="{{ p.onFollow }}" style="{{ p.followStyle }}">{{ p.followLabel }}</button>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="padding:42px 0 0">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px">
+          <h2 style="font-family:'Newsreader',serif;font-weight:500;font-size:30px;margin:0;letter-spacing:-0.01em">Fresh frames</h2>
+          <span style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.16em;color:#9a988f">UPDATED HOURLY</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+          <sc-for list="{{ discoverGrid }}" as="p" hint-placeholder-count="12">
+            <div onClick="{{ p.open }}" style="position:relative;aspect-ratio:1;background:#dcd9d2;background-image:{{ p.g }};background-size:cover;border-radius:8px;overflow:hidden;cursor:pointer">
+              <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(255,255,255,0.05) 0 2px,transparent 2px 8px)"></div>
+              <div style="position:absolute;inset:0;box-shadow:inset 0 0 70px rgba(0,0,0,0.22)"></div>
+              <span style="position:absolute;bottom:8px;left:9px;font-family:'Space Mono',monospace;font-size:10px;color:rgba(255,255,255,0.78);letter-spacing:0.04em">{{ p.code }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ 02 · PORTFOLIO ============ -->
+  <sc-if value="{{ isPortfolio }}" hint-placeholder-val="{{ false }}">
+    <div style="animation:pfxFade .4s ease both">
+      <div style="position:relative;height:300px;overflow:hidden;background:linear-gradient(135deg,#7e8893 0%,#3f4651 100%)">
+        <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(255,255,255,0.05) 0 2px,transparent 2px 9px)"></div>
+        <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0.05),rgba(244,243,240,0.0) 40%,#f4f3f0 100%)"></div>
+        <span style="position:absolute;top:16px;left:32px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.2em;color:rgba(255,255,255,0.7)">PORTFOLIO COVER · ICELAND — RING ROAD</span>
+      </div>
+      <div style="max-width:1280px;margin:0 auto;padding:0 32px 84px">
+        <div style="display:flex;gap:22px;align-items:flex-end;margin-top:-58px;position:relative">
+          <div style="width:116px;height:116px;border-radius:50%;border:4px solid #f4f3f0;background:linear-gradient(145deg,#bda988,#8a7150);flex-shrink:0;box-shadow:0 8px 24px rgba(0,0,0,0.18)"></div>
+          <div style="flex:1;padding-bottom:8px">
+            <h1 style="font-family:'Newsreader',serif;font-weight:500;font-size:42px;letter-spacing:-0.02em;margin:0;line-height:1">Mira Calder</h1>
+            <div style="font-family:'Space Mono',monospace;font-size:12.5px;color:#9a988f;margin-top:7px">@miracalder · Reykjavík, Iceland · Landscape</div>
+          </div>
+          <div style="display:flex;gap:10px;padding-bottom:10px">
+            <button style="padding:11px 22px;background:#16150f;color:#f4f3f0;border:none;border-radius:9px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer">Follow</button>
+            <button style="padding:11px 20px;background:#fff;color:#16150f;border:1px solid #d6d3cb;border-radius:9px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer">Message</button>
+          </div>
+        </div>
+        <p style="font-size:16px;line-height:1.6;color:#56544c;max-width:62ch;margin:22px 0 24px;text-wrap:pretty">Chasing long light along the Ring Road and the fjords of the north. Large-format landscapes, limited print editions, and the occasional 4am alarm. Prints made affordable so the work can live on real walls.</p>
+        <div style="display:flex;gap:0;border-top:1px solid #e0ded8;border-bottom:1px solid #e0ded8;padding:18px 0;margin-bottom:30px">
+          <div style="padding-right:40px;border-right:1px solid #e0ded8">
+            <div style="font-family:'Newsreader',serif;font-size:26px">248</div>
+            <div style="font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:0.1em;color:#9a988f;text-transform:uppercase;margin-top:2px">Frames</div>
+          </div>
+          <div style="padding:0 40px;border-right:1px solid #e0ded8">
+            <div style="font-family:'Newsreader',serif;font-size:26px">12.4k</div>
+            <div style="font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:0.1em;color:#9a988f;text-transform:uppercase;margin-top:2px">Followers</div>
+          </div>
+          <div style="padding:0 40px">
+            <div style="font-family:'Newsreader',serif;font-size:26px">1,204</div>
+            <div style="font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:0.1em;color:#9a988f;text-transform:uppercase;margin-top:2px">Prints sold</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap">
+          <span style="padding:8px 16px;border-radius:999px;font-size:13.5px;font-weight:600;background:#16150f;color:#f4f3f0;cursor:pointer">All work</span>
+          <span style="padding:8px 16px;border:1px solid #d6d3cb;border-radius:999px;font-size:13.5px;color:#56544c;background:#fff;cursor:pointer">Iceland — Ring Road</span>
+          <span style="padding:8px 16px;border:1px solid #d6d3cb;border-radius:999px;font-size:13.5px;color:#56544c;background:#fff;cursor:pointer">Coastal Long Exposure</span>
+          <span style="padding:8px 16px;border:1px solid #d6d3cb;border-radius:999px;font-size:13.5px;color:#56544c;background:#fff;cursor:pointer">Northern Light</span>
+          <span style="padding:8px 16px;border:1px solid #d6d3cb;border-radius:999px;font-size:13.5px;color:#56544c;background:#fff;cursor:pointer">Studio</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px">
+          <sc-for list="{{ portfolioGrid }}" as="p" hint-placeholder-count="15">
+            <div onClick="{{ p.open }}" style="position:relative;aspect-ratio:1;background:#dcd9d2;background-image:{{ p.g }};background-size:cover;border-radius:8px;overflow:hidden;cursor:pointer">
+              <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(255,255,255,0.05) 0 2px,transparent 2px 8px)"></div>
+              <div style="position:absolute;inset:0;box-shadow:inset 0 0 70px rgba(0,0,0,0.2)"></div>
+              <span style="position:absolute;bottom:8px;left:9px;font-family:'Space Mono',monospace;font-size:9.5px;color:rgba(255,255,255,0.75)">{{ p.code }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ 03 · LIGHTBOX ============ -->
+  <sc-if value="{{ isLightbox }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#100f0b;min-height:calc(100vh - 47px);display:flex;flex-direction:column;color:#f4f3f0;animation:pfxFade .35s ease both">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid rgba(244,243,240,0.1)">
+        <button onClick="{{ goPortfolio }}" style="display:flex;align-items:center;gap:9px;background:none;border:none;color:#f4f3f0;font-family:inherit;font-size:14px;cursor:pointer">
+          <span style="font-size:17px">←</span>
+          <span style="display:flex;align-items:center;gap:8px"><span style="width:24px;height:24px;border-radius:50%;background:linear-gradient(145deg,#bda988,#8a7150)"></span>Mira Calder · Portfolio</span>
+        </button>
+        <span style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.18em;color:rgba(244,243,240,0.6)">{{ activeNo }} / {{ activeTotal }}</span>
+        <button onClick="{{ goPortfolio }}" style="width:34px;height:34px;border-radius:8px;background:rgba(244,243,240,0.08);border:none;color:#f4f3f0;font-size:16px;cursor:pointer">✕</button>
+      </div>
+      <div style="flex:1;display:flex;min-height:0">
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:20px;padding:32px;position:relative">
+          <button onClick="{{ onPrev }}" style="width:46px;height:46px;border-radius:50%;background:rgba(244,243,240,0.08);border:1px solid rgba(244,243,240,0.14);color:#f4f3f0;font-size:18px;cursor:pointer;flex-shrink:0">←</button>
+          <div style="flex:1;max-width:760px;aspect-ratio:3/2;background:#222;background-image:{{ active.g }};background-size:cover;border-radius:6px;position:relative;box-shadow:0 30px 80px rgba(0,0,0,0.5)">
+            <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(255,255,255,0.045) 0 2px,transparent 2px 9px)"></div>
+            <div style="position:absolute;inset:0;box-shadow:inset 0 0 120px rgba(0,0,0,0.25)"></div>
+          </div>
+          <button onClick="{{ onNext }}" style="width:46px;height:46px;border-radius:50%;background:rgba(244,243,240,0.08);border:1px solid rgba(244,243,240,0.14);color:#f4f3f0;font-size:18px;cursor:pointer;flex-shrink:0">→</button>
+        </div>
+        <div style="width:344px;flex-shrink:0;border-left:1px solid rgba(244,243,240,0.1);padding:32px 28px;display:flex;flex-direction:column;overflow-y:auto">
+          <h2 style="font-family:'Newsreader',serif;font-weight:500;font-size:30px;margin:0;letter-spacing:-0.01em">{{ active.title }}</h2>
+          <div style="font-family:'Space Mono',monospace;font-size:11.5px;color:rgba(244,243,240,0.5);margin-top:6px">{{ active.code }}</div>
+          <div style="margin:22px 0;border-top:1px solid rgba(244,243,240,0.1)"></div>
+          <div style="display:flex;flex-direction:column;gap:13px;font-size:13.5px">
+            <div style="display:flex;justify-content:space-between"><span style="color:rgba(244,243,240,0.5);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.06em">EXPOSURE</span><span style="font-family:'Space Mono',monospace">{{ active.meta }}</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:rgba(244,243,240,0.5);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.06em">CAMERA</span><span>Leica Q3</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:rgba(244,243,240,0.5);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.06em">EDITION</span><span>12 of 25</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:rgba(244,243,240,0.5);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.06em">RELEASED</span><span>Mar 2026</span></div>
+          </div>
+          <div style="margin:24px 0 0;padding:20px;background:rgba(244,243,240,0.05);border:1px solid rgba(244,243,240,0.1);border-radius:12px">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px">
+              <span style="font-size:15px;font-weight:600">Buy a print</span>
+              <span style="font-family:'Space Mono',monospace;font-size:12px;color:rgba(244,243,240,0.6)">from $18</span>
+            </div>
+            <button onClick="{{ goPricing }}" style="width:100%;padding:13px;background:#f4f3f0;color:#16150f;border:none;border-radius:9px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer">Choose size & checkout</button>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:14px">
+            <button style="flex:1;padding:11px;background:rgba(244,243,240,0.06);border:1px solid rgba(244,243,240,0.12);color:#f4f3f0;border-radius:9px;font-family:inherit;font-size:13.5px;cursor:pointer">♡ Like</button>
+            <button style="flex:1;padding:11px;background:rgba(244,243,240,0.06);border:1px solid rgba(244,243,240,0.12);color:#f4f3f0;border-radius:9px;font-family:inherit;font-size:13.5px;cursor:pointer">↗ Share</button>
+          </div>
+          <div style="margin:24px 0 0;border-top:1px solid rgba(244,243,240,0.1);padding-top:20px">
+            <div style="font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:0.12em;color:rgba(244,243,240,0.5);text-transform:uppercase;margin-bottom:16px">Comments</div>
+            <div style="display:flex;gap:10px;margin-bottom:16px">
+              <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(145deg,#bda988,#8a7150);flex-shrink:0"></div>
+              <div style="flex:1;display:flex;gap:7px">
+                <input value="{{ commentDraft }}" onInput="{{ onCommentDraft }}" placeholder="Add a comment…" style="flex:1;min-width:0;padding:9px 12px;border:1px solid rgba(244,243,240,0.16);border-radius:9px;background:rgba(244,243,240,0.05);color:#f4f3f0;font-family:inherit;font-size:13px;outline:none">
+                <button onClick="{{ onPostComment }}" style="padding:9px 14px;background:#f4f3f0;color:#16150f;border:none;border-radius:9px;font-family:inherit;font-weight:600;font-size:12.5px;cursor:pointer;flex-shrink:0">Post</button>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <sc-for list="{{ lbComments }}" as="c" hint-placeholder-count="3">
+                <div style="display:flex;gap:10px">
+                  <div style="width:30px;height:30px;border-radius:50%;background:{{ c.avatar }};flex-shrink:0"></div>
+                  <div style="flex:1;min-width:0">
+                    <div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:13px;font-weight:600">{{ c.name }}</span><span style="font-family:'Space Mono',monospace;font-size:9.5px;color:rgba(244,243,240,0.4)">{{ c.time }}</span></div>
+                    <p style="font-size:13px;line-height:1.45;color:rgba(244,243,240,0.82);margin:4px 0 5px">{{ c.text }}</p>
+                    <div style="display:flex;gap:14px;font-size:11.5px;color:rgba(244,243,240,0.5)"><span style="cursor:pointer">♡ {{ c.likes }}</span><span style="cursor:pointer">Reply</span></div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="border-top:1px solid rgba(244,243,240,0.1);padding:14px 24px;display:flex;gap:9px;overflow-x:auto">
+        <sc-for list="{{ related }}" as="p" hint-placeholder-count="8">
+          <div onClick="{{ p.open }}" style="position:relative;width:74px;height:74px;flex-shrink:0;background:#222;background-image:{{ p.g }};background-size:cover;border-radius:6px;cursor:pointer">
+            <div style="{{ p.ringStyle }}"></div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ 04 · COMMUNITY ============ -->
+  <sc-if value="{{ isCommunity }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width:1280px;margin:0 auto;padding:34px 32px 84px;display:grid;grid-template-columns:236px 1fr 280px;gap:28px;align-items:start;animation:pfxFade .4s ease both">
+
+      <!-- left rail -->
+      <div style="position:sticky;top:80px">
+        <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.22em;color:#9a988f;margin-bottom:16px">05 — COMMUNITY</div>
+        <button style="width:100%;padding:12px;background:#16150f;color:#f4f3f0;border:none;border-radius:9px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;margin-bottom:22px">+ New post</button>
+        <div style="font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:0.14em;color:#9a988f;text-transform:uppercase;margin-bottom:10px">Spaces</div>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:8px;background:#fff;border:1px solid #e0ded8;font-size:14px;font-weight:600;cursor:pointer">Show your work <span style="font-family:'Space Mono',monospace;font-size:11px;color:#9a988f">2.1k</span></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:8px;font-size:14px;color:#56544c;cursor:pointer">Critique room <span style="font-family:'Space Mono',monospace;font-size:11px;color:#9a988f">844</span></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:8px;font-size:14px;color:#56544c;cursor:pointer">Pricing & business <span style="font-family:'Space Mono',monospace;font-size:11px;color:#9a988f">612</span></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:8px;font-size:14px;color:#56544c;cursor:pointer">Gear talk <span style="font-family:'Space Mono',monospace;font-size:11px;color:#9a988f">1.3k</span></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:8px;font-size:14px;color:#56544c;cursor:pointer">Locations <span style="font-family:'Space Mono',monospace;font-size:11px;color:#9a988f">498</span></div>
+        </div>
+      </div>
+
+      <!-- feed -->
+      <div style="display:flex;flex-direction:column;gap:18px;min-width:0">
+        <div style="background:#fff;border:1px solid #e0ded8;border-radius:14px;padding:18px">
+          <div style="display:flex;gap:13px;align-items:center">
+            <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(145deg,#9a96a6,#675f74);flex-shrink:0"></div>
+            <input placeholder="Share your work or start a discussion…" style="flex:1;padding:12px 15px;border:1px solid #e0ded8;border-radius:9px;background:#faf9f6;font-family:inherit;font-size:14.5px;color:#16150f;outline:none">
+          </div>
+          <div style="display:flex;gap:8px;margin-top:13px;padding-left:55px">
+            <button style="padding:8px 14px;background:#f4f3f0;border:1px solid #e0ded8;border-radius:8px;font-family:inherit;font-size:13px;color:#56544c;cursor:pointer">◇ Photo</button>
+            <button style="padding:8px 14px;background:#f4f3f0;border:1px solid #e0ded8;border-radius:8px;font-family:inherit;font-size:13px;color:#56544c;cursor:pointer">◷ Poll</button>
+            <button style="margin-left:auto;padding:8px 22px;background:#16150f;color:#f4f3f0;border:none;border-radius:8px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer">Post</button>
+          </div>
+        </div>
+
+        <sc-for list="{{ feed }}" as="p" hint-placeholder-count="4">
+          <div style="background:#fff;border:1px solid #e0ded8;border-radius:14px;padding:20px">
+            <div style="display:flex;gap:12px;align-items:center;margin-bottom:13px">
+              <div style="width:44px;height:44px;border-radius:50%;background:#dcd9d2;background-image:{{ p.avatar }};background-size:cover;flex-shrink:0"></div>
+              <div style="flex:1;min-width:0">
+                <div style="font-family:'Newsreader',serif;font-size:18px;line-height:1.1">{{ p.name }}</div>
+                <div style="font-family:'Space Mono',monospace;font-size:10.5px;color:#9a988f;margin-top:2px">{{ p.handle }} · {{ p.spec }} · {{ p.time }}</div>
+              </div>
+              <span style="color:#c8c5bc;font-size:20px;cursor:pointer">···</span>
+            </div>
+            <p style="font-size:15px;line-height:1.55;color:#2a2924;margin:0 0 14px;text-wrap:pretty">{{ p.text }}</p>
+            <sc-if value="{{ p.photo }}" hint-placeholder-val="{{ false }}">
+              <div style="position:relative;aspect-ratio:16/9;background:#dcd9d2;background-image:{{ p.photoG }};background-size:cover;border-radius:10px;overflow:hidden;margin-bottom:14px">
+                <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(255,255,255,0.05) 0 2px,transparent 2px 9px)"></div>
+                <div style="position:absolute;inset:0;box-shadow:inset 0 0 90px rgba(0,0,0,0.18)"></div>
+              </div>
+            </sc-if>
+            <div style="display:flex;gap:10px;align-items:center">
+              <button onClick="{{ p.onLike }}" style="{{ p.likeStyle }}"><span style="font-size:15px">{{ p.likeIcon }}</span> {{ p.likeCount }}</button>
+              <button style="display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:8px;border:1px solid #e0ded8;background:#fff;color:#56544c;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">◰ {{ p.commentLabel }}</button>
+              <button style="display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:8px;border:1px solid #e0ded8;background:#fff;color:#56544c;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">↗ Share</button>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <!-- right rail -->
+      <div style="position:sticky;top:80px;display:flex;flex-direction:column;gap:18px">
+        <div style="background:#fff;border:1px solid #e0ded8;border-radius:14px;padding:18px">
+          <div style="font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:0.14em;color:#9a988f;text-transform:uppercase;margin-bottom:14px">Trending</div>
+          <div style="display:flex;flex-wrap:wrap;gap:7px">
+            <span style="padding:6px 12px;background:#f4f3f0;border-radius:999px;font-size:13px;color:#2a2924;cursor:pointer">#goldenhour</span>
+            <span style="padding:6px 12px;background:#f4f3f0;border-radius:999px;font-size:13px;color:#2a2924;cursor:pointer">#printsales</span>
+            <span style="padding:6px 12px;background:#f4f3f0;border-radius:999px;font-size:13px;color:#2a2924;cursor:pointer">#longexposure</span>
+            <span style="padding:6px 12px;background:#f4f3f0;border-radius:999px;font-size:13px;color:#2a2924;cursor:pointer">#filmlook</span>
+            <span style="padding:6px 12px;background:#f4f3f0;border-radius:999px;font-size:13px;color:#2a2924;cursor:pointer">#fujix</span>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #e0ded8;border-radius:14px;padding:18px">
+          <div style="font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:0.14em;color:#9a988f;text-transform:uppercase;margin-bottom:14px">Active now</div>
+          <div style="display:flex;flex-direction:column;gap:13px">
+            <div style="display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(145deg,#b09092,#7a5e60)"></div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Lena Brandt</div><div style="font-family:'Space Mono',monospace;font-size:10px;color:#9a988f">@lenabrandt</div></div><span style="width:8px;height:8px;border-radius:50%;background:#3f7a5e"></span></div>
+            <div style="display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(145deg,#7e9396,#52696c)"></div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Theo Vance</div><div style="font-family:'Space Mono',monospace;font-size:10px;color:#9a988f">@theovance</div></div><span style="width:8px;height:8px;border-radius:50%;background:#3f7a5e"></span></div>
+            <div style="display:flex;align-items:center;gap:10px"><div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(145deg,#bda988,#8a7150)"></div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Mira Calder</div><div style="font-family:'Space Mono',monospace;font-size:10px;color:#9a988f">@miracalder</div></div><span style="width:8px;height:8px;border-radius:50%;background:#c8c5bc"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ 05 · PRICING / STORE ============ -->
+  <sc-if value="{{ isPricing }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width:1080px;margin:0 auto;padding:64px 32px 88px;animation:pfxFade .4s ease both">
+      <div style="text-align:center;margin-bottom:48px">
+        <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.24em;color:#9a988f;margin-bottom:20px">08 — PRICING</div>
+        <h1 style="font-family:'Newsreader',serif;font-weight:500;font-size:54px;line-height:1.05;letter-spacing:-0.02em;margin:0 0 16px">Pricing that gets out of the way.</h1>
+        <p style="font-size:17px;line-height:1.55;color:#56544c;max-width:50ch;margin:0 auto 26px">Showing your work should never cost more than making it. Every plan includes the portfolio, the community, and a print store — with the lowest commissions in the business.</p>
+        <div style="display:inline-flex;background:#fff;border:1px solid #e0ded8;border-radius:999px;padding:4px">
+          <span style="padding:8px 20px;border-radius:999px;background:#16150f;color:#f4f3f0;font-size:13.5px;font-weight:600;cursor:pointer">Monthly</span>
+          <span style="padding:8px 20px;border-radius:999px;color:#56544c;font-size:13.5px;font-weight:600;cursor:pointer">Annual · save 20%</span>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:60px">
+        <sc-for list="{{ plans }}" as="p" hint-placeholder-count="3">
+          <div style="{{ p.cardStyle }}">
+            <div style="{{ p.tagStyle }}">{{ p.tag }}</div>
+            <div style="display:flex;align-items:baseline;gap:4px;margin:16px 0 6px">
+              <span style="font-family:'Newsreader',serif;font-size:48px;line-height:1">{{ p.price }}</span>
+              <span style="font-size:15px;opacity:0.6">{{ p.period }}</span>
+            </div>
+            <div style="font-family:'Newsreader',serif;font-size:24px;margin-bottom:22px">{{ p.name }}</div>
+            <div style="display:flex;flex-direction:column;gap:11px;margin-bottom:26px">
+              <sc-for list="{{ p.feats }}" as="f" hint-placeholder-count="5">
+                <div style="display:flex;gap:10px;font-size:14px;line-height:1.4;{{ p.featStyle }}"><span style="{{ p.dotStyle }}">—</span><span>{{ f }}</span></div>
+              </sc-for>
+            </div>
+            <button style="{{ p.ctaStyle }}">{{ p.cta }}</button>
+          </div>
+        </sc-for>
+      </div>
+      <div style="border-top:1px solid #e0ded8;padding-top:48px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px">
+          <h2 style="font-family:'Newsreader',serif;font-weight:500;font-size:32px;margin:0;letter-spacing:-0.01em">À la carte prints</h2>
+          <span style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#9a988f">NO SUBSCRIPTION REQUIRED</span>
+        </div>
+        <p style="font-size:15px;color:#56544c;margin:0 0 26px;max-width:56ch">Buyers pay once, photographers keep the most. Set your own markup on archival prints fulfilled and shipped worldwide.</p>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+          <sc-for list="{{ prints }}" as="p" hint-placeholder-count="4">
+            <div style="background:#fff;border:1px solid #e0ded8;border-radius:12px;overflow:hidden">
+              <div style="aspect-ratio:4/3;background:linear-gradient(145deg,#9aa79b,#5f6f63);position:relative">
+                <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(255,255,255,0.06) 0 2px,transparent 2px 9px)"></div>
+              </div>
+              <div style="padding:15px">
+                <div style="font-size:15px;font-weight:600">{{ p.size }}</div>
+                <div style="font-family:'Space Mono',monospace;font-size:11px;color:#9a988f;margin:4px 0 12px">{{ p.kind }}</div>
+                <div style="display:flex;align-items:center;justify-content:space-between">
+                  <span style="font-family:'Newsreader',serif;font-size:22px">{{ p.price }}</span>
+                  <button style="padding:8px 14px;background:#16150f;color:#f4f3f0;border:none;border-radius:8px;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer">Add</button>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ 06 · CLIENT GALLERY ============ -->
+  <sc-if value="{{ isClient }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width:1280px;margin:0 auto;padding:34px 32px 88px;animation:pfxFade .4s ease both">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:24px;padding-bottom:22px;border-bottom:1px solid #e0ded8;flex-wrap:wrap">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.18em;color:#9a988f;margin-bottom:12px">
+            <span>⬚ PRIVATE</span><span style="color:#d0cdc4">·</span><span>09 — CLIENT GALLERY</span>
+          </div>
+          <h1 style="font-family:'Newsreader',serif;font-weight:500;font-size:38px;letter-spacing:-0.02em;margin:0 0 8px">Delgado Wedding — Final Selects</h1>
+          <div style="font-size:14px;color:#56544c">Shared with <strong style="color:#16150f">Ana & Marcus Delgado</strong> · 212 frames · Link expires in 28 days</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <button style="padding:11px 18px;background:#fff;border:1px solid #d6d3cb;border-radius:9px;font-family:inherit;font-weight:600;font-size:13.5px;color:#16150f;cursor:pointer">↓ Download all</button>
+          <button style="padding:11px 18px;background:#16150f;color:#f4f3f0;border:none;border-radius:9px;font-family:inherit;font-weight:600;font-size:13.5px;cursor:pointer">↗ Share link</button>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 0;flex-wrap:wrap;gap:12px">
+        <div style="display:flex;gap:8px">
+          <span style="padding:8px 16px;border-radius:999px;font-size:13.5px;font-weight:600;background:#16150f;color:#f4f3f0;cursor:pointer">All photos</span>
+          <span style="padding:8px 16px;border:1px solid #d6d3cb;border-radius:999px;font-size:13.5px;color:#56544c;background:#fff;cursor:pointer">♡ Favorites</span>
+          <span style="padding:8px 16px;border:1px solid #d6d3cb;border-radius:999px;font-size:13.5px;color:#56544c;background:#fff;cursor:pointer">Ceremony</span>
+          <span style="padding:8px 16px;border:1px solid #d6d3cb;border-radius:999px;font-size:13.5px;color:#56544c;background:#fff;cursor:pointer">Reception</span>
+        </div>
+        <sc-if value="{{ hasSelection }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:center;gap:14px;background:#16150f;color:#f4f3f0;padding:8px 8px 8px 18px;border-radius:999px">
+            <span style="font-size:13.5px;font-weight:600">{{ selectedCount }} selected</span>
+            <button style="padding:8px 16px;background:#f4f3f0;color:#16150f;border:none;border-radius:999px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer">Add to favorites</button>
+          </div>
+        </sc-if>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+        <sc-for list="{{ clientGrid }}" as="p" hint-placeholder-count="12">
+          <div onClick="{{ p.open }}" style="position:relative;aspect-ratio:3/2;background:#dcd9d2;background-image:{{ p.g }};background-size:cover;border-radius:8px;overflow:hidden;cursor:pointer">
+            <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(255,255,255,0.05) 0 2px,transparent 2px 9px)"></div>
+            <div style="position:absolute;inset:0;box-shadow:inset 0 0 70px rgba(0,0,0,0.18)"></div>
+            <div onClick="{{ p.onSelect }}" style="{{ p.checkStyle }}">✓</div>
+            <div style="{{ p.ringStyle }}"></div>
+            <span style="position:absolute;bottom:8px;left:9px;font-family:'Space Mono',monospace;font-size:9.5px;color:rgba(255,255,255,0.75)">{{ p.code }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ 07 · ADMIN DASHBOARD ============ -->
+  <sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width:1280px;margin:0 auto;padding:34px 32px 88px;animation:pfxFade .4s ease both">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:30px;flex-wrap:wrap;gap:16px">
+        <div>
+          <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.22em;color:#9a988f;margin-bottom:12px">11 — STUDIO DASHBOARD</div>
+          <h1 style="font-family:'Newsreader',serif;font-weight:500;font-size:40px;letter-spacing:-0.02em;margin:0">Good morning, Mira.</h1>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <span style="padding:10px 16px;background:#fff;border:1px solid #d6d3cb;border-radius:9px;font-family:'Space Mono',monospace;font-size:12px;color:#56544c;cursor:pointer">Last 30 days ▾</span>
+          <button onClick="{{ goUpload }}" style="padding:11px 20px;background:#16150f;color:#f4f3f0;border:none;border-radius:9px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer">↑ Upload photos</button>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
+        <sc-for list="{{ dashStats }}" as="s" hint-placeholder-count="4">
+          <div style="background:#fff;border:1px solid #e0ded8;border-radius:14px;padding:22px">
+            <div style="font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:0.1em;color:#9a988f;text-transform:uppercase;margin-bottom:14px">{{ s.label }}</div>
+            <div style="display:flex;align-items:baseline;gap:10px">
+              <span style="font-family:'Newsreader',serif;font-size:38px;line-height:1">{{ s.value }}</span>
+              <span style="font-size:13px;font-weight:600;color:#3f7a5e">{{ s.delta }}</span>
+            </div>
+            <div style="font-size:12px;color:#9a988f;margin-top:8px">{{ s.sub }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:24px">
+        <div style="background:#fff;border:1px solid #e0ded8;border-radius:14px;padding:24px">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:24px">
+            <h2 style="font-family:'Newsreader',serif;font-weight:500;font-size:22px;margin:0">Print revenue</h2>
+            <span style="font-family:'Space Mono',monospace;font-size:11px;color:#9a988f">2026 · monthly</span>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:8px;height:180px">
+            <sc-for list="{{ salesBars }}" as="b" hint-placeholder-count="12">
+              <div style="flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:8px">
+                <div style="{{ b.style }}"></div>
+                <span style="font-family:'Space Mono',monospace;font-size:10px;color:#9a988f">{{ b.m }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #e0ded8;border-radius:14px;padding:24px">
+          <h2 style="font-family:'Newsreader',serif;font-weight:500;font-size:22px;margin:0 0 18px">Recent sales</h2>
+          <div style="display:flex;flex-direction:column">
+            <sc-for list="{{ recentSales }}" as="r" hint-placeholder-count="5">
+              <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #ecebe6">
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.item }}</div>
+                  <div style="font-family:'Space Mono',monospace;font-size:10.5px;color:#9a988f;margin-top:2px">{{ r.buyer }} · {{ r.when }}</div>
+                </div>
+                <span style="font-family:'Newsreader',serif;font-size:18px">{{ r.amt }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:#fff;border:1px solid #e0ded8;border-radius:14px;padding:24px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px">
+          <h2 style="font-family:'Newsreader',serif;font-weight:500;font-size:22px;margin:0">Top galleries</h2>
+          <span onClick="{{ goUpload }}" style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.12em;color:#56544c;cursor:pointer">MANAGE ALL →</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+          <sc-for list="{{ topGalleries }}" as="g" hint-placeholder-count="4">
+            <div style="border:1px solid #e0ded8;border-radius:12px;overflow:hidden;cursor:pointer">
+              <div style="aspect-ratio:16/9;background:linear-gradient(145deg,#7e8893,#525c68);position:relative">
+                <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(255,255,255,0.05) 0 2px,transparent 2px 9px)"></div>
+              </div>
+              <div style="padding:13px">
+                <div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ g.name }}</div>
+                <div style="font-family:'Space Mono',monospace;font-size:10.5px;color:#9a988f;margin-top:4px">{{ g.frames }} frames · {{ g.views }} views</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ 08 · ADMIN UPLOAD & MANAGE ============ -->
+  <sc-if value="{{ isUpload }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width:1280px;margin:0 auto;padding:34px 32px 88px;display:grid;grid-template-columns:236px 1fr;gap:28px;align-items:start;animation:pfxFade .4s ease both">
+      <div style="position:sticky;top:80px">
+        <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.22em;color:#9a988f;margin-bottom:16px">13 — UPLOAD</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <span style="font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:0.14em;color:#9a988f;text-transform:uppercase">Albums</span>
+          <span style="font-size:18px;color:#56544c;cursor:pointer">+</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <sc-for list="{{ albumsList }}" as="a" hint-placeholder-count="4">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:8px;background:#fff;border:1px solid #e0ded8;cursor:pointer;margin-bottom:4px">
+              <div style="min-width:0">
+                <div style="font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px">
+                  <sc-if value="{{ a.priv }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;color:#9a988f">⬚</span></sc-if>
+                  {{ a.name }}
+                </div>
+              </div>
+              <span style="font-family:'Space Mono',monospace;font-size:11px;color:#9a988f;flex-shrink:0">{{ a.count }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div>
+        <div style="border:2px dashed #cfccc3;border-radius:16px;background:#fbfaf7;padding:48px;text-align:center;margin-bottom:26px">
+          <div style="width:56px;height:56px;border-radius:14px;background:#16150f;color:#f4f3f0;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 18px">↑</div>
+          <h2 style="font-family:'Newsreader',serif;font-weight:500;font-size:26px;margin:0 0 8px">Drop RAW or JPEG files to upload</h2>
+          <p style="font-size:14.5px;color:#56544c;margin:0 0 20px">Up to 100 MB per file · added to <strong style="color:#16150f">Iceland — Ring Road</strong></p>
+          <button style="padding:12px 26px;background:#16150f;color:#f4f3f0;border:none;border-radius:9px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer">Browse files</button>
+        </div>
+
+        <div style="background:#fff;border:1px solid #e0ded8;border-radius:14px;overflow:hidden;margin-bottom:26px">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #ecebe6">
+            <h3 style="font-family:'Newsreader',serif;font-weight:500;font-size:19px;margin:0">Upload queue</h3>
+            <span style="font-family:'Space Mono',monospace;font-size:11px;color:#9a988f">3 of 5 done</span>
+          </div>
+          <sc-for list="{{ uploadQueue }}" as="u" hint-placeholder-count="5">
+            <div style="display:flex;align-items:center;gap:14px;padding:13px 20px;border-bottom:1px solid #f1f0ec">
+              <div style="width:46px;height:46px;border-radius:7px;background:#dcd9d2;background-image:{{ u.g }};background-size:cover;flex-shrink:0"></div>
+              <div style="flex:1;min-width:0">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
+                  <span style="font-family:'Space Mono',monospace;font-size:12.5px;font-weight:700">{{ u.name }}</span>
+                  <span style="font-family:'Space Mono',monospace;font-size:10.5px;color:#9a988f">{{ u.size }}</span>
+                </div>
+                <div style="height:5px;background:#ecebe6;border-radius:99px;overflow:hidden"><div style="{{ u.barStyle }}"></div></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;width:120px;justify-content:flex-end">
+                <span style="{{ u.dotStyle }}"></span>
+                <span style="font-family:'Space Mono',monospace;font-size:11px;color:#56544c">{{ u.statusLabel }}</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="background:#fff;border:1px solid #e0ded8;border-radius:14px;overflow:hidden">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #ecebe6">
+            <h3 style="font-family:'Newsreader',serif;font-weight:500;font-size:19px;margin:0">Manage frames</h3>
+            <span style="font-family:'Space Mono',monospace;font-size:11px;color:#9a988f">15 in this album</span>
+          </div>
+          <div style="display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr 0.6fr;gap:12px;padding:11px 20px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#9a988f;text-transform:uppercase;border-bottom:1px solid #ecebe6">
+            <span>Frame</span><span>Album</span><span>Status</span><span>Price</span><span></span>
+          </div>
+          <sc-for list="{{ portfolioGrid }}" as="p" hint-placeholder-count="6">
+            <div style="display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr 0.6fr;gap:12px;padding:11px 20px;align-items:center;border-bottom:1px solid #f1f0ec">
+              <div style="display:flex;align-items:center;gap:12px;min-width:0">
+                <div style="width:42px;height:42px;border-radius:6px;background:#dcd9d2;background-image:{{ p.g }};background-size:cover;flex-shrink:0"></div>
+                <div style="min-width:0">
+                  <div style="font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.title }}</div>
+                  <div style="font-family:'Space Mono',monospace;font-size:10px;color:#9a988f">{{ p.code }}</div>
+                </div>
+              </div>
+              <span style="font-size:12.5px;color:#56544c">Ring Road</span>
+              <span><span style="font-size:11.5px;font-weight:600;color:#3f7a5e;background:rgba(63,122,94,0.1);padding:4px 10px;border-radius:999px">Published</span></span>
+              <span style="font-family:'Space Mono',monospace;font-size:13px">from $18</span>
+              <span style="text-align:right;color:#c8c5bc;cursor:pointer;font-size:17px">···</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ 09 · MOBILE ============ -->
+  <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#e7e6e1;min-height:calc(100vh - 47px);padding:40px 32px 64px;animation:pfxFade .4s ease both">
+      <div style="max-width:1240px;margin:0 auto">
+        <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.22em;color:#8c8a82;margin-bottom:6px">15 — MOBILE</div>
+        <h1 style="font-family:'Newsreader',serif;font-weight:500;font-size:34px;letter-spacing:-0.02em;margin:0 0 6px">Portfolix on the phone</h1>
+        <p style="font-size:15px;color:#56544c;margin:0 0 34px;max-width:60ch">The same contact-sheet system, reflowed for one thumb. Browse, post to the community, and manage uploads from a shoot — all on the go.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:48px 40px;justify-content:center">
+
+          <!-- MOBILE: DISCOVER -->
+          <div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+            <span style="font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:0.16em;color:#8c8a82">DISCOVER</span>
+            <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="356" height="760" hint-size="356px,760px">
+              <div style="padding-top:52px;min-height:100%;background:#f4f3f0;font-family:'Hanken Grotesk',sans-serif;color:#16150f">
+                <div style="padding:10px 18px 14px;display:flex;align-items:center;justify-content:space-between">
+                  <span style="font-family:'Newsreader',serif;font-size:23px;font-weight:600">Portfolix</span>
+                  <span style="width:36px;height:36px;border-radius:50%;background:#fff;border:1px solid #e0ded8;display:flex;align-items:center;justify-content:center;font-size:16px">⌕</span>
+                </div>
+                <div style="padding:0 0 16px 18px;display:flex;gap:11px;overflow-x:auto">
+                  <div style="flex-shrink:0;width:138px">
+                    <div style="height:96px;border-radius:10px;background:linear-gradient(145deg,#bda988,#8a7150)"></div>
+                    <div style="font-family:'Newsreader',serif;font-size:15px;margin-top:7px">Mira Calder</div>
+                    <div style="font-family:'Space Mono',monospace;font-size:9.5px;color:#9a988f">@miracalder</div>
+                  </div>
+                  <div style="flex-shrink:0;width:138px">
+                    <div style="height:96px;border-radius:10px;background:linear-gradient(145deg,#7e8893,#525c68)"></div>
+                    <div style="font-family:'Newsreader',serif;font-size:15px;margin-top:7px">Søren Lafield</div>
+                    <div style="font-family:'Space Mono',monospace;font-size:9.5px;color:#9a988f">@sorenl</div>
+                  </div>
+                  <div style="flex-shrink:0;width:80px">
+                    <div style="height:96px;border-radius:10px;background:linear-gradient(145deg,#b09092,#7a5e60)"></div>
+                  </div>
+                </div>
+                <div style="padding:0 18px 8px;display:flex;align-items:baseline;justify-content:space-between">
+                  <span style="font-family:'Newsreader',serif;font-size:18px">Fresh frames</span>
+                  <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.12em;color:#9a988f">HOURLY</span>
+                </div>
+                <div style="padding:0 18px 96px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                  <div style="aspect-ratio:1;border-radius:8px;background:linear-gradient(145deg,#9aa79b,#5f6f63)"></div>
+                  <div style="aspect-ratio:1;border-radius:8px;background:linear-gradient(145deg,#8f93a3,#5e6374)"></div>
+                  <div style="aspect-ratio:1;border-radius:8px;background:linear-gradient(145deg,#c0ab9a,#8f7967)"></div>
+                  <div style="aspect-ratio:1;border-radius:8px;background:linear-gradient(145deg,#869a93,#566b63)"></div>
+                  <div style="aspect-ratio:1;border-radius:8px;background:linear-gradient(145deg,#bb9d9a,#8a6d6b)"></div>
+                  <div style="aspect-ratio:1;border-radius:8px;background:linear-gradient(145deg,#92997f,#646a52)"></div>
+                </div>
+                <div style="position:sticky;bottom:0;display:flex;justify-content:space-around;align-items:center;padding:12px 0 26px;background:rgba(244,243,240,0.9);backdrop-filter:blur(12px);border-top:1px solid #e0ded8;font-size:19px;color:#9a988f">
+                  <span style="color:#16150f">◎</span><span>⌕</span><span>◰</span><span>◐</span>
+                </div>
+              </div>
+            </x-import>
+          </div>
+
+          <!-- MOBILE: PORTFOLIO -->
+          <div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+            <span style="font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:0.16em;color:#8c8a82">PORTFOLIO</span>
+            <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="356" height="760" hint-size="356px,760px">
+              <div style="min-height:100%;background:#f4f3f0;font-family:'Hanken Grotesk',sans-serif;color:#16150f">
+                <div style="height:150px;background:linear-gradient(135deg,#7e8893,#3f4651);position:relative">
+                  <div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,#f4f3f0)"></div>
+                </div>
+                <div style="padding:0 18px;margin-top:-40px;position:relative">
+                  <div style="width:78px;height:78px;border-radius:50%;border:4px solid #f4f3f0;background:linear-gradient(145deg,#bda988,#8a7150)"></div>
+                  <h2 style="font-family:'Newsreader',serif;font-weight:500;font-size:26px;margin:12px 0 4px">Mira Calder</h2>
+                  <div style="font-family:'Space Mono',monospace;font-size:11px;color:#9a988f">@miracalder · Reykjavík</div>
+                  <div style="display:flex;gap:10px;margin:16px 0">
+                    <button style="flex:1;padding:10px;background:#16150f;color:#f4f3f0;border:none;border-radius:9px;font-family:inherit;font-weight:600;font-size:13px">Follow</button>
+                    <button style="flex:1;padding:10px;background:#fff;color:#16150f;border:1px solid #d6d3cb;border-radius:9px;font-family:inherit;font-weight:600;font-size:13px">Message</button>
+                  </div>
+                  <div style="display:flex;gap:18px;padding:14px 0;border-top:1px solid #e0ded8;border-bottom:1px solid #e0ded8;margin-bottom:16px">
+                    <div><div style="font-family:'Newsreader',serif;font-size:19px">248</div><div style="font-family:'Space Mono',monospace;font-size:9px;color:#9a988f;text-transform:uppercase">Frames</div></div>
+                    <div><div style="font-family:'Newsreader',serif;font-size:19px">12.4k</div><div style="font-family:'Space Mono',monospace;font-size:9px;color:#9a988f;text-transform:uppercase">Followers</div></div>
+                    <div><div style="font-family:'Newsreader',serif;font-size:19px">1.2k</div><div style="font-family:'Space Mono',monospace;font-size:9px;color:#9a988f;text-transform:uppercase">Prints</div></div>
+                  </div>
+                </div>
+                <div style="padding:0 18px 40px;display:grid;grid-template-columns:1fr 1fr;gap:7px">
+                  <div style="aspect-ratio:1;border-radius:7px;background:linear-gradient(145deg,#9aa79b,#5f6f63)"></div>
+                  <div style="aspect-ratio:1;border-radius:7px;background:linear-gradient(145deg,#7e8893,#525c68)"></div>
+                  <div style="aspect-ratio:1;border-radius:7px;background:linear-gradient(145deg,#c0ab9a,#8f7967)"></div>
+                  <div style="aspect-ratio:1;border-radius:7px;background:linear-gradient(145deg,#869a93,#566b63)"></div>
+                  <div style="aspect-ratio:1;border-radius:7px;background:linear-gradient(145deg,#8f93a3,#5e6374)"></div>
+                  <div style="aspect-ratio:1;border-radius:7px;background:linear-gradient(145deg,#92997f,#646a52)"></div>
+                </div>
+              </div>
+            </x-import>
+          </div>
+
+          <!-- MOBILE: COMMUNITY -->
+          <div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+            <span style="font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:0.16em;color:#8c8a82">COMMUNITY</span>
+            <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="356" height="760" hint-size="356px,760px">
+              <div style="padding-top:52px;min-height:100%;background:#f4f3f0;font-family:'Hanken Grotesk',sans-serif;color:#16150f">
+                <div style="padding:8px 18px 12px;display:flex;align-items:center;justify-content:space-between">
+                  <span style="font-family:'Newsreader',serif;font-size:21px;font-weight:600">Community</span>
+                  <span style="padding:7px 13px;background:#16150f;color:#f4f3f0;border-radius:8px;font-size:12px;font-weight:600">+ Post</span>
+                </div>
+                <div style="padding:0 18px 90px;display:flex;flex-direction:column;gap:13px">
+                  <div style="background:#fff;border:1px solid #e0ded8;border-radius:13px;padding:15px">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:11px">
+                      <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(145deg,#b09092,#7a5e60)"></div>
+                      <div><div style="font-family:'Newsreader',serif;font-size:15px">Ana Okonkwo</div><div style="font-family:'Space Mono',monospace;font-size:9.5px;color:#9a988f">Portrait · 2h</div></div>
+                    </div>
+                    <p style="font-size:13.5px;line-height:1.5;color:#2a2924;margin:0 0 11px">Rooftop session at golden hour — which frame works as the lead?</p>
+                    <div style="aspect-ratio:16/10;border-radius:9px;background:linear-gradient(145deg,#bda988,#8a7150);margin-bottom:11px"></div>
+                    <div style="display:flex;gap:8px">
+                      <span style="padding:6px 11px;background:#16150f;color:#f4f3f0;border-radius:7px;font-size:12px;font-weight:600">♥ 128</span>
+                      <span style="padding:6px 11px;border:1px solid #e0ded8;border-radius:7px;font-size:12px;color:#56544c;font-weight:600">◰ 24</span>
+                    </div>
+                  </div>
+                  <div style="background:#fff;border:1px solid #e0ded8;border-radius:13px;padding:15px">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:11px">
+                      <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(145deg,#7e9396,#52696c)"></div>
+                      <div><div style="font-family:'Newsreader',serif;font-size:15px">Theo Vance</div><div style="font-family:'Space Mono',monospace;font-size:9.5px;color:#9a988f">Documentary · 5h</div></div>
+                    </div>
+                    <p style="font-size:13.5px;line-height:1.5;color:#2a2924;margin:0 0 11px">Print pricing question: flat per size, or scale with edition number?</p>
+                    <div style="display:flex;gap:8px">
+                      <span style="padding:6px 11px;border:1px solid #e0ded8;border-radius:7px;font-size:12px;color:#56544c;font-weight:600">♡ 64</span>
+                      <span style="padding:6px 11px;border:1px solid #e0ded8;border-radius:7px;font-size:12px;color:#56544c;font-weight:600">◰ 41</span>
+                    </div>
+                  </div>
+                </div>
+                <div style="position:sticky;bottom:0;display:flex;justify-content:space-around;align-items:center;padding:12px 0 26px;background:rgba(244,243,240,0.9);backdrop-filter:blur(12px);border-top:1px solid #e0ded8;font-size:19px;color:#9a988f">
+                  <span>◎</span><span>⌕</span><span style="color:#16150f">◰</span><span>◐</span>
+                </div>
+              </div>
+            </x-import>
+          </div>
+
+          <!-- MOBILE: ADMIN UPLOAD -->
+          <div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+            <span style="font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:0.16em;color:#8c8a82">ADMIN · UPLOAD</span>
+            <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="356" height="760" hint-size="356px,760px" dark="{{ true }}">
+              <div style="padding-top:52px;min-height:100%;background:#16150f;font-family:'Hanken Grotesk',sans-serif;color:#f4f3f0">
+                <div style="padding:10px 18px 16px">
+                  <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.16em;color:rgba(244,243,240,0.45)">STUDIO</div>
+                  <div style="font-family:'Newsreader',serif;font-size:23px;font-weight:600;margin-top:3px">Upload</div>
+                </div>
+                <div style="margin:0 18px 18px;border:2px dashed rgba(244,243,240,0.22);border-radius:14px;padding:30px 18px;text-align:center">
+                  <div style="width:46px;height:46px;border-radius:12px;background:#f4f3f0;color:#16150f;display:flex;align-items:center;justify-content:center;font-size:21px;margin:0 auto 12px">↑</div>
+                  <div style="font-family:'Newsreader',serif;font-size:18px;margin-bottom:4px">Add to a shoot</div>
+                  <div style="font-size:12.5px;color:rgba(244,243,240,0.55)">Tap to select from camera roll</div>
+                </div>
+                <div style="padding:0 18px 40px;display:flex;flex-direction:column;gap:11px">
+                  <div style="display:flex;align-items:center;gap:12px">
+                    <div style="width:42px;height:42px;border-radius:7px;background:linear-gradient(145deg,#9aa79b,#5f6f63)"></div>
+                    <div style="flex:1">
+                      <div style="font-family:'Space Mono',monospace;font-size:11.5px;font-weight:700">DSC_4823.RAW</div>
+                      <div style="height:4px;background:rgba(244,243,240,0.14);border-radius:99px;margin-top:7px;overflow:hidden"><div style="width:72%;height:100%;background:#f4f3f0;border-radius:99px"></div></div>
+                    </div>
+                    <span style="font-family:'Space Mono',monospace;font-size:10.5px;color:rgba(244,243,240,0.55)">72%</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:12px">
+                    <div style="width:42px;height:42px;border-radius:7px;background:linear-gradient(145deg,#7e8893,#525c68)"></div>
+                    <div style="flex:1">
+                      <div style="font-family:'Space Mono',monospace;font-size:11.5px;font-weight:700">DSC_4821.RAW</div>
+                      <div style="height:4px;background:rgba(244,243,240,0.14);border-radius:99px;margin-top:7px;overflow:hidden"><div style="width:100%;height:100%;background:#6fae8c;border-radius:99px"></div></div>
+                    </div>
+                    <span style="font-family:'Space Mono',monospace;font-size:10.5px;color:#6fae8c">Done</span>
+                  </div>
+                  <div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;padding:13px 15px;background:rgba(244,243,240,0.06);border-radius:11px">
+                    <div><div style="font-size:13.5px;font-weight:600">Iceland — Ring Road</div><div style="font-family:'Space Mono',monospace;font-size:10px;color:rgba(244,243,240,0.5)">48 frames · Public</div></div>
+                    <span style="color:rgba(244,243,240,0.5)">›</span>
+                  </div>
+                </div>
+              </div>
+            </x-import>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ 02 · SEARCH & FILTER ============ -->
+  <sc-if value="{{ isSearch }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width:1280px;margin:0 auto;padding:34px 32px 88px;display:grid;grid-template-columns:262px 1fr;gap:30px;align-items:start;animation:pfxFade .4s ease both">
+      <div style="position:sticky;top:80px">
+        <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.22em;color:#9a988f;margin-bottom:16px">02 — SEARCH</div>
+        <input placeholder="Search frames…" style="width:100%;padding:12px 14px;border:1px solid #d6d3cb;border-radius:9px;background:#fff;font-family:inherit;font-size:14px;color:#16150f;outline:none;margin-bottom:24px">
+        <div style="font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:0.14em;color:#9a988f;text-transform:uppercase;margin-bottom:12px">Style</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:26px">
+          <sc-for list="{{ styleFacets }}" as="f" hint-placeholder-count="8">
+            <div onClick="{{ f.onClick }}" style="display:flex;align-items:center;gap:11px;cursor:pointer;font-size:14px;color:#2a2924">
+              <span style="{{ f.box }}">✓</span><span>{{ f.label }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:0.14em;color:#9a988f;text-transform:uppercase;margin-bottom:12px">Color</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:26px">
+          <sc-for list="{{ colorFacets }}" as="c" hint-placeholder-count="6">
+            <div onClick="{{ c.onClick }}" style="text-align:center">
+              <div style="{{ c.swStyle }}"></div>
+              <div style="font-size:11px;color:#56544c;margin-top:5px">{{ c.label }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:0.14em;color:#9a988f;text-transform:uppercase;margin-bottom:12px">Location</div>
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <sc-for list="{{ locations }}" as="l" hint-placeholder-count="6">
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:14px;color:#2a2924;cursor:pointer"><span>{{ l }}</span><span style="color:#c8c5bc">›</span></div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <h1 style="font-family:'Newsreader',serif;font-weight:500;font-size:30px;letter-spacing:-0.01em;margin:0"><span style="color:#16150f">{{ resultCount }}</span> <span style="color:#9a988f;font-size:20px">frames</span></h1>
+          <span style="padding:10px 16px;background:#fff;border:1px solid #d6d3cb;border-radius:9px;font-size:13.5px;color:#56544c;cursor:pointer">Most recent ▾</span>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px">
+          <sc-for list="{{ activeFilterChips }}" as="c" hint-placeholder-count="1">
+            <span style="display:flex;align-items:center;gap:8px;padding:7px 9px 7px 14px;background:#16150f;color:#f4f3f0;border-radius:999px;font-size:13px;font-weight:600">{{ c }} <span style="opacity:0.6">✕</span></span>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+          <sc-for list="{{ searchResults }}" as="p" hint-placeholder-count="12">
+            <div onClick="{{ p.open }}" style="position:relative;aspect-ratio:1;background:#dcd9d2;background-image:{{ p.g }};background-size:cover;border-radius:9px;overflow:hidden;cursor:pointer">
+              <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(255,255,255,0.05) 0 2px,transparent 2px 9px)"></div>
+              <div style="position:absolute;inset:0;box-shadow:inset 0 0 70px rgba(0,0,0,0.2)"></div>
+              <div onClick="{{ p.onFav }}" style="position:absolute;top:9px;right:9px;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.32);color:#fff;font-size:14px;border:1px solid rgba(255,255,255,0.6)">{{ p.favIcon }}</div>
+              <span style="position:absolute;bottom:8px;left:9px;font-family:'Space Mono',monospace;font-size:9.5px;color:rgba(255,255,255,0.78)">{{ p.code }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ 06 · CHAT / DMs ============ -->
+  <sc-if value="{{ isChat }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width:1280px;margin:0 auto;padding:28px 32px 40px;animation:pfxFade .4s ease both">
+      <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.22em;color:#9a988f;margin-bottom:16px">06 — MESSAGES</div>
+      <div style="display:grid;grid-template-columns:320px 1fr;gap:0;border:1px solid #e0ded8;border-radius:16px;overflow:hidden;background:#fff;height:660px">
+        <!-- conversation list -->
+        <div style="border-right:1px solid #e0ded8;background:#faf9f6;display:flex;flex-direction:column">
+          <div style="padding:18px 16px 12px">
+            <h2 style="font-family:'Newsreader',serif;font-weight:500;font-size:24px;margin:0 0 12px">Messages</h2>
+            <input placeholder="Search conversations" style="width:100%;padding:10px 13px;border:1px solid #e0ded8;border-radius:9px;background:#fff;font-family:inherit;font-size:13.5px;outline:none">
+          </div>
+          <div style="flex:1;overflow-y:auto;padding:6px 10px;display:flex;flex-direction:column;gap:2px">
+            <sc-for list="{{ convos }}" as="c" hint-placeholder-count="4">
+              <div onClick="{{ c.onClick }}" style="{{ c.rowStyle }}">
+                <div style="position:relative;flex-shrink:0">
+                  <div style="width:46px;height:46px;border-radius:50%;background:{{ c.avatar }}"></div>
+                  <sc-if value="{{ c.online }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;bottom:1px;right:1px;width:11px;height:11px;border-radius:50%;background:#3f7a5e;border:2px solid #faf9f6"></span></sc-if>
+                </div>
+                <div style="flex:1;min-width:0">
+                  <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:'Newsreader',serif;font-size:16px">{{ c.name }}</span><span style="font-family:'Space Mono',monospace;font-size:10px;color:#9a988f">{{ c.time }}</span></div>
+                  <div style="font-size:13px;color:#56544c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">{{ c.preview }}</div>
+                </div>
+                <sc-if value="{{ c.badge }}" hint-placeholder-val="{{ false }}"><span style="flex-shrink:0;min-width:20px;height:20px;border-radius:999px;background:#16150f;color:#f4f3f0;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 6px">{{ c.unread }}</span></sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <!-- thread -->
+        <div style="display:flex;flex-direction:column;min-width:0">
+          <div style="display:flex;align-items:center;gap:13px;padding:16px 22px;border-bottom:1px solid #e0ded8">
+            <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(145deg,#b09092,#7a5e60)"></div>
+            <div style="flex:1"><div style="font-family:'Newsreader',serif;font-size:18px">{{ activeConvo.name }}</div><div style="font-family:'Space Mono',monospace;font-size:11px;color:#3f7a5e">● Online now</div></div>
+            <span style="width:38px;height:38px;border-radius:9px;border:1px solid #e0ded8;display:flex;align-items:center;justify-content:center;color:#56544c;cursor:pointer">⌕</span>
+            <span style="width:38px;height:38px;border-radius:9px;border:1px solid #e0ded8;display:flex;align-items:center;justify-content:center;color:#56544c;cursor:pointer">⋯</span>
+          </div>
+          <div style="flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:14px;background:#faf9f6">
+            <div style="text-align:center;font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:0.1em;color:#9a988f">TODAY</div>
+            <sc-for list="{{ messages }}" as="m" hint-placeholder-count="5">
+              <div style="{{ m.rowStyle }}">
+                <div>
+                  <div style="{{ m.bubbleStyle }}">{{ m.text }}</div>
+                  <div style="{{ m.timeStyle }}">{{ m.time }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="padding:16px 20px;border-top:1px solid #e0ded8;display:flex;gap:11px;align-items:center">
+            <span style="width:40px;height:40px;border-radius:9px;border:1px solid #e0ded8;display:flex;align-items:center;justify-content:center;color:#56544c;cursor:pointer;flex-shrink:0">+</span>
+            <input value="{{ chatDraft }}" onInput="{{ onChatDraft }}" onKeyDown="{{ onChatKey }}" placeholder="Write a message…" style="flex:1;padding:13px 16px;border:1px solid #e0ded8;border-radius:11px;background:#faf9f6;font-family:inherit;font-size:14.5px;outline:none">
+            <button onClick="{{ onSendChat }}" style="padding:13px 22px;background:#16150f;color:#f4f3f0;border:none;border-radius:11px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;flex-shrink:0">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ 07 · COLLECTIONS / FAVORITES ============ -->
+  <sc-if value="{{ isCollections }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width:1280px;margin:0 auto;padding:34px 32px 88px;animation:pfxFade .4s ease both">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:30px;flex-wrap:wrap;gap:14px">
+        <div>
+          <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.22em;color:#9a988f;margin-bottom:12px">07 — COLLECTIONS</div>
+          <h1 style="font-family:'Newsreader',serif;font-weight:500;font-size:40px;letter-spacing:-0.02em;margin:0">Saved & organized</h1>
+        </div>
+        <button style="padding:11px 20px;background:#16150f;color:#f4f3f0;border:none;border-radius:9px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer">+ New collection</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:54px">
+        <sc-for list="{{ collections }}" as="c" hint-placeholder-count="3">
+          <div style="background:#fff;border:1px solid #e0ded8;border-radius:14px;overflow:hidden;cursor:pointer">
+            <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:2px;aspect-ratio:1">
+              <sc-for list="{{ c.covers }}" as="cv" hint-placeholder-count="4">
+                <div style="background:{{ cv }}"></div>
+              </sc-for>
+            </div>
+            <div style="padding:16px">
+              <div style="font-family:'Newsreader',serif;font-size:20px">{{ c.name }}</div>
+              <div style="font-size:13px;color:#56544c;margin-top:3px">{{ c.note }}</div>
+              <div style="font-family:'Space Mono',monospace;font-size:10.5px;color:#9a988f;margin-top:10px">{{ c.count }} FRAMES</div>
+            </div>
+          </div>
+        </sc-for>
+        <div style="border:1.5px dashed #cfccc3;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#9a988f;cursor:pointer;min-height:220px">
+          <div style="font-size:30px;font-weight:300">+</div>
+          <div style="font-size:13.5px;margin-top:6px">Create collection</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px">
+        <h2 style="font-family:'Newsreader',serif;font-weight:500;font-size:28px;letter-spacing:-0.01em;margin:0">Liked photos</h2>
+        <span style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.14em;color:#9a988f">{{ favCount }} SAVED</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px">
+        <sc-for list="{{ favGrid }}" as="p" hint-placeholder-count="12">
+          <div onClick="{{ p.open }}" style="position:relative;aspect-ratio:1;background:#dcd9d2;background-image:{{ p.g }};background-size:cover;border-radius:8px;overflow:hidden;cursor:pointer">
+            <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(255,255,255,0.05) 0 2px,transparent 2px 9px)"></div>
+            <div style="position:absolute;inset:0;box-shadow:inset 0 0 60px rgba(0,0,0,0.2)"></div>
+            <div onClick="{{ p.onFav }}" style="{{ p.heartStyle }}">{{ p.favIcon }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ 10 · ONBOARDING ============ -->
+  <sc-if value="{{ isOnboarding }}" hint-placeholder-val="{{ false }}">
+    <div style="min-height:calc(100vh - 47px);background:#f4f3f0;padding:48px 24px 80px;animation:pfxFade .4s ease both">
+      <div style="max-width:600px;margin:0 auto;text-align:center">
+        <div style="font-family:'Newsreader',serif;font-size:28px;font-weight:600;letter-spacing:-0.015em;margin-bottom:32px">Portfolix</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:40px">
+          <sc-for list="{{ onbStepItems }}" as="st" hint-placeholder-count="4">
+            <div onClick="{{ st.onClick }}" style="display:flex;align-items:center;gap:11px;cursor:pointer">
+              <span style="{{ st.dotStyle }}">{{ st.n }}</span>
+              <span style="font-size:13px;font-weight:600;color:#56544c">{{ st.label }}</span>
+            </div>
+            <span style="width:34px;height:1px;background:#d6d3cb;margin:0 14px"></span>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid #e0ded8;border-radius:16px;padding:36px">
+        <sc-if value="{{ isOnb0 }}" hint-placeholder-val="{{ true }}">
+          <h1 style="font-family:'Newsreader',serif;font-weight:500;font-size:30px;letter-spacing:-0.01em;margin:0 0 6px;text-align:center">Create your account</h1>
+          <p style="font-size:14.5px;color:#56544c;text-align:center;margin:0 0 26px">Start free. No card required for 14 days.</p>
+          <div style="display:flex;flex-direction:column;gap:11px;margin-bottom:18px">
+            <button style="padding:13px;background:#fff;border:1px solid #d6d3cb;border-radius:10px;font-family:inherit;font-size:14.5px;font-weight:600;color:#16150f;cursor:pointer">Continue with Google</button>
+            <button style="padding:13px;background:#fff;border:1px solid #d6d3cb;border-radius:10px;font-family:inherit;font-size:14.5px;font-weight:600;color:#16150f;cursor:pointer">Continue with Apple</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;margin:18px 0;color:#9a988f;font-size:12px"><span style="flex:1;height:1px;background:#e0ded8"></span>OR<span style="flex:1;height:1px;background:#e0ded8"></span></div>
+          <label style="display:block;font-size:12.5px;font-weight:600;color:#56544c;margin-bottom:6px">Email</label>
+          <input placeholder="you@studio.com" style="width:100%;padding:13px;border:1px solid #d6d3cb;border-radius:10px;font-family:inherit;font-size:14.5px;margin-bottom:14px;outline:none">
+          <label style="display:block;font-size:12.5px;font-weight:600;color:#56544c;margin-bottom:6px">Password</label>
+          <input type="password" value="passpasspass" style="width:100%;padding:13px;border:1px solid #d6d3cb;border-radius:10px;font-family:inherit;font-size:14.5px;margin-bottom:24px;outline:none">
+          <button onClick="{{ onbNext }}" style="width:100%;padding:14px;background:#16150f;color:#f4f3f0;border:none;border-radius:10px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">Create account →</button>
+        </sc-if>
+
+        <sc-if value="{{ isOnb1 }}" hint-placeholder-val="{{ false }}">
+          <h1 style="font-family:'Newsreader',serif;font-weight:500;font-size:30px;letter-spacing:-0.01em;margin:0 0 6px;text-align:center">Pick a plan</h1>
+          <p style="font-size:14.5px;color:#56544c;text-align:center;margin:0 0 26px">Switch or cancel anytime. Affordable by design.</p>
+          <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:26px">
+            <sc-for list="{{ plansOnb }}" as="p" hint-placeholder-count="3">
+              <div onClick="{{ p.onPick }}" style="{{ p.rowStyle }}">
+                <span style="{{ p.radioStyle }}"></span>
+                <div style="flex:1"><div style="font-family:'Newsreader',serif;font-size:19px">{{ p.name }}</div><div style="font-size:13px;color:#56544c">{{ p.tag }}</div></div>
+                <div style="text-align:right"><span style="font-family:'Newsreader',serif;font-size:24px">{{ p.price }}</span><span style="font-size:13px;color:#9a988f">{{ p.period }}</span></div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;gap:12px">
+            <button onClick="{{ onbBack }}" style="padding:14px 22px;background:#fff;border:1px solid #d6d3cb;border-radius:10px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">Back</button>
+            <button onClick="{{ onbNext }}" style="flex:1;padding:14px;background:#16150f;color:#f4f3f0;border:none;border-radius:10px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">Continue →</button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isOnb2 }}" hint-placeholder-val="{{ false }}">
+          <h1 style="font-family:'Newsreader',serif;font-weight:500;font-size:30px;letter-spacing:-0.01em;margin:0 0 6px;text-align:center">Set up your studio</h1>
+          <p style="font-size:14.5px;color:#56544c;text-align:center;margin:0 0 26px">This becomes your public portfolio.</p>
+          <div style="display:flex;gap:16px;align-items:center;margin-bottom:20px">
+            <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(145deg,#bda988,#8a7150);flex-shrink:0;position:relative">
+              <span style="position:absolute;bottom:-2px;right:-2px;width:26px;height:26px;border-radius:50%;background:#16150f;color:#f4f3f0;display:flex;align-items:center;justify-content:center;font-size:13px;border:2px solid #fff">＋</span>
+            </div>
+            <div style="font-size:13px;color:#56544c">Upload an avatar<br><span style="font-family:'Space Mono',monospace;font-size:11px;color:#9a988f">JPG or PNG · square</span></div>
+          </div>
+          <label style="display:block;font-size:12.5px;font-weight:600;color:#56544c;margin-bottom:6px">Display name</label>
+          <input value="Mira Calder" style="width:100%;padding:13px;border:1px solid #d6d3cb;border-radius:10px;font-family:inherit;font-size:14.5px;margin-bottom:14px;outline:none">
+          <label style="display:block;font-size:12.5px;font-weight:600;color:#56544c;margin-bottom:6px">Handle</label>
+          <div style="display:flex;align-items:center;border:1px solid #d6d3cb;border-radius:10px;overflow:hidden;margin-bottom:14px"><span style="padding:13px;background:#f4f3f0;color:#9a988f;font-family:'Space Mono',monospace;font-size:13px">portfolix.com/</span><input value="miracalder" style="flex:1;padding:13px;border:none;font-family:inherit;font-size:14.5px;outline:none"></div>
+          <label style="display:block;font-size:12.5px;font-weight:600;color:#56544c;margin-bottom:8px">Specialty</label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:26px">
+            <span style="padding:8px 14px;border-radius:999px;font-size:13px;font-weight:600;background:#16150f;color:#f4f3f0;cursor:pointer">Landscape</span>
+            <span style="padding:8px 14px;border:1px solid #d6d3cb;border-radius:999px;font-size:13px;color:#56544c;cursor:pointer">Portrait</span>
+            <span style="padding:8px 14px;border:1px solid #d6d3cb;border-radius:999px;font-size:13px;color:#56544c;cursor:pointer">Street</span>
+            <span style="padding:8px 14px;border:1px solid #d6d3cb;border-radius:999px;font-size:13px;color:#56544c;cursor:pointer">Wedding</span>
+          </div>
+          <div style="display:flex;gap:12px">
+            <button onClick="{{ onbBack }}" style="padding:14px 22px;background:#fff;border:1px solid #d6d3cb;border-radius:10px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">Back</button>
+            <button onClick="{{ onbNext }}" style="flex:1;padding:14px;background:#16150f;color:#f4f3f0;border:none;border-radius:10px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">Finish setup →</button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isOnb3 }}" hint-placeholder-val="{{ false }}">
+          <div style="text-align:center;padding:14px 0">
+            <div style="width:64px;height:64px;border-radius:50%;background:#16150f;color:#f4f3f0;display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 22px">✓</div>
+            <h1 style="font-family:'Newsreader',serif;font-weight:500;font-size:32px;letter-spacing:-0.01em;margin:0 0 10px">You’re all set, Mira.</h1>
+            <p style="font-size:15px;color:#56544c;margin:0 0 28px;line-height:1.5">Your studio is live at <span style="font-family:'Space Mono',monospace;color:#16150f">portfolix.com/miracalder</span>. Upload your first frames to get going.</p>
+            <div style="display:flex;gap:12px;justify-content:center">
+              <button onClick="{{ goUpload }}" style="padding:14px 24px;background:#16150f;color:#f4f3f0;border:none;border-radius:10px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">Upload photos</button>
+              <button onClick="{{ goBuilder }}" style="padding:14px 24px;background:#fff;border:1px solid #d6d3cb;border-radius:10px;font-family:inherit;font-weight:600;font-size:15px;cursor:pointer">Build a gallery</button>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ 12 · ANALYTICS DEEP-DIVE ============ -->
+  <sc-if value="{{ isAnalytics }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width:1280px;margin:0 auto;padding:34px 32px 88px;animation:pfxFade .4s ease both">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:14px">
+        <div>
+          <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.22em;color:#9a988f;margin-bottom:12px">12 — ANALYTICS</div>
+          <h1 style="font-family:'Newsreader',serif;font-weight:500;font-size:40px;letter-spacing:-0.02em;margin:0">Performance</h1>
+        </div>
+        <div style="display:flex;gap:8px">
+          <span style="padding:9px 15px;background:#16150f;color:#f4f3f0;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">30 days</span>
+          <span style="padding:9px 15px;background:#fff;border:1px solid #d6d3cb;border-radius:8px;font-size:13px;color:#56544c;cursor:pointer">90 days</span>
+          <span style="padding:9px 15px;background:#fff;border:1px solid #d6d3cb;border-radius:8px;font-size:13px;color:#56544c;cursor:pointer">All time</span>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
+        <div style="background:#fff;border:1px solid #e0ded8;border-radius:14px;padding:20px"><div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#9a988f;text-transform:uppercase;margin-bottom:12px">Photo views</div><div style="font-family:'Newsreader',serif;font-size:34px;line-height:1">48,210</div><div style="font-size:12px;color:#3f7a5e;margin-top:6px">▲ 12.4%</div></div>
+        <div style="background:#fff;border:1px solid #e0ded8;border-radius:14px;padding:20px"><div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#9a988f;text-transform:uppercase;margin-bottom:12px">Conversion</div><div style="font-family:'Newsreader',serif;font-size:34px;line-height:1">0.31%</div><div style="font-size:12px;color:#3f7a5e;margin-top:6px">▲ 0.04%</div></div>
+        <div style="background:#fff;border:1px solid #e0ded8;border-radius:14px;padding:20px"><div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#9a988f;text-transform:uppercase;margin-bottom:12px">Avg. order</div><div style="font-family:'Newsreader',serif;font-size:34px;line-height:1">$25.30</div><div style="font-size:12px;color:#c0683f;margin-top:6px">▼ 2.1%</div></div>
+        <div style="background:#fff;border:1px solid #e0ded8;border-radius:14px;padding:20px"><div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.1em;color:#9a988f;text-transform:uppercase;margin-bottom:12px">Print revenue</div><div style="font-family:'Newsreader',serif;font-size:34px;line-height:1">$3,240</div><div style="font-size:12px;color:#3f7a5e;margin-top:6px">▲ 8.1%</div></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1.55fr 1fr;gap:16px">
+        <div style="background:#fff;border:1px solid #e0ded8;border-radius:14px;padding:24px">
+          <h2 style="font-family:'Newsreader',serif;font-weight:500;font-size:22px;margin:0 0 18px">Top performing frames</h2>
+          <div style="display:grid;grid-template-columns:2fr 0.8fr 0.6fr 0.9fr 0.7fr 1fr;gap:12px;padding-bottom:11px;border-bottom:1px solid #ecebe6;font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:0.08em;color:#9a988f;text-transform:uppercase">
+            <span>Frame</span><span>Views</span><span>Sales</span><span>Revenue</span><span>Conv.</span><span style="text-align:right">7-day</span>
+          </div>
+          <sc-for list="{{ topPhotos }}" as="p" hint-placeholder-count="5">
+            <div style="display:grid;grid-template-columns:2fr 0.8fr 0.6fr 0.9fr 0.7fr 1fr;gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid #f1f0ec">
+              <div style="display:flex;align-items:center;gap:11px;min-width:0">
+                <div style="width:40px;height:40px;border-radius:6px;background:#dcd9d2;background-image:{{ p.g }};background-size:cover;flex-shrink:0"></div>
+                <div style="min-width:0"><div style="font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.title }}</div><div style="font-family:'Space Mono',monospace;font-size:9.5px;color:#9a988f">{{ p.code }}</div></div>
+              </div>
+              <span style="font-size:13.5px">{{ p.views }}</span>
+              <span style="font-size:13.5px">{{ p.sales }}</span>
+              <span style="font-family:'Newsreader',serif;font-size:16px">{{ p.rev }}</span>
+              <span style="font-size:13px;color:#56544c">{{ p.conv }}</span>
+              <div style="display:flex;align-items:flex-end;gap:2px;height:30px">
+                <sc-for list="{{ p.trendBars }}" as="b" hint-placeholder-count="7"><div style="{{ b.style }}"></div></sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div style="background:#fff;border:1px solid #e0ded8;border-radius:14px;padding:24px">
+            <h2 style="font-family:'Newsreader',serif;font-weight:500;font-size:22px;margin:0 0 20px">Conversion funnel</h2>
+            <sc-for list="{{ funnelRows }}" as="f" hint-placeholder-count="4">
+              <div style="margin-bottom:15px">
+                <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px"><span style="color:#56544c">{{ f.label }}</span><span style="font-family:'Space Mono',monospace;color:#9a988f">{{ f.disp }}</span></div>
+                <div style="{{ f.barStyle }}">{{ f.value }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="background:#fff;border:1px solid #e0ded8;border-radius:14px;padding:24px">
+            <h2 style="font-family:'Newsreader',serif;font-weight:500;font-size:22px;margin:0 0 16px">Top buyers</h2>
+            <sc-for list="{{ topBuyers }}" as="b" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f1f0ec">
+                <div style="width:36px;height:36px;border-radius:50%;background:{{ b.avatar }};flex-shrink:0"></div>
+                <div style="flex:1"><div style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700">{{ b.name }}</div><div style="font-size:11.5px;color:#9a988f">{{ b.orders }} orders</div></div>
+                <span style="font-family:'Newsreader',serif;font-size:17px">{{ b.spent }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ 14 · GALLERY BUILDER ============ -->
+  <sc-if value="{{ isBuilder }}" hint-placeholder-val="{{ false }}">
+    <div style="max-width:1280px;margin:0 auto;padding:34px 32px 88px;animation:pfxFade .4s ease both">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:26px;flex-wrap:wrap;gap:14px">
+        <div>
+          <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.22em;color:#9a988f;margin-bottom:12px">14 — GALLERY BUILDER</div>
+          <h1 style="font-family:'Newsreader',serif;font-weight:500;font-size:36px;letter-spacing:-0.02em;margin:0">Iceland — Ring Road</h1>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <span style="font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:0.12em;color:#9a988f">DRAG TO REORDER</span>
+          <button style="padding:11px 18px;background:#fff;border:1px solid #d6d3cb;border-radius:9px;font-family:inherit;font-weight:600;font-size:13.5px;cursor:pointer">Preview</button>
+          <button style="padding:11px 20px;background:#16150f;color:#f4f3f0;border:none;border-radius:9px;font-family:inherit;font-weight:600;font-size:13.5px;cursor:pointer">Publish</button>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 300px;gap:26px;align-items:start">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
+          <sc-for list="{{ builderList }}" as="p" hint-placeholder-count="9">
+            <div draggable="true" onDragStart="{{ p.onDragStart }}" onDragOver="{{ p.onDragOver }}" onDrop="{{ p.onDrop }}" style="position:relative;aspect-ratio:4/3;background:#dcd9d2;background-image:{{ p.g }};background-size:cover;border-radius:10px;overflow:hidden;cursor:grab">
+              <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(255,255,255,0.05) 0 2px,transparent 2px 9px)"></div>
+              <div style="position:absolute;inset:0;box-shadow:inset 0 0 60px rgba(0,0,0,0.2)"></div>
+              <span style="position:absolute;top:9px;left:9px;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:#16150f;background:rgba(244,243,240,0.92);padding:3px 8px;border-radius:6px">{{ p.no }}</span>
+              <span style="position:absolute;top:9px;right:9px;color:rgba(255,255,255,0.85);font-size:15px;cursor:grab">⠿</span>
+              <span style="position:absolute;bottom:8px;left:10px;font-family:'Space Mono',monospace;font-size:9.5px;color:rgba(255,255,255,0.78)">{{ p.code }}</span>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="position:sticky;top:80px;background:#fff;border:1px solid #e0ded8;border-radius:14px;padding:22px">
+          <div style="font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:0.14em;color:#9a988f;text-transform:uppercase;margin-bottom:18px">Gallery settings</div>
+          <label style="display:block;font-size:12.5px;font-weight:600;color:#56544c;margin-bottom:6px">Title</label>
+          <input value="Iceland — Ring Road" style="width:100%;padding:11px 13px;border:1px solid #d6d3cb;border-radius:9px;font-family:inherit;font-size:14px;margin-bottom:14px;outline:none">
+          <label style="display:block;font-size:12.5px;font-weight:600;color:#56544c;margin-bottom:6px">Description</label>
+          <textarea style="width:100%;padding:11px 13px;border:1px solid #d6d3cb;border-radius:9px;font-family:inherit;font-size:14px;margin-bottom:16px;outline:none;resize:none;height:64px">Long light along the north coast.</textarea>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-top:1px solid #ecebe6">
+            <div><div style="font-size:13.5px;font-weight:600">Visibility</div><div style="font-size:11.5px;color:#9a988f">Public — on your portfolio</div></div>
+            <span style="width:42px;height:24px;border-radius:999px;background:#16150f;position:relative;cursor:pointer;flex-shrink:0"><span style="position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:#fff"></span></span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-top:1px solid #ecebe6">
+            <div><div style="font-size:13.5px;font-weight:600">Prints for sale</div><div style="font-size:11.5px;color:#9a988f">From $18 each</div></div>
+            <span style="width:42px;height:24px;border-radius:999px;background:#16150f;position:relative;cursor:pointer;flex-shrink:0"><span style="position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:#fff"></span></span>
+          </div>
+          <label style="display:block;font-size:12.5px;font-weight:600;color:#56544c;margin:18px 0 8px">Layout</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <div style="aspect-ratio:1;border:2px solid #16150f;border-radius:9px;display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:6px"><span style="background:#dcd9d2;border-radius:2px"></span><span style="background:#dcd9d2;border-radius:2px"></span><span style="background:#dcd9d2;border-radius:2px"></span><span style="background:#dcd9d2;border-radius:2px"></span></div>
+            <div style="aspect-ratio:1;border:1px solid #d6d3cb;border-radius:9px;display:flex;flex-direction:column;gap:2px;padding:6px"><span style="background:#e7e5df;border-radius:2px;flex:2"></span><span style="background:#e7e5df;border-radius:2px;flex:1"></span></div>
+            <div style="aspect-ratio:1;border:1px solid #d6d3cb;border-radius:9px;padding:6px"><span style="display:block;background:#e7e5df;border-radius:2px;width:100%;height:100%"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- SCREENS -->
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  tones = [
+    ['#9aa79b','#5f6f63'], ['#bda988','#8a7150'], ['#7e8893','#525c68'],
+    ['#b09092','#7a5e60'], ['#9a96a6','#675f74'], ['#b3a886','#857a5b'],
+    ['#7e9396','#52696c'], ['#bb9d9a','#8a6d6b'], ['#92997f','#646a52'],
+    ['#8f93a3','#5e6374'], ['#c0ab9a','#8f7967'], ['#869a93','#566b63'],
+  ];
+  state = { screen:'discover', activeIndex:0, activeList:null, liked:{}, following:{'Yuki Tanaka':true}, selected:{},
+            onbStep:0, plan:'studio', activeConvo:0, chatDraft:'', extraMsgs:[], builderOrder:null, favorites:{8800:true,8803:true,8807:true}, activeFilters:{Landscape:true}, commentDraft:'' };
+
+  featured = [
+    {name:'Mira Calder', handle:'@miracalder', loc:'Reykjavík', spec:'Landscape', frames:248},
+    {name:'Søren Lafield', handle:'@sorenl', loc:'Berlin', spec:'Street', frames:512},
+    {name:'Ana Okonkwo', handle:'@anaok', loc:'Lagos', spec:'Portrait', frames:331},
+    {name:'Theo Vance', handle:'@theovance', loc:'Portland', spec:'Documentary', frames:189},
+    {name:'Yuki Tanaka', handle:'@yukit', loc:'Kyoto', spec:'Fine Art', frames:407},
+    {name:'Lena Brandt', handle:'@lenabrandt', loc:'Oslo', spec:'Wedding', frames:276},
+  ];
+  categories = ['Landscape','Portrait','Street','Wedding','Fine Art','Documentary','Architecture','Wildlife','Black & White'];
+
+  feedRaw = [
+    {name:'Ana Okonkwo', handle:'@anaok', spec:'Portrait', time:'2h', text:'Rooftop session at golden hour — natural light only, one reflector. Which frame works as the lead?', photo:true, likes:128, comments:24},
+    {name:'Theo Vance', handle:'@theovance', spec:'Documentary', time:'5h', text:'Print pricing question for the room: flat rate per size, or scale with edition number? Trying to keep mine affordable without underselling the work.', photo:false, likes:64, comments:41},
+    {name:'Yuki Tanaka', handle:'@yukit', spec:'Fine Art', time:'8h', text:'Six months on this series. Fog, patience, and a very cold tripod.', photo:true, likes:302, comments:58},
+    {name:'Søren Lafield', handle:'@sorenl', spec:'Street', time:'1d', text:'Shot this on the U-Bahn with a 35mm. Sometimes the best frame is the one you almost didn\u2019t take.', photo:true, likes:211, comments:33},
+  ];
+
+  plans = [
+    {name:'Solo', price:'$6', period:'/mo', tag:'For getting started', feats:['Unlimited photo storage','1 portfolio site','Community access','Basic print store','Portfolix subdomain'], cta:'Start free trial', featured:false},
+    {name:'Studio', price:'$14', period:'/mo', tag:'Most popular', feats:['Everything in Solo','Custom domain','Client galleries + proofing','Lower print commission — 8%','Sales & visitor analytics'], cta:'Start free trial', featured:true},
+    {name:'Atelier', price:'$29', period:'/mo', tag:'For full-time pros', feats:['Everything in Studio','Lowest commission — 4%','Unlimited client galleries','Priority support','Second-shooter seats'], cta:'Start free trial', featured:false},
+  ];
+  prints = [
+    {size:'8 × 10″', kind:'Lustre print', price:'$18'},
+    {size:'16 × 20″', kind:'Archival matte', price:'$45'},
+    {size:'24 × 36″', kind:'Gallery giclée', price:'$120'},
+    {size:'Framed 18 × 24″', kind:'Oak frame · museum glass', price:'$210'},
+  ];
+
+  dashStats = [
+    {label:'Profile views', value:'48.2k', delta:'+12.4%', sub:'vs. last 30 days'},
+    {label:'Print revenue', value:'$3,240', delta:'+8.1%', sub:'vs. last 30 days'},
+    {label:'Prints sold', value:'128', delta:'+22', sub:'vs. last 30 days'},
+    {label:'Followers', value:'9,418', delta:'+341', sub:'vs. last 30 days'},
+  ];
+  recentSales = [
+    {item:'\u201CNorthbound\u201D — 16×20 archival', buyer:'k.m\u00f8ller', when:'2h ago', amt:'$45'},
+    {item:'\u201CTideline\u201D — framed 18×24', buyer:'studio.ridge', when:'6h ago', amt:'$210'},
+    {item:'Delgado wedding — digital pack', buyer:'a.delgado', when:'1d ago', amt:'$120'},
+    {item:'\u201CQuiet Hours\u201D — 8×10 lustre', buyer:'noahp', when:'1d ago', amt:'$18'},
+    {item:'\u201CFirst Light\u201D — 24×36 giclée', buyer:'mira.co', when:'2d ago', amt:'$120'},
+  ];
+  topGalleries = [
+    {name:'Iceland — Ring Road', frames:48, views:'12.1k'},
+    {name:'Studio Portraits \u201926', frames:32, views:'8.4k'},
+    {name:'Berlin After Dark', frames:64, views:'6.9k'},
+    {name:'Coastal Long Exposure', frames:28, views:'5.2k'},
+  ];
+  salesBars = [40,55,38,62,48,70,58,82,66,90,74,96];
+  months = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+
+  uploadQueue = [
+    {name:'DSC_4821.RAW', size:'48.2 MB', status:'done'},
+    {name:'DSC_4822.RAW', size:'46.9 MB', status:'done'},
+    {name:'DSC_4823.RAW', size:'51.1 MB', status:'uploading', pct:72},
+    {name:'DSC_4824.RAW', size:'45.3 MB', status:'uploading', pct:34},
+    {name:'DSC_4825.RAW', size:'49.7 MB', status:'queued'},
+  ];
+  albumsList = [
+    {name:'Iceland — Ring Road', count:48, priv:false},
+    {name:'Studio Portraits \u201926', count:32, priv:false},
+    {name:'Berlin After Dark', count:64, priv:false},
+    {name:'Delgado Wedding', count:212, priv:true},
+  ];
+
+  // ---- new feature data ----
+  filterStyles = ['Landscape','Portrait','Street','Wedding','Fine Art','Documentary','Architecture','Wildlife'];
+  filterLocations = ['Iceland','Germany','Japan','Nigeria','United States','Norway','Worldwide'];
+  filterColors = [['Warm','#c0683f'],['Cool','#3f6ec0'],['Green','#3f7a5e'],['Neutral','#8c8a82'],['Mono','#1c1b18'],['Dusk','#7c4dcc']];
+
+  chatConvos = [
+    {name:'Lena Brandt', handle:'@lenabrandt', tone:['#b09092','#7a5e60'], preview:'Sounds good — sending the contract now.', time:'2m', unread:2, online:true},
+    {name:'Theo Vance', handle:'@theovance', tone:['#7e9396','#52696c'], preview:'Did you ever try the 35 1.4 on the M?', time:'1h', unread:0, online:true},
+    {name:'Ana & Marcus', handle:'client', tone:['#bda988','#8a7150'], preview:'We LOVE the rooftop ones 😍', time:'3h', unread:0, online:false},
+    {name:'Yuki Tanaka', handle:'@yukit', tone:['#9a96a6','#675f74'], preview:'The fog series is up — thoughts?', time:'1d', unread:0, online:false},
+  ];
+  threadMsgs = [
+    {me:false, text:'Hi Mira! Loved the Ring Road gallery. Are the 16×20 archival prints still available?', time:'10:24'},
+    {me:true, text:'Hey Lena — yes! All editions under 25 are open. Which frame caught your eye?', time:'10:26'},
+    {me:false, text:'“Northbound” and “Tideline”. Could I get both as a pair?', time:'10:28'},
+    {me:true, text:'Absolutely. I can do a paired edition at $80 for the two, shipped. I’ll set up a private checkout link.', time:'10:31'},
+    {me:false, text:'Sounds good — sending the contract now.', time:'10:32'},
+  ];
+
+  collections = [
+    {name:'Wall-worthy', count:24, note:'Pieces I’d hang at home', tones:[['#9aa79b','#5f6f63'],['#7e8893','#525c68'],['#c0ab9a','#8f7967'],['#869a93','#566b63']]},
+    {name:'Cold palettes', count:18, note:'Blues, fog, and frost', tones:[['#8f93a3','#5e6374'],['#7e9396','#52696c'],['#7e8893','#525c68'],['#9a96a6','#675f74']]},
+    {name:'Golden hour', count:31, note:'Warm light only', tones:[['#bda988','#8a7150'],['#c0ab9a','#8f7967'],['#b3a886','#857a5b'],['#b09092','#7a5e60']]},
+  ];
+
+  topPhotos = [
+    {title:'Northbound', code:'PFX·4200', views:'8,210', sales:42, rev:'$1,260', conv:'2.1%', trend:[30,45,40,60,55,80,96]},
+    {title:'Tideline', code:'PFX·4205', views:'6,940', sales:31, rev:'$930', conv:'1.8%', trend:[20,30,50,45,60,55,72]},
+    {title:'Quiet Hours', code:'PFX·4202', views:'5,120', sales:18, rev:'$540', conv:'1.2%', trend:[40,38,42,50,48,52,58]},
+    {title:'First Light', code:'PFX·4208', views:'4,330', sales:22, rev:'$660', conv:'1.6%', trend:[10,25,30,28,40,48,50]},
+    {title:'Driftwood', code:'PFX·4211', views:'3,980', sales:9, rev:'$270', conv:'0.6%', trend:[50,45,40,35,30,28,26]},
+  ];
+  topBuyers = [
+    {name:'studio.ridge', orders:8, spent:'$1,140', tone:['#7e8893','#525c68']},
+    {name:'k.møller', orders:5, spent:'$640', tone:['#b09092','#7a5e60']},
+    {name:'a.delgado', orders:4, spent:'$520', tone:['#bda988','#8a7150']},
+    {name:'noahp', orders:3, spent:'$210', tone:['#869a93','#566b63']},
+  ];
+  funnel = [
+    {label:'Photo views', value:'48,210', pct:100},
+    {label:'Lightbox opens', value:'19,440', pct:40},
+    {label:'Added to cart', value:'2,910', pct:6},
+    {label:'Purchases', value:'128', pct:0.3, display:'0.3%'},
+  ];
+
+  onbSteps = ['Account','Plan','Studio setup','Done'];
+
+  threadComments = [
+    {name:'Theo Vance', tone:['#7e9396','#52696c'], text:'That sky gradient is unreal. SOOC or graduated filter?', time:'3h', likes:12},
+    {name:'Lena Brandt', tone:['#b09092','#7a5e60'], text:'The framing on this is so calm. Adding to my Wall-worthy collection.', time:'2h', likes:8},
+    {name:'Yuki Tanaka', tone:['#9a96a6','#675f74'], text:'Beautiful restraint. Would love to see the full set.', time:'1h', likes:5},
+  ];
+
+  g(i){ const t=this.tones[((i%this.tones.length)+this.tones.length)%this.tones.length]; return 'linear-gradient(145deg,'+t[0]+' 0%,'+t[1]+' 100%)'; }
+
+  makeGrid(n, base){
+    const ap=['\u01921.4','\u01922','\u01922.8','\u01924','\u01925.6'];
+    const sh=['1/2000','1/500','1/250','1/125','1/60'];
+    const iso=['100','200','400','800'];
+    const foc=['24mm','35mm','50mm','85mm','135mm','16mm'];
+    const titles=['Northbound','Salt & Static','Quiet Hours','Field Notes','After Rain','Tideline','Concrete Bloom','Long Exposure','First Light','Cold Open','Paper Moon','Driftwood','Low Tide','Ember','Verglas','Half Light'];
+    return Array.from({length:n}, (_,i)=>({
+      id: base+i,
+      g: this.g(i + base),
+      code: 'PFX·'+(base+i),
+      title: titles[i%titles.length],
+      meta: ap[i%ap.length]+' · '+sh[i%sh.length]+' · ISO '+iso[i%iso.length]+' · '+foc[i%foc.length],
+    }));
+  }
+
+  discoverGrid = this.makeGrid(12, 1000);
+  portfolioPhotos = this.makeGrid(15, 4200);
+  clientPhotos = this.makeGrid(12, 8800);
+  searchGrid = this.makeGrid(12, 6000);
+  builderGrid = this.makeGrid(9, 7000);
+
+  go = (screen)=> this.setState({ screen });
+  openPhoto = (list, i)=> this.setState({ screen:'lightbox', activeList:list, activeIndex:i });
+  stepPhoto = (d)=> this.setState(s=>{ const list=s.activeList||this.portfolioPhotos; const n=list.length; return { activeIndex:((s.activeIndex+d)%n+n)%n }; });
+  toggleLike = (i)=> this.setState(s=>({ liked:{...s.liked, [i]:!s.liked[i]} }));
+  toggleFollow = (name)=> (e)=>{ if(e&&e.stopPropagation) e.stopPropagation(); this.setState(s=>({ following:{...s.following, [name]:!s.following[name]} })); };
+  toggleSelect = (id)=> this.setState(s=>({ selected:{...s.selected, [id]:!s.selected[id]} }));
+  setOnbStep = (i)=> this.setState({ onbStep: Math.max(0, Math.min(3, i)) });
+  setPlan = (p)=> this.setState({ plan:p });
+  setConvo = (i)=> this.setState({ activeConvo:i });
+  setChatDraft = (e)=> this.setState({ chatDraft:e.target.value });
+  sendChat = ()=> this.setState(s=>{ const t=s.chatDraft.trim(); if(!t) return {}; return { extraMsgs:[...s.extraMsgs, {me:true, text:t, time:'now'}], chatDraft:'' }; });
+  onChatKey = (e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); this.sendChat(); } };
+  toggleFav = (id)=> (e)=>{ if(e&&e.stopPropagation) e.stopPropagation(); this.setState(s=>({ favorites:{...s.favorites, [id]:!s.favorites[id]} })); };
+  toggleFilter = (k)=> this.setState(s=>({ activeFilters:{...s.activeFilters, [k]:!s.activeFilters[k]} }));
+  onDragStart = (i)=> (e)=>{ this._dragIdx=i; if(e.dataTransfer){ e.dataTransfer.effectAllowed='move'; } };
+  onDragOver = (e)=>{ e.preventDefault(); };
+  onDrop = (i)=> (e)=>{ e.preventDefault(); this.setState(s=>{ const order=(s.builderOrder||this.builderGrid.map(p=>p.id)).slice(); const from=this._dragIdx; if(from==null||from===i) return {}; const [m]=order.splice(from,1); order.splice(i,0,m); return { builderOrder:order }; }); };
+  onCommentDraft = (e)=> this.setState({ commentDraft:e.target.value });
+  postComment = ()=> this.setState(s=>{ const t=(s.commentDraft||'').trim(); if(!t) return {}; return { extraComments:[{name:'Mira Calder',tone:['#bda988','#8a7150'],text:t,time:'now',likes:0}, ...(s.extraComments||[])], commentDraft:'' }; });
+
+  renderVals(){
+    const s = this.state;
+    const ink='#16150f', paper='#f4f3f0';
+    const mkTab = (n,label,key)=>{
+      const active = s.screen===key;
+      return { n, label, key, onClick:()=>this.go(key),
+        style:{ display:'flex', alignItems:'baseline', gap:6, padding:'6px 11px', borderRadius:7, border:'none', cursor:'pointer', flexShrink:0,
+          background: active?paper:'transparent', color: active?ink:'rgba(244,243,240,0.62)',
+          fontFamily:'"Hanken Grotesk",sans-serif', fontSize:13, fontWeight:600, whiteSpace:'nowrap', transition:'background .15s,color .15s' },
+        numStyle:{ fontFamily:'"Space Mono",monospace', fontSize:10, opacity: active?0.5:0.55, fontWeight:400 } };
+    };
+    const tabs = [['01','Discover','discover'],['02','Search','search'],['03','Portfolio','portfolio'],['04','Lightbox','lightbox'],['05','Community','community'],['06','Chat','chat'],['07','Collections','collections'],['08','Pricing','pricing'],['09','Client','client']].map(t=>mkTab(...t));
+    const accountTabs = [['10','Onboarding','onboarding']].map(t=>mkTab(...t));
+    const adminTabs = [['11','Dashboard','dashboard'],['12','Analytics','analytics'],['13','Upload','upload'],['14','Builder','builder']].map(t=>mkTab(...t));
+    const mobileTab = mkTab('15','Mobile','mobile');
+
+    const followStyle = (on)=>({ flexShrink:0, padding:'7px 13px', borderRadius:7, cursor:'pointer', fontFamily:'"Hanken Grotesk",sans-serif', fontSize:12.5, fontWeight:600,
+      border:'1px solid '+(on?'#16150f':'#d6d3cb'), background:on?'#16150f':'#fff', color:on?'#f4f3f0':'#16150f' });
+
+    const featured = this.featured.map((p,i)=>{ const on=!!s.following[p.name]; return {
+      ...p, cover:this.g(i*2+1), avatar:this.g(i*2+5),
+      following:on, followLabel:on?'Following':'Follow', followStyle:followStyle(on),
+      onFollow:this.toggleFollow(p.name), onOpen:()=>this.go('portfolio') }; });
+
+    const discoverGrid = this.discoverGrid.map((p,i)=>({ ...p, open:()=>this.openPhoto(this.discoverGrid, i) }));
+    const portfolioGrid = this.portfolioPhotos.map((p,i)=>({ ...p, open:()=>this.openPhoto(this.portfolioPhotos, i) }));
+    const clientGrid = this.clientPhotos.map((p,i)=>{ const sel=!!s.selected[p.id]; return {
+      ...p, selected:sel, onSelect:(e)=>{ if(e&&e.stopPropagation) e.stopPropagation(); this.toggleSelect(p.id); }, open:()=>this.openPhoto(this.clientPhotos, i),
+      ringStyle:{ position:'absolute', inset:0, borderRadius:8, border:'3px solid '+(sel?'#16150f':'transparent'), pointerEvents:'none' },
+      checkStyle:{ position:'absolute', top:9, right:9, width:22, height:22, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center',
+        background:sel?'#16150f':'rgba(0,0,0,0.32)', color:'#fff', fontSize:13, border:'1.5px solid rgba(255,255,255,0.85)' } }; });
+
+    const feed = this.feedRaw.map((p,i)=>{ const liked=!!s.liked[i]; return {
+      ...p, avatar:this.g(i*3+2), photoG:this.g(i*3+6),
+      liked, likeCount:p.likes+(liked?1:0), likeIcon:liked?'♥':'♡', commentLabel:p.comments+' comments',
+      likeStyle:{ display:'flex', alignItems:'center', gap:7, padding:'7px 12px', borderRadius:8, cursor:'pointer', border:'1px solid '+(liked?'#16150f':'#e0ded8'), background:liked?'#16150f':'#fff', color:liked?'#f4f3f0':'#56544c', fontFamily:'inherit', fontSize:13, fontWeight:600 },
+      onLike:()=>this.toggleLike(i) }; });
+
+    const plans = this.plans.map(p=>({ ...p,
+      cardStyle:{ position:'relative', background: p.featured?'#16150f':'#fff', color:p.featured?'#f4f3f0':'#16150f', border:'1px solid '+(p.featured?'#16150f':'#e0ded8'), borderRadius:14, padding:'30px 26px', display:'flex', flexDirection:'column' },
+      ctaStyle:{ marginTop:'auto', padding:'13px', borderRadius:9, border:'none', cursor:'pointer', fontFamily:'inherit', fontWeight:600, fontSize:14.5, background:p.featured?'#f4f3f0':'#16150f', color:p.featured?'#16150f':'#f4f3f0' },
+      tagStyle:{ fontFamily:'"Space Mono",monospace', fontSize:10.5, letterSpacing:'0.14em', textTransform:'uppercase', color:p.featured?'rgba(244,243,240,0.6)':'#9a988f' },
+      featStyle:{ color:p.featured?'rgba(244,243,240,0.85)':'#56544c' },
+      dotStyle:{ color:p.featured?'#f4f3f0':'#16150f' } }));
+
+    const list = s.activeList || this.portfolioPhotos;
+    const n = list.length;
+    const active = list[((s.activeIndex%n)+n)%n] || list[0];
+    const related = this.portfolioPhotos.slice(0,8).map((p,i)=>({ ...p, open:()=>this.openPhoto(this.portfolioPhotos, i),
+      ringStyle:{ position:'absolute', inset:0, borderRadius:6, border:'2px solid '+((list===this.portfolioPhotos && (((s.activeIndex%n)+n)%n)===i)?'#16150f':'transparent'), pointerEvents:'none' } }));
+
+    const uploadQueue = this.uploadQueue.map((u,i)=>({ ...u, g:this.g(i+3),
+      statusLabel: u.status==='done'?'Published':u.status==='uploading'?('Uploading · '+u.pct+'%'):'Queued',
+      barStyle:{ width:(u.status==='done'?100:u.status==='uploading'?u.pct:0)+'%', height:'100%', background: u.status==='done'?'#3f7a5e':'#16150f', borderRadius:99, transition:'width .3s' },
+      dotStyle:{ width:7, height:7, borderRadius:'50%', background: u.status==='done'?'#3f7a5e':u.status==='uploading'?'#16150f':'#c8c5bc' } }));
+
+    const selectedCount = Object.keys(s.selected).filter(k=>s.selected[k]).length;
+
+    // ---- SEARCH ----
+    const facetBox = (on)=>({ width:18, height:18, borderRadius:5, flexShrink:0, border:'1.5px solid '+(on?'#16150f':'#cfccc3'), background:on?'#16150f':'#fff', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11 });
+    const styleFacets = this.filterStyles.map(x=>({ label:x, active:!!s.activeFilters[x], onClick:()=>this.toggleFilter(x), box:facetBox(!!s.activeFilters[x]) }));
+    const colorFacets = this.filterColors.map(c=>({ label:c[0], hex:c[1], active:!!s.activeFilters[c[0]], onClick:()=>this.toggleFilter(c[0]),
+      swStyle:{ width:'100%', aspectRatio:'1', borderRadius:9, background:c[1], cursor:'pointer', border:'2px solid '+(s.activeFilters[c[0]]?'#16150f':'transparent'), boxShadow:'inset 0 0 0 2px #fff' } }));
+    const activeFilterChips = Object.keys(s.activeFilters).filter(k=>s.activeFilters[k]);
+    const searchResults = this.searchGrid.map((p,i)=>({ ...p, open:()=>this.openPhoto(this.searchGrid,i), fav:!!s.favorites[p.id], favIcon:s.favorites[p.id]?'♥':'♡', onFav:this.toggleFav(p.id) }));
+
+    // ---- CHAT ----
+    const convos = this.chatConvos.map((c,i)=>({ ...c, avatar:'linear-gradient(145deg,'+c.tone[0]+','+c.tone[1]+')', active:i===s.activeConvo, onClick:()=>this.setConvo(i),
+      rowStyle:{ display:'flex', gap:12, alignItems:'center', padding:'12px 14px', borderRadius:11, cursor:'pointer', background:i===s.activeConvo?'#fff':'transparent', border:'1px solid '+(i===s.activeConvo?'#e0ded8':'transparent') },
+      badge:c.unread>0 }));
+    const activeConvo = this.chatConvos[s.activeConvo] || this.chatConvos[0];
+    const messages = [...this.threadMsgs, ...s.extraMsgs].map(m=>({ ...m,
+      rowStyle:{ display:'flex', justifyContent:m.me?'flex-end':'flex-start' },
+      bubbleStyle:{ maxWidth:'72%', padding:'11px 15px', borderRadius:m.me?'14px 14px 4px 14px':'14px 14px 14px 4px', fontSize:14.5, lineHeight:1.45,
+        background:m.me?'#16150f':'#fff', color:m.me?'#f4f3f0':'#16150f', border:m.me?'none':'1px solid #e0ded8' },
+      timeStyle:{ fontFamily:'"Space Mono",monospace', fontSize:9.5, color:'#9a988f', marginTop:5, textAlign:m.me?'right':'left' } }));
+
+    // ---- COLLECTIONS / FAVORITES ----
+    const collections = this.collections.map(c=>({ ...c, covers:c.tones.map(t=>'linear-gradient(145deg,'+t[0]+','+t[1]+')') }));
+    const favGrid = this.clientPhotos.map((p,i)=>{ const fav=!!s.favorites[p.id]; return { ...p, fav, favIcon:fav?'♥':'♡', onFav:this.toggleFav(p.id), open:()=>this.openPhoto(this.clientPhotos,i),
+      heartStyle:{ position:'absolute', top:9, right:9, width:30, height:30, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', fontSize:15,
+        background:fav?'#16150f':'rgba(0,0,0,0.32)', color:fav?'#f4f3f0':'#fff', border:'1px solid rgba(255,255,255,0.6)' } }; });
+    const favCount = Object.keys(s.favorites).filter(k=>s.favorites[k]).length;
+
+    // ---- ANALYTICS ----
+    const topPhotos = this.topPhotos.map((p,i)=>({ ...p, g:this.g(i+2),
+      trendBars:p.trend.map(h=>({ style:{ width:'100%', height:h+'%', background:'#cfccc3', borderRadius:'2px 2px 0 0' } })) }));
+    const funnelRows = this.funnel.map((f,i)=>({ ...f, disp:f.display||(f.pct+'%'),
+      barStyle:{ width:Math.max(f.pct,3)+'%', height:34, borderRadius:7, background:'rgba(22,21,15,'+(1-i*0.2)+')', minWidth:60, display:'flex', alignItems:'center', paddingLeft:14, color:'#f4f3f0', fontSize:13, fontWeight:600 } }));
+
+    // ---- BUILDER ----
+    const byId = {}; this.builderGrid.forEach(p=>{ byId[p.id]=p; });
+    const order = s.builderOrder || this.builderGrid.map(p=>p.id);
+    const builderList = order.map((id,i)=>({ ...byId[id], idx:i, no:String(i+1).padStart(2,'0'), onDragStart:this.onDragStart(i), onDragOver:this.onDragOver, onDrop:this.onDrop(i) }));
+
+    // ---- ONBOARDING ----
+    const onbStepItems = this.onbSteps.map((label,i)=>({ label, n:String(i+1).padStart(2,'0'), active:i===s.onbStep, done:i<s.onbStep, onClick:()=>this.setOnbStep(i),
+      dotStyle:{ width:30, height:30, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontFamily:'"Space Mono",monospace', fontSize:12,
+        background:(i<=s.onbStep)?'#16150f':'#fff', color:(i<=s.onbStep)?'#f4f3f0':'#9a988f', border:'1px solid '+((i<=s.onbStep)?'#16150f':'#d6d3cb') } }));
+    const plansOnb = this.plans.map(p=>{ const sel=s.plan===p.name.toLowerCase(); return { ...p, selected:sel, onPick:()=>this.setPlan(p.name.toLowerCase()),
+      rowStyle:{ display:'flex', alignItems:'center', gap:16, padding:'18px 20px', borderRadius:12, cursor:'pointer', background:'#fff', border:'2px solid '+(sel?'#16150f':'#e0ded8') },
+      radioStyle:{ width:20, height:20, borderRadius:'50%', flexShrink:0, border:'2px solid '+(sel?'#16150f':'#cfccc3'), background:sel?'#16150f':'#fff', boxShadow:sel?'inset 0 0 0 3px #fff':'none' } }; });
+
+    // ---- LIGHTBOX COMMENTS ----
+    const lbComments = [...(s.extraComments||[]), ...this.threadComments].map(c=>({ ...c, avatar:'linear-gradient(145deg,'+c.tone[0]+','+c.tone[1]+')' }));
+
+    return {
+      tabs, accountTabs, adminTabs, mobileTab, chromeNote:'WEB · 1440',
+      isDiscover:s.screen==='discover', isPortfolio:s.screen==='portfolio', isLightbox:s.screen==='lightbox',
+      isCommunity:s.screen==='community', isPricing:s.screen==='pricing', isClient:s.screen==='client',
+      isDashboard:s.screen==='dashboard', isUpload:s.screen==='upload', isMobile:s.screen==='mobile',
+      isSearch:s.screen==='search', isChat:s.screen==='chat', isCollections:s.screen==='collections',
+      isOnboarding:s.screen==='onboarding', isAnalytics:s.screen==='analytics', isBuilder:s.screen==='builder',
+      categories:this.categories, featured, discoverGrid, portfolioGrid, clientGrid, feed, plans, prints:this.prints,
+      dashStats:this.dashStats, recentSales:this.recentSales, topGalleries:this.topGalleries,
+      salesBars:this.salesBars.map((h,i)=>({h, m:this.months[i], style:{ height:h+'%', background: i===this.salesBars.length-1?'#16150f':'#cfccc3', borderRadius:'3px 3px 0 0', width:'100%' }})),
+      uploadQueue, albumsList:this.albumsList,
+      active, related, activeNo:(((s.activeIndex%n)+n)%n)+1, activeTotal:n,
+      onPrev:()=>this.stepPhoto(-1), onNext:()=>this.stepPhoto(1),
+      goPortfolio:()=>this.go('portfolio'), goLightbox:()=>this.openPhoto(this.portfolioPhotos, 0),
+      goPricing:()=>this.go('pricing'), goCommunity:()=>this.go('community'), goUpload:()=>this.go('upload'),
+      goSearch:()=>this.go('search'), goChat:()=>this.go('chat'), goCollections:()=>this.go('collections'),
+      goAnalytics:()=>this.go('analytics'), goBuilder:()=>this.go('builder'), goOnboarding:()=>this.go('onboarding'),
+      selectedCount, hasSelection:selectedCount>0,
+      styleFacets, colorFacets, locations:this.filterLocations, activeFilterChips, searchResults, resultCount:'2,418',
+      convos, activeConvo, messages, chatDraft:s.chatDraft, onChatDraft:this.setChatDraft, onSendChat:this.sendChat, onChatKey:this.onChatKey,
+      collections, favGrid, favCount,
+      topPhotos, topBuyers:this.topBuyers.map((b,i)=>({...b, avatar:'linear-gradient(145deg,'+b.tone[0]+','+b.tone[1]+')'})), funnelRows,
+      builderList,
+      onbStep:s.onbStep, onbStepItems, plansOnb,
+      isOnb0:s.onbStep===0, isOnb1:s.onbStep===1, isOnb2:s.onbStep===2, isOnb3:s.onbStep===3,
+      onbNext:()=>this.setOnbStep(s.onbStep+1), onbBack:()=>this.setOnbStep(s.onbStep-1),
+      lbComments, commentDraft:s.commentDraft, onCommentDraft:this.onCommentDraft, onPostComment:this.postComment,
+    };
+  }
+}
+</script>
+</body>
+</html>

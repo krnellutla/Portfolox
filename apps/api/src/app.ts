@@ -5,9 +5,11 @@ import { pool } from './db/client.js';
 import { AppError } from './lib/app-error.js';
 import { corsMiddleware } from './middleware/cors.js';
 import { errorHandler } from './middleware/error-handler.js';
+import { authRateLimit, writeRateLimit } from './middleware/rate-limit.js';
 import { requestLogging } from './middleware/request-logging.js';
 import { requireAuth } from './middleware/require-auth.js';
 import { resolveTenant } from './middleware/resolve-tenant.js';
+import { securityHeaders } from './middleware/security-headers.js';
 import { authRouter } from './routes/auth.js';
 import { healthRouter } from './routes/health.js';
 import { nodesRouter } from './routes/nodes.js';
@@ -30,6 +32,7 @@ import { nodesRouter } from './routes/nodes.js';
 export function createApp(dbPool: Pool = pool): Express {
   const app = express();
 
+  app.use(securityHeaders);
   app.use(requestLogging);
   app.use(express.json());
   app.use(cookieParser());
@@ -38,9 +41,11 @@ export function createApp(dbPool: Pool = pool): Express {
 
   app.use(resolveTenant(dbPool));
   app.use(corsMiddleware);
+  app.use('/auth', authRateLimit);
   app.use(authRouter);
   app.use(nodesRouter);
   app.use(requireAuth);
+  app.use(writeRateLimit);
 
   // Tenant-scoped, authenticated route groups (/media, /profile) mount
   // here starting with Milestone 1.5+.
