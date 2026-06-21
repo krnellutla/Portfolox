@@ -18,6 +18,7 @@ const StudioDashboard = lazy(() => import('./features/studio/DashboardPage.js'))
 const SearchPage = lazy(() => import('./features/search/SearchPage.js'));
 const CommunityPage = lazy(() => import('./features/community/CommunityPage.js'));
 const ClientGalleryPage = lazy(() => import('./features/client/ClientGalleryPage.js'));
+const UploadPage = lazy(() => import('./features/studio/UploadPage.js'));
 
 function RouteFallback() {
   return <StateView variant="loading" title="Loading…" fullScreen />;
@@ -43,6 +44,7 @@ function App() {
             <Route path="/search" element={<SearchPage />} />
             <Route path="/community" element={<CommunityPage />} />
             <Route path="/client/:shareToken" element={<ClientGalleryPage />} />
+            <Route path="/studio/upload" element={<UploadPage />} />
 
             <Route element={<RequireAuth />}>
               <Route path="/dashboard" element={<DashboardLayout />}>
