@@ -9,3 +9,7 @@ coverage/
 !.env.desktop.example
 .DS_Store
 *.log
+
+# Design handoff assets (local only)
+design_ux/
+*.zip
