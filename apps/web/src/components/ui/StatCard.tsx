@@ -3,10 +3,11 @@ export interface StatCardProps {
   value: string;
   delta?: string;
   deltaDirection?: 'up' | 'down' | 'neutral';
+  sub?: string;
   className?: string;
 }
 
-export function StatCard({ label, value, delta, deltaDirection = 'neutral', className = '' }: StatCardProps) {
+export function StatCard({ label, value, delta, deltaDirection = 'neutral', sub, className = '' }: StatCardProps) {
   const deltaColor =
     deltaDirection === 'up'
       ? 'text-positive'
@@ -19,8 +20,9 @@ export function StatCard({ label, value, delta, deltaDirection = 'neutral', clas
       <p className="font-mono text-[10px] uppercase tracking-label text-muted">{label}</p>
       <p className="mt-2 font-serif text-[36px] font-[500] leading-none text-ink">{value}</p>
       {delta && (
-        <p className={`mt-1.5 text-[12px] ${deltaColor}`}>{delta}</p>
+        <p className={`mt-2.5 text-[13px] font-semibold ${deltaColor}`}>{delta}</p>
       )}
+      {sub && <p className="mt-2 text-[12px] text-muted">{sub}</p>}
     </div>
   );
 }
