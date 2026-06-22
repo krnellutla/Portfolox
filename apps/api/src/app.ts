@@ -5,14 +5,16 @@ import { pool } from './db/client.js';
 import { AppError } from './lib/app-error.js';
 import { corsMiddleware } from './middleware/cors.js';
 import { errorHandler } from './middleware/error-handler.js';
-import { authRateLimit } from './middleware/rate-limit.js';
+import { authRateLimit, writeRateLimit } from './middleware/rate-limit.js';
 import { requestLogging } from './middleware/request-logging.js';
 import { requireAuth } from './middleware/require-auth.js';
 import { resolveTenant } from './middleware/resolve-tenant.js';
 import { securityHeaders } from './middleware/security-headers.js';
 import { authRouter } from './routes/auth.js';
 import { healthRouter } from './routes/health.js';
+import { createMediaRouter } from './routes/media.js';
 import { nodesRouter } from './routes/nodes.js';
+import { createStorageProvider, type StorageProvider } from './services/storage/index.js';
 
 /**
  * Middleware order: request logging (first, so req.id/req.log exist for
@@ -29,7 +31,10 @@ import { nodesRouter } from './routes/nodes.js';
  * `pool` is injectable so tests can point tenant resolution at the test
  * database instead of the module-level runtime pool.
  */
-export function createApp(dbPool: Pool = pool): Express {
+export function createApp(
+  dbPool: Pool = pool,
+  storageProvider: StorageProvider = createStorageProvider(),
+): Express {
   const app = express();
 
   // Trust exactly one proxy hop (nginx). Required so express-rate-limit
@@ -52,10 +57,9 @@ export function createApp(dbPool: Pool = pool): Express {
   app.use(nodesRouter);
   app.use(requireAuth);
 
-  // Tenant-scoped, authenticated route groups (/media, /profile) mount
-  // here starting with Milestone 1.5+.
-  // Apply writeRateLimit per-router on mutating methods when Phase 2
-  // write routes are added — not as a global mount that would also hit GETs.
+  const mediaRouter = createMediaRouter(storageProvider);
+  app.use(writeRateLimit);
+  app.use(mediaRouter);
 
   app.use((_req, _res, next) => {
     next(AppError.notFound('Route not found'));

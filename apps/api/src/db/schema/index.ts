@@ -4,3 +4,4 @@ export * from './users.js';
 export * from './tokens.js';
 export * from './nodes.js';
 export * from './media-assets.js';
+export * from './media-variants.js';
