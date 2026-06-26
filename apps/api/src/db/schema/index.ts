@@ -5,3 +5,4 @@ export * from './tokens.js';
 export * from './nodes.js';
 export * from './media-assets.js';
 export * from './media-variants.js';
+export * from './tenant-settings.js';

@@ -57,6 +57,27 @@
       "when": 1782452339965,
       "tag": "0007_real_dark_phoenix",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1782700000000,
+      "tag": "0008_tenant_settings",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1782700000001,
+      "tag": "0009_tenant_settings_rls",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1782700000002,
+      "tag": "0010_tenant_settings_grant",
+      "breakpoints": true
     }
   ]
 }
