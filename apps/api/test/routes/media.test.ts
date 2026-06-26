@@ -1,10 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import request from 'supertest';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../../src/app.js';
 import { withTenant } from '../../src/db/with-tenant.js';
 import { signAccessToken } from '../../src/lib/jwt.js';
 import { FakeStorageProvider } from '../../src/services/storage/index.js';
+import type { Enqueue } from '../../src/services/media/queue.js';
 import { createTestMigratorPool, createTestPool } from '../db-test-utils.js';
 
 // Helper: query media_assets within a tenant RLS context (required by FORCE RLS)
@@ -25,7 +26,8 @@ describe('POST /media/presign and POST /media/:id/confirm', () => {
   const pool = createTestPool();
   const migratorPool = createTestMigratorPool();
   const storage = new FakeStorageProvider();
-  const app = createApp(pool, storage);
+  const enqueue: Enqueue = vi.fn();
+  const app = createApp(pool, storage, enqueue);
 
   const tenantA = randomUUID();
   const tenantB = randomUUID();
@@ -93,6 +95,7 @@ describe('POST /media/presign and POST /media/:id/confirm', () => {
 
   beforeEach(() => {
     storage.reset();
+    vi.clearAllMocks();
   });
 
   // --- Presign ---
@@ -188,7 +191,7 @@ describe('POST /media/presign and POST /media/:id/confirm', () => {
 
   // --- Confirm ---
 
-  it('confirm: flips a pending asset to ready and persists dimensions', async () => {
+  it('confirm: flips a pending asset to processing, persists dimensions, and enqueues processing', async () => {
     // First presign to get an assetId
     const presignRes = await request(app)
       .post('/media/presign')
@@ -207,19 +210,23 @@ describe('POST /media/presign and POST /media/:id/confirm', () => {
 
     expect(confirmRes.status).toBe(200);
     expect(confirmRes.body.error).toBeNull();
-    expect(confirmRes.body.data.status).toBe('ready');
+    expect(confirmRes.body.data.status).toBe('processing');
     expect(confirmRes.body.data.width).toBe(1920);
     expect(confirmRes.body.data.height).toBe(1080);
 
     // Verify in DB (must go through withTenant due to FORCE RLS)
     const rows = await queryAsset(migratorPool, tenantA, assetId);
-    expect(rows.rows[0].status).toBe('ready');
+    expect(rows.rows[0].status).toBe('processing');
     expect(rows.rows[0].width).toBe(1920);
     expect(rows.rows[0].height).toBe(1080);
     expect(rows.rows[0].checksum).toBe('abc123');
+
+    // Enqueue must have been called exactly once with the correct job
+    expect(enqueue).toHaveBeenCalledOnce();
+    expect(enqueue).toHaveBeenCalledWith({ tenantId: tenantA, assetId });
   });
 
-  it('confirm: returns 404 when asset belongs to another tenant', async () => {
+  it('confirm: returns 404 when asset belongs to another tenant, does not enqueue', async () => {
     // Presign an asset under tenantA
     const presignRes = await request(app)
       .post('/media/presign')
@@ -238,6 +245,7 @@ describe('POST /media/presign and POST /media/:id/confirm', () => {
 
     expect(confirmRes.status).toBe(404);
     expect(confirmRes.body.error.code).toBe('NOT_FOUND');
+    expect(enqueue).not.toHaveBeenCalled();
 
     // Asset must remain pending (query as tenantA since the asset belongs to them)
     const rows = await queryAsset(migratorPool, tenantA, assetId);

@@ -12,8 +12,10 @@ import { resolveTenant } from './middleware/resolve-tenant.js';
 import { securityHeaders } from './middleware/security-headers.js';
 import { authRouter } from './routes/auth.js';
 import { healthRouter } from './routes/health.js';
-import { createMediaRouter } from './routes/media.js';
+import { createMediaPublicRouter, createMediaRouter } from './routes/media.js';
 import { nodesRouter } from './routes/nodes.js';
+import { createInProcessEnqueue } from './services/media/queue.js';
+import type { Enqueue } from './services/media/queue.js';
 import { createStorageProvider, type StorageProvider } from './services/storage/index.js';
 
 /**
@@ -34,6 +36,7 @@ import { createStorageProvider, type StorageProvider } from './services/storage/
 export function createApp(
   dbPool: Pool = pool,
   storageProvider: StorageProvider = createStorageProvider(),
+  enqueue: Enqueue = createInProcessEnqueue({ pool: dbPool, storage: storageProvider }),
 ): Express {
   const app = express();
 
@@ -55,9 +58,10 @@ export function createApp(
   app.use('/auth', authRateLimit);
   app.use(authRouter);
   app.use(nodesRouter);
+  app.use(createMediaPublicRouter());
   app.use(requireAuth);
 
-  const mediaRouter = createMediaRouter(storageProvider);
+  const mediaRouter = createMediaRouter(storageProvider, enqueue);
   app.use(writeRateLimit);
   app.use(mediaRouter);
 

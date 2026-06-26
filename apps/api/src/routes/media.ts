@@ -1,20 +1,28 @@
 import {
   type ApiEnvelope,
   type MediaAsset,
+  type MediaListResponse,
   type PresignResponse,
   confirmParamsSchema,
   confirmRequestSchema,
   mediaAssetSchema,
+  mediaListResponseSchema,
   presignRequestSchema,
   presignResponseSchema,
 } from '@portfoliohub/shared';
 import { randomUUID } from 'node:crypto';
 import { Router } from 'express';
+import { z } from 'zod';
 import { env } from '../config/env.js';
 import { AppError } from '../lib/app-error.js';
 import { asyncHandler } from '../lib/async-handler.js';
 import { validate } from '../lib/validate.js';
+import type { Enqueue } from '../services/media/queue.js';
 import type { StorageProvider } from '../services/storage/index.js';
+
+const mediaQuerySchema = z.object({
+  nodeId: z.string().uuid(),
+});
 
 const MIME_TO_EXT: Record<string, string> = {
   'image/jpeg': 'jpg',
@@ -24,7 +32,87 @@ const MIME_TO_EXT: Record<string, string> = {
   'image/gif': 'gif',
 };
 
-export function createMediaRouter(storage: StorageProvider): Router {
+export function createMediaPublicRouter(): Router {
+  const router = Router();
+
+  router.get(
+    '/media',
+    validate({ query: mediaQuerySchema }),
+    asyncHandler(async (req, res) => {
+      if (!req.tenant || !req.withTenant) {
+        throw AppError.notFound('Tenant not found for this host');
+      }
+
+      const { nodeId } = req.query as { nodeId: string };
+
+      const assets = await req.withTenant(async (client) => {
+        const assetRows = await client.query(
+          `SELECT id, tenant_id, node_id, object_key, url, mime_type, status,
+                  position, original_filename, byte_size, checksum, width, height, created_at
+           FROM media_assets
+           WHERE node_id = $1 AND status = 'ready'
+           ORDER BY position`,
+          [nodeId],
+        );
+
+        if (assetRows.rowCount === 0) return [];
+
+        const assetIds = assetRows.rows.map((r) => r.id as string);
+        const variantRows = await client.query(
+          `SELECT id, tenant_id, asset_id, variant, object_key, url, width, height, byte_size, created_at
+           FROM media_variants
+           WHERE asset_id = ANY($1)
+           ORDER BY asset_id, width`,
+          [assetIds],
+        );
+
+        const variantsByAsset = new Map<string, typeof variantRows.rows>();
+        for (const v of variantRows.rows) {
+          const list = variantsByAsset.get(v.asset_id as string) ?? [];
+          list.push(v);
+          variantsByAsset.set(v.asset_id as string, list);
+        }
+
+        return assetRows.rows.map((a) => ({
+          id: a.id,
+          tenantId: a.tenant_id,
+          nodeId: a.node_id,
+          objectKey: a.object_key,
+          url: a.url,
+          mimeType: a.mime_type,
+          status: a.status,
+          position: a.position,
+          originalFilename: a.original_filename,
+          byteSize: a.byte_size,
+          checksum: a.checksum,
+          width: a.width,
+          height: a.height,
+          createdAt: a.created_at,
+          variants: (variantsByAsset.get(a.id as string) ?? []).map((v) => ({
+            id: v.id,
+            tenantId: v.tenant_id,
+            assetId: v.asset_id,
+            variant: v.variant,
+            objectKey: v.object_key,
+            url: v.url,
+            width: v.width,
+            height: v.height,
+            byteSize: v.byte_size,
+            createdAt: v.created_at,
+          })),
+        }));
+      });
+
+      const data: MediaListResponse = mediaListResponseSchema.parse(assets);
+      const body: ApiEnvelope<MediaListResponse> = { data, error: null };
+      res.json(body);
+    }),
+  );
+
+  return router;
+}
+
+export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): Router {
   const router = Router();
 
   router.post(
@@ -122,7 +210,7 @@ export function createMediaRouter(storage: StorageProvider): Router {
       const asset = await req.withTenant(async (client) => {
         const row = await client.query(
           `UPDATE media_assets
-           SET status = 'ready', width = $2, height = $3, checksum = $4
+           SET status = 'processing', width = $2, height = $3, checksum = $4
            WHERE id = $1 AND status = 'pending'
            RETURNING id, tenant_id, node_id, object_key, url, mime_type, status,
                      position, original_filename, byte_size, checksum, width, height, created_at`,
@@ -135,6 +223,8 @@ export function createMediaRouter(storage: StorageProvider): Router {
 
         return row.rows[0];
       });
+
+      enqueue({ tenantId: req.tenant.id, assetId: id });
 
       const data: MediaAsset = mediaAssetSchema.parse({
         id: asset.id,
