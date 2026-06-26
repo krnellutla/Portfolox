@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { asyncHandler } from '../lib/async-handler.js';
 import { AppError } from '../lib/app-error.js';
 
-export const photographersRouter = Router();
+export const photographersRouter: Router = Router();
 
 const cdn = (id: string, w = 800) =>
   `https://images.unsplash.com/photo-${id}?w=${w}&q=80&auto=format&fit=crop`;

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { asyncHandler } from '../lib/async-handler.js';
 import { AppError } from '../lib/app-error.js';
 
-export const analyticsRouter = Router();
+export const analyticsRouter: Router = Router();
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const REVENUE_DATA = [8400, 9200, 7800, 11200, 12800, 10400, 13600, 14200, 11800, 15400, 16800, 18200];

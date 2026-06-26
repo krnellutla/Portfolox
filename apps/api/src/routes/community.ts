@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { asyncHandler } from '../lib/async-handler.js';
 import { AppError } from '../lib/app-error.js';
 
-export const communityRouter = Router();
+export const communityRouter: Router = Router();
 
 const SPACES = [
   { space: 'show-your-work',   label: 'Show Your Work',     count: 412 },

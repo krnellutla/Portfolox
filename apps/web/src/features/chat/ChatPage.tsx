@@ -30,14 +30,11 @@ export default function ChatPage() {
   const { data: conversations, isLoading: convsLoading } = useQuery({
     queryKey: qk.conversations(),
     queryFn: listConversations,
-    onSuccess: (data) => {
-      if (!activeConvId && data.length > 0) setActiveConvId(data[0].id);
-    },
-  } as Parameters<typeof useQuery>[0]);
+  });
 
   useEffect(() => {
     if (!activeConvId && conversations && conversations.length > 0) {
-      setActiveConvId(conversations[0].id);
+      setActiveConvId(conversations[0]?.id ?? null);
     }
   }, [conversations, activeConvId]);
 

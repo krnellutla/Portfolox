@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { asyncHandler } from '../lib/async-handler.js';
 import { AppError } from '../lib/app-error.js';
 
-export const meRouter = Router();
+export const meRouter: Router = Router();
 
 meRouter.get(
   '/me',

@@ -1,7 +1,7 @@
-import { Router } from 'express';
+import { Router, type IRouter } from 'express';
 import { asyncHandler } from '../lib/async-handler.js';
 
-export const plansRouter = Router();
+export const plansRouter: IRouter = Router();
 
 const PLANS = [
   {

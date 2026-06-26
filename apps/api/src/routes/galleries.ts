@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto';
 import { asyncHandler } from '../lib/async-handler.js';
 import { AppError } from '../lib/app-error.js';
 
-export const galleriesRouter = Router();
+export const galleriesRouter: Router = Router();
 
 function nodeToGallery(r: Record<string, unknown>, tenantId: string) {
   return {

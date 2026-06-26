@@ -1,8 +1,8 @@
-import { Router } from 'express';
+import { Router, type IRouter } from 'express';
 import { asyncHandler } from '../lib/async-handler.js';
 import { AppError } from '../lib/app-error.js';
 
-export const searchRouter = Router();
+export const searchRouter: IRouter = Router();
 
 searchRouter.get(
   '/search/facets',

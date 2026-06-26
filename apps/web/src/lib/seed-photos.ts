@@ -38,11 +38,11 @@ export const SEED_PHOTOS: SeedPhoto[] = [
 ];
 
 export function seedPhoto(index: number): SeedPhoto {
-  return SEED_PHOTOS[index % SEED_PHOTOS.length];
+  return SEED_PHOTOS[index % SEED_PHOTOS.length]!;
 }
 
 export function seedPhotoUrl(index: number, w = 800): string {
-  const { id } = SEED_PHOTOS[index % SEED_PHOTOS.length];
+  const { id } = SEED_PHOTOS[index % SEED_PHOTOS.length]!;
   return cdn(id, w);
 }
 
@@ -62,6 +62,6 @@ export const SEED_AVATAR_IDS = [
 ];
 
 export function seedAvatarUrl(index: number, size = 120): string {
-  const id = SEED_AVATAR_IDS[index % SEED_AVATAR_IDS.length];
+  const id = SEED_AVATAR_IDS[index % SEED_AVATAR_IDS.length]!;
   return cdn(id, size);
 }

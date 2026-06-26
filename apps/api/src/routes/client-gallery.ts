@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { asyncHandler } from '../lib/async-handler.js';
 import { AppError } from '../lib/app-error.js';
 
-export const clientGalleryRouter = Router();
+export const clientGalleryRouter: Router = Router();
 
 clientGalleryRouter.get('/client/:shareToken', asyncHandler(async (req, res) => {
   if (!req.withTenant) throw AppError.notFound('Tenant not found');

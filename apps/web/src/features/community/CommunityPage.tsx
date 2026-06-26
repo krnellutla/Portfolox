@@ -114,7 +114,7 @@ export default function CommunityPage() {
               { space: 'gear' as CommunitySpace, label: 'Gear Talk', count: 266 },
               { space: 'locations' as CommunitySpace, label: 'Locations', count: 137 },
             ]).map((s) => {
-              const id = 'space' in s ? s.space : s.space;
+              const id = s.space;
               const label = s.label;
               const count = s.count;
               return (

@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { asyncHandler } from '../lib/async-handler.js';
 import { AppError } from '../lib/app-error.js';
 
-export const conversationsRouter = Router();
+export const conversationsRouter: Router = Router();
 
 conversationsRouter.get('/conversations', asyncHandler(async (_req, res) => {
   res.json({ data: [], error: null });

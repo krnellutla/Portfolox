@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto';
 import { asyncHandler } from '../lib/async-handler.js';
 import { AppError } from '../lib/app-error.js';
 
-export const photosRouter = Router();
+export const photosRouter: Router = Router();
 
 function assetToPhoto(r: Record<string, unknown>) {
   return {
