@@ -8,6 +8,7 @@ import {
   uniqueIndex,
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 import { tenants } from './tenants.js';
 
 export const nodes = pgTable(
@@ -28,5 +29,8 @@ export const nodes = pgTable(
   (table) => [
     index('nodes_tenant_parent_idx').on(table.tenantId, table.parentId),
     uniqueIndex('nodes_tenant_parent_slug_idx').on(table.tenantId, table.parentId, table.slug),
+    uniqueIndex('nodes_tenant_root_slug_idx')
+      .on(table.tenantId, table.slug)
+      .where(sql`parent_id IS NULL`),
   ],
 );

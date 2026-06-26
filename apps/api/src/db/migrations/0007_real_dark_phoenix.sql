@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "nodes_tenant_root_slug_idx" ON "nodes" USING btree ("tenant_id","slug") WHERE parent_id IS NULL;

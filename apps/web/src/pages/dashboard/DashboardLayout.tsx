@@ -34,6 +34,9 @@ export default function DashboardLayout() {
           <NavLink to="/dashboard" end className={NAV_LINK_CLASS}>
             Overview
           </NavLink>
+          <NavLink to="/dashboard/content" className={NAV_LINK_CLASS}>
+            Content
+          </NavLink>
         </nav>
       </aside>
 

@@ -1,4 +1,5 @@
 export * from './envelope.js';
+export * from './lib/slug.js';
 export * from './schemas/tenant.js';
 export * from './schemas/tenant-domain.js';
 export * from './schemas/user.js';

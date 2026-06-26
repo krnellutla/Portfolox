@@ -14,6 +14,7 @@ import { authRouter } from './routes/auth.js';
 import { healthRouter } from './routes/health.js';
 import { createMediaPublicRouter, createMediaRouter } from './routes/media.js';
 import { nodesRouter } from './routes/nodes.js';
+import { createNodesWriteRouter } from './routes/nodes-write.js';
 import { createInProcessEnqueue } from './services/media/queue.js';
 import type { Enqueue } from './services/media/queue.js';
 import { createStorageProvider, type StorageProvider } from './services/storage/index.js';
@@ -64,6 +65,7 @@ export function createApp(
   const mediaRouter = createMediaRouter(storageProvider, enqueue);
   app.use(writeRateLimit);
   app.use(mediaRouter);
+  app.use(createNodesWriteRouter());
 
   app.use((_req, _res, next) => {
     next(AppError.notFound('Route not found'));
