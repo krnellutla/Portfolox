@@ -15,7 +15,7 @@ export const mediaAssetSchema = z.object({
   objectKey: z.string().min(1),
   url: z.string().url(),
   mimeType: z.enum(ALLOWED_MIME_TYPES),
-  status: z.enum(['pending', 'ready']),
+  status: z.enum(['pending', 'processing', 'ready', 'failed']),
   position: z.number().int().nonnegative(),
   originalFilename: z.string().min(1),
   byteSize: z.number().int().positive(),
@@ -32,13 +32,25 @@ export const mediaVariantSchema = z.object({
   tenantId: z.string().uuid(),
   assetId: z.string().uuid(),
   variant: z.enum(['thumb', 'small', 'medium', 'large']),
+  objectKey: z.string().min(1),
   url: z.string().url(),
   width: z.number().int().positive(),
   height: z.number().int().positive(),
+  byteSize: z.number().int().positive(),
   createdAt: z.coerce.date(),
 });
 
 export type MediaVariant = z.infer<typeof mediaVariantSchema>;
+
+export const mediaAssetWithVariantsSchema = mediaAssetSchema.extend({
+  variants: z.array(mediaVariantSchema),
+});
+
+export type MediaAssetWithVariants = z.infer<typeof mediaAssetWithVariantsSchema>;
+
+export const mediaListResponseSchema = z.array(mediaAssetWithVariantsSchema);
+
+export type MediaListResponse = z.infer<typeof mediaListResponseSchema>;
 
 export const presignRequestSchema = z.object({
   nodeId: z.string().uuid(),
