@@ -158,6 +158,9 @@ export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): R
           throw AppError.validation('Media can only be uploaded to gallery nodes');
         }
 
+        // Serialize concurrent uploads to prevent duplicate positions
+        await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [nodeId]);
+
         const positionRow = await client.query(
           'SELECT COALESCE(MAX(position), -1) + 1 AS next_position FROM media_assets WHERE node_id = $1',
           [nodeId],
@@ -255,6 +258,9 @@ export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): R
   // Authenticated admin list — returns ALL statuses (pending/processing/ready/failed)
   // so the dashboard can surface upload progress and failures. Mirrors the public
   // GET /media assembly but without the status='ready' filter.
+  //
+  // Authorization model (Phase 1): every authenticated tenant user is a full admin.
+  // Per-user roles (editor/viewer) are scoped to Phase 3.
 
   router.get(
     '/media/manage',
@@ -331,6 +337,8 @@ export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): R
   );
 
   // ── DELETE /media/:id ─────────────────────────────────────────────────────
+  // TODO(Phase 3): strip objectKey/checksum from all client-facing payloads once
+  // the shared schema has separate public vs. internal asset types.
 
   router.delete(
     '/media/:id',
@@ -357,6 +365,9 @@ export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): R
           position: number;
         };
 
+        // Serialize concurrent deletes/moves within this gallery node
+        await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [node_id]);
+
         // Collect variant keys before the cascade removes variant rows
         const variantRows = await client.query(
           'SELECT object_key FROM media_variants WHERE asset_id = $1',
@@ -378,8 +389,11 @@ export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): R
 
       // Best-effort storage cleanup after the DB transaction commits
       for (const key of objectKeysToDelete) {
-        await storage.deleteObject(key).catch(() => {
-          // swallow: orphaned storage blobs are tolerable; DB is authoritative
+        await storage.deleteObject(key).catch((err: unknown) => {
+          req.log.warn(
+            { key, err: err instanceof Error ? err.message : String(err) },
+            'media storage cleanup failed — blob may be orphaned',
+          );
         });
       }
 
@@ -415,6 +429,9 @@ export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): R
 
         const currentPosition = assetRow.rows[0].position as number;
         const nodeId = assetRow.rows[0].node_id as string;
+
+        // Serialize concurrent moves/deletes within this gallery node
+        await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [nodeId]);
 
         // Count siblings (excluding self) to clamp position
         const countRow = await client.query(

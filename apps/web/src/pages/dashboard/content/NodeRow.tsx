@@ -7,6 +7,8 @@ import { Button } from '../../../components/ui/Button.js';
 interface Props {
   node: NodeResponse;
   depth: number;
+  selected?: boolean;
+  onSelect?: (id: string) => void;
   onRename: (id: string, name: string) => void;
   onDelete: (id: string) => void;
 }
@@ -17,7 +19,7 @@ const TYPE_ICON: Record<NodeResponse['type'], string> = {
   page: '📄',
 };
 
-export function NodeRow({ node, depth, onRename, onDelete }: Props) {
+export function NodeRow({ node, depth, selected = false, onSelect, onRename, onDelete }: Props) {
   const [editing, setEditing] = useState(false);
   const [draftName, setDraftName] = useState(node.name);
 
@@ -44,7 +46,12 @@ export function NodeRow({ node, depth, onRename, onDelete }: Props) {
     <div
       ref={setNodeRef}
       style={style}
-      className="group flex items-center gap-2 rounded px-2 py-1.5 hover:bg-slate-800"
+      className={`group flex items-center gap-2 rounded px-2 py-1.5 hover:bg-slate-800 ${
+        selected ? 'bg-slate-700 ring-1 ring-slate-500' : ''
+      }`}
+      onClick={() => node.type === 'gallery' && onSelect?.(node.id)}
+      role={node.type === 'gallery' ? 'button' : undefined}
+      tabIndex={node.type === 'gallery' ? 0 : undefined}
     >
       {/* drag handle */}
       <button

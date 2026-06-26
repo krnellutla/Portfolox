@@ -3,6 +3,7 @@ import { Button } from '../../../components/ui/Button.js';
 import { StateView } from '../../../components/ui/StateView.js';
 import { useNodesStore } from '../../../stores/nodes-store.js';
 import { CreateNodeDialog } from './CreateNodeDialog.js';
+import { MediaPanel } from './MediaPanel.js';
 import { NodeTree } from './NodeTree.js';
 
 export default function GalleryManager() {
@@ -11,6 +12,7 @@ export default function GalleryManager() {
 
   const [showCreate, setShowCreate] = useState(false);
   const [pendingError, setPendingError] = useState<string | null>(null);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === 'idle') {
@@ -100,11 +102,15 @@ export default function GalleryManager() {
       <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-2">
         <NodeTree
           nodes={nodes}
+          selectedId={selectedNodeId}
+          onSelect={(id) => setSelectedNodeId((prev) => (prev === id ? null : id))}
           onRename={handleRename}
           onDelete={handleDelete}
           onMove={handleMove}
         />
       </div>
+
+      {selectedNodeId && <MediaPanel nodeId={selectedNodeId} />}
 
       {showCreate && (
         <CreateNodeDialog

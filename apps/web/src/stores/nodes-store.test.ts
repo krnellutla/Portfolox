@@ -171,9 +171,9 @@ describe('useNodesStore', () => {
         .sort((a, b) => a.position - b.position);
 
       expect(folderAChildren.map((n) => n.id)).toEqual(['child2']);
-      expect(folderAChildren[0].position).toBe(0);
+      expect(folderAChildren[0]!.position).toBe(0);
       expect(folderBChildren.map((n) => n.id)).toEqual(['child1']);
-      expect(folderBChildren[0].position).toBe(0);
+      expect(folderBChildren[0]!.position).toBe(0);
     });
   });
 });

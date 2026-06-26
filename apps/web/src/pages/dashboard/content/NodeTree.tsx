@@ -14,6 +14,8 @@ import { NodeRow } from './NodeRow.js';
 
 interface Props {
   nodes: NodeResponse[];
+  selectedId?: string | null;
+  onSelect?: (id: string) => void;
   onRename: (id: string, name: string) => void;
   onDelete: (id: string) => void;
   onMove: (id: string, targetParentId: string | null, targetPosition: number) => void;
@@ -31,7 +33,7 @@ function flatten(nodes: NodeResponse[], parentId: string | null = null, depth = 
   return children.flatMap((n) => [{ node: n, depth }, ...flatten(nodes, n.id, depth + 1)]);
 }
 
-export function NodeTree({ nodes, onRename, onDelete, onMove }: Props) {
+export function NodeTree({ nodes, selectedId, onSelect, onRename, onDelete, onMove }: Props) {
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const flatItems = flatten(nodes);
@@ -74,6 +76,8 @@ export function NodeTree({ nodes, onRename, onDelete, onMove }: Props) {
               key={node.id}
               node={node}
               depth={depth}
+              selected={selectedId === node.id}
+              onSelect={onSelect}
               onRename={onRename}
               onDelete={onDelete}
             />
