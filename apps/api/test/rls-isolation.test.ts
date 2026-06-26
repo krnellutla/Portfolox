@@ -92,4 +92,33 @@ describe('tenant row-level security isolation', () => {
       withTenant(pool, 'not-a-uuid', (client) => client.query('SELECT * FROM nodes')),
     ).rejects.toThrow();
   });
+
+  it('tenant_settings: tenant A cannot read tenant B settings', async () => {
+    // Seed a settings row for tenantB via the migrator (owner, bypasses RLS)
+    await withTenant(migratorPool, tenantB, async (client) => {
+      await client.query(
+        `INSERT INTO tenant_settings (tenant_id, color_bg)
+         VALUES ($1, '#bb0000')
+         ON CONFLICT (tenant_id) DO UPDATE SET color_bg = '#bb0000'`,
+        [tenantB],
+      );
+    });
+
+    // App-role under tenantA context should get 0 rows
+    const rows = await withTenant(pool, tenantA, (client) =>
+      client.query('SELECT * FROM tenant_settings'),
+    );
+    expect(rows.rows).toHaveLength(0);
+  });
+
+  it('tenant_settings: write with mismatched tenant_id is rejected', async () => {
+    await expect(
+      withTenant(pool, tenantA, (client) =>
+        client.query(
+          "INSERT INTO tenant_settings (tenant_id, color_bg) VALUES ($1, '#ff0000')",
+          [tenantB],
+        ),
+      ),
+    ).rejects.toThrow();
+  });
 });

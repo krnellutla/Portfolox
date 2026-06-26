@@ -3,6 +3,7 @@ import {
   nodeSchema,
   tenantDomainSchema,
   tenantSchema,
+  tenantSettingsSchema,
   tokenSchema,
   userSchema,
 } from '@portfoliohub/shared';
@@ -13,6 +14,7 @@ import {
   nodeRowSchema,
   tenantDomainRowSchema,
   tenantRowSchema,
+  tenantSettingsRowSchema,
   tokenRowSchema,
   userRowSchema,
 } from '../src/db/zod.js';
@@ -55,4 +57,6 @@ describe('shared Zod contracts match the Drizzle table schemas', () => {
   it('token', () => assertFieldsMatch(tokenSchema, tokenRowSchema, 'token'));
   it('node', () => assertFieldsMatch(nodeSchema, nodeRowSchema, 'node'));
   it('mediaAsset', () => assertFieldsMatch(mediaAssetSchema, mediaAssetRowSchema, 'mediaAsset'));
+  it('tenantSettings', () =>
+    assertFieldsMatch(tenantSettingsSchema, tenantSettingsRowSchema, 'tenantSettings'));
 });

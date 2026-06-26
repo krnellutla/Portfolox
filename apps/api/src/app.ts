@@ -26,6 +26,7 @@ import { clientGalleryRouter } from './routes/client-gallery.js';
 import { meRouter } from './routes/me.js';
 import { galleriesRouter } from './routes/galleries.js';
 import { analyticsRouter } from './routes/analytics.js';
+import { tenantSettingsPublicRouter, tenantSettingsRouter } from './routes/tenant-settings.js';
 import { createInProcessEnqueue } from './services/media/queue.js';
 import type { Enqueue } from './services/media/queue.js';
 import { createStorageProvider, type StorageProvider } from './services/storage/index.js';
@@ -68,6 +69,7 @@ export function createApp(
   app.use(communityRouter);
   app.use(conversationsRouter);
   app.use(clientGalleryRouter);
+  app.use(tenantSettingsPublicRouter);
 
   // Protected routes — Bearer token required
   app.use(requireAuth);
@@ -77,6 +79,7 @@ export function createApp(
   app.use(mediaRouter);
   app.use(createNodesWriteRouter());
   app.use(meRouter);
+  app.use(tenantSettingsRouter);
   app.use(galleriesRouter);
   app.use(analyticsRouter);
 
