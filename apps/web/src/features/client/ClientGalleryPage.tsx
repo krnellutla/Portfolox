@@ -1,22 +1,47 @@
 import { useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { TopNav } from '../../components/nav/TopNav.js';
 import { PhotoTile } from '../../components/photo/PhotoTile.js';
-import type { PhotoCategory } from './mock.js';
-import { CLIENT_GALLERY_META, CLIENT_PHOTOS } from './mock.js';
+import { StateView } from '../../components/ui/StateView.js';
+import { getClientGallery, addFavorites } from '../../api/client-gallery.js';
+import { qk } from '../../lib/query-client.js';
+import { seedPhotoUrl } from '../../lib/seed-photos.js';
+
+type PhotoCategory = 'all' | 'favorites' | 'ceremony' | 'reception';
 
 const CATEGORY_LABELS: { id: PhotoCategory; label: string }[] = [
-  { id: 'all',      label: 'All' },
-  { id: 'favorites',label: '♡ Favorites' },
-  { id: 'ceremony', label: 'Ceremony' },
-  { id: 'reception',label: 'Reception' },
+  { id: 'all',       label: 'All' },
+  { id: 'favorites', label: '♡ Favorites' },
+  { id: 'ceremony',  label: 'Ceremony' },
+  { id: 'reception', label: 'Reception' },
 ];
 
 export default function ClientGalleryPage() {
+  const { shareToken } = useParams<{ shareToken: string }>();
+  const queryClient = useQueryClient();
   const [activeCategory, setActiveCategory] = useState<PhotoCategory>('all');
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [favorites, setFavorites] = useState<Set<string>>(
-    new Set(CLIENT_PHOTOS.filter((p) => p.favoritedByMe).map((p) => p.id))
-  );
+
+  const { data: gallery, isLoading, error } = useQuery({
+    queryKey: qk.clientGallery(shareToken ?? ''),
+    queryFn: () => getClientGallery(shareToken ?? ''),
+    enabled: !!shareToken,
+  });
+
+  const favMutation = useMutation({
+    mutationFn: (photoIds: string[]) => addFavorites(shareToken ?? '', photoIds),
+    onMutate: (photoIds) => {
+      queryClient.setQueryData(qk.clientGallery(shareToken ?? ''), (old: typeof gallery) => {
+        if (!old) return old;
+        return { ...old, favoritePhotoIds: [...new Set([...old.favoritePhotoIds, ...photoIds])] };
+      });
+      setSelected(new Set());
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: qk.clientGallery(shareToken ?? '') });
+    },
+  });
 
   function toggleSelect(id: string) {
     setSelected((prev) => {
@@ -26,18 +51,22 @@ export default function ClientGalleryPage() {
     });
   }
 
-  function addToFavorites() {
-    setFavorites((prev) => {
-      const next = new Set(prev);
-      selected.forEach((id) => next.add(id));
-      return next;
-    });
-    setSelected(new Set());
-  }
+  if (isLoading) return <StateView variant="loading" title="Loading gallery…" fullScreen />;
+  if (error || !gallery) return <StateView variant="error" title="Gallery not found or link expired" fullScreen />;
 
-  const filtered = CLIENT_PHOTOS.filter((p) => {
+  const favoriteIds = new Set(gallery.favoritePhotoIds);
+
+  const photos = gallery.photoOrder.map((id, i) => ({
+    id,
+    code: `DLG-${String(i + 1).padStart(3, '0')}`,
+    url: seedPhotoUrl(i, 800),
+    favoritedByMe: favoriteIds.has(id),
+    category: i % 2 === 0 ? 'ceremony' : 'reception' as PhotoCategory,
+  }));
+
+  const filtered = photos.filter((p) => {
     if (activeCategory === 'all') return true;
-    if (activeCategory === 'favorites') return favorites.has(p.id);
+    if (activeCategory === 'favorites') return p.favoritedByMe;
     return p.category === activeCategory;
   });
 
@@ -53,17 +82,20 @@ export default function ClientGalleryPage() {
               ⬚ PRIVATE · 09 — CLIENT GALLERY
             </p>
             <h1 className="font-serif text-[38px] font-[500] text-ink tracking-[-0.02em] mb-1.5">
-              {CLIENT_GALLERY_META.title}
+              {gallery.title}
             </h1>
             <p className="font-mono text-[11px] text-muted">
-              Shared with {CLIENT_GALLERY_META.clientName} · {CLIENT_GALLERY_META.frameCount} frames · expires {CLIENT_GALLERY_META.expiresAt}
+              Shared with {gallery.clientName} · {gallery.counts.frames} frames · expires {new Date(gallery.expiresAt).toLocaleDateString()}
             </p>
           </div>
           <div className="flex items-center gap-2.5 mt-2">
             <button className="px-4 py-[10px] bg-surface border border-field rounded-[9px] font-semibold text-[14px] text-ink hover:border-ink transition-colors">
               ↓ Download all
             </button>
-            <button className="px-4 py-[10px] bg-ink text-paper rounded-[9px] font-semibold text-[14px] hover:bg-ink-2 transition-colors">
+            <button
+              onClick={() => void navigator.clipboard.writeText(window.location.href)}
+              className="px-4 py-[10px] bg-ink text-paper rounded-[9px] font-semibold text-[14px] hover:bg-ink-2 transition-colors"
+            >
               ↗ Share link
             </button>
           </div>
@@ -90,14 +122,14 @@ export default function ClientGalleryPage() {
         <div className="grid grid-cols-4 gap-3">
           {filtered.map((photo) => {
             const isSel = selected.has(photo.id);
-            const isFav = favorites.has(photo.id);
+            const isFav = photo.favoritedByMe;
             return (
               <div key={photo.id} className="group relative">
                 <PhotoTile
                   ratio="3:2"
-                  src={photo.url || undefined}
-                  alt={photo.title}
-                  placeholderGradient={photo.gradient}
+                  src={photo.url}
+                  alt={photo.code}
+                  code={photo.code}
                   action={
                     <button
                       onClick={(e) => { e.stopPropagation(); toggleSelect(photo.id); }}
@@ -135,10 +167,11 @@ export default function ClientGalleryPage() {
           <span className="font-semibold text-[14px]">{selected.size} selected</span>
           <span className="w-px h-4 bg-paper/20" />
           <button
-            onClick={addToFavorites}
-            className="font-semibold text-[14px] text-paper/80 hover:text-paper transition-colors"
+            onClick={() => favMutation.mutate(Array.from(selected))}
+            disabled={favMutation.isPending}
+            className="font-semibold text-[14px] text-paper/80 hover:text-paper transition-colors disabled:opacity-60"
           >
-            Add to favorites
+            {favMutation.isPending ? 'Saving…' : 'Add to favorites'}
           </button>
           <button
             onClick={() => setSelected(new Set())}

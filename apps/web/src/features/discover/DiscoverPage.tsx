@@ -1,26 +1,49 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { TopNav } from '../../components/nav/TopNav.js';
 import { PhotoGrid } from '../../components/photo/PhotoGrid.js';
 import { PhotoTile } from '../../components/photo/PhotoTile.js';
-import { Chip } from '../../components/ui/Chip.js';
 import { Eyebrow } from '../../components/ui/Eyebrow.js';
 import { Input } from '../../components/ui/Input.js';
+import { StateView } from '../../components/ui/StateView.js';
 import { FeaturedCard } from './FeaturedCard.js';
-import { CATEGORIES, FEATURED, FRESH_PHOTOS } from './mock.js';
+import { getFeatured, getFresh } from '../../api/discover.js';
+import { follow, unfollow } from '../../api/photographers.js';
+import { qk } from '../../lib/query-client.js';
+
+const CATEGORIES = [
+  'Landscape', 'Portrait', 'Street', 'Wedding',
+  'Fine Art', 'Documentary', 'Architecture', 'Wildlife', 'Black & White',
+];
 
 export default function DiscoverPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [query, setQuery] = useState('');
-  const [following, setFollowing] = useState<Set<string>>(new Set());
 
-  function toggleFollow(name: string) {
-    setFollowing((prev) => {
-      const next = new Set(prev);
-      next.has(name) ? next.delete(name) : next.add(name);
-      return next;
-    });
-  }
+  const { data: featured, isLoading: featuredLoading, error: featuredError } = useQuery({
+    queryKey: qk.discover.featured(),
+    queryFn: getFeatured,
+  });
+
+  const { data: fresh, isLoading: freshLoading } = useQuery({
+    queryKey: qk.discover.fresh(),
+    queryFn: () => getFresh(),
+  });
+
+  const followMutation = useMutation({
+    mutationFn: ({ id, following }: { id: string; following: boolean }) =>
+      following ? unfollow(id) : follow(id),
+    onMutate: ({ id, following }) => {
+      queryClient.setQueryData(qk.discover.featured(), (old: typeof featured) =>
+        old?.map((p) => p.id === id ? { ...p, isFollowedByMe: !following } : p),
+      );
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: qk.discover.featured() });
+    },
+  });
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -44,7 +67,6 @@ export default function DiscoverPage() {
             costs more than making it.
           </p>
 
-          {/* Search row */}
           <form onSubmit={handleSearch} className="flex gap-2.5 max-w-[580px] mb-5">
             <Input
               placeholder="Search photographers, places, or styles"
@@ -60,7 +82,6 @@ export default function DiscoverPage() {
             </button>
           </form>
 
-          {/* Category chips */}
           <div className="flex flex-wrap gap-2">
             {CATEGORIES.map((cat) => (
               <button
@@ -85,16 +106,21 @@ export default function DiscoverPage() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
-            {FEATURED.map((p) => (
-              <FeaturedCard
-                key={p.name}
-                photographer={p}
-                followed={following.has(p.name)}
-                onFollow={() => toggleFollow(p.name)}
-              />
-            ))}
-          </div>
+          {featuredLoading && <StateView variant="loading" title="Loading…" />}
+          {featuredError && <StateView variant="error" title="Couldn't load featured photographers" />}
+          {featured && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
+              {featured.map((p, i) => (
+                <FeaturedCard
+                  key={p.id}
+                  photographer={p}
+                  coverImageIndex={i}
+                  followed={!!p.isFollowedByMe}
+                  onFollow={() => followMutation.mutate({ id: p.id, following: !!p.isFollowedByMe })}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Fresh frames */}
@@ -107,17 +133,21 @@ export default function DiscoverPage() {
               UPDATED HOURLY
             </span>
           </div>
-          <PhotoGrid cols={2} gap="sm" className="md:[grid-template-columns:repeat(4,minmax(0,1fr))]">
-            {FRESH_PHOTOS.map((photo) => (
-              <PhotoTile
-                key={photo.id}
-                ratio="1:1"
-                code={photo.code}
-                placeholderGradient={photo.gradient}
-                onClick={() => {/* lightbox: built in screen 12 */}}
-              />
-            ))}
-          </PhotoGrid>
+          {freshLoading && <StateView variant="loading" title="Loading…" />}
+          {fresh && (
+            <PhotoGrid cols={2} gap="sm" className="md:[grid-template-columns:repeat(4,minmax(0,1fr))]">
+              {fresh.items.map((photo) => (
+                <PhotoTile
+                  key={photo.id}
+                  src={photo.url || photo.thumbUrl || undefined}
+                  alt={photo.title}
+                  ratio="1:1"
+                  code={photo.code}
+                  onClick={() => navigate(`/lightbox?id=${photo.id}`)}
+                />
+              ))}
+            </PhotoGrid>
+          )}
         </div>
       </div>
     </div>

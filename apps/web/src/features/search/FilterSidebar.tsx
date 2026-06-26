@@ -1,12 +1,28 @@
 import { Input } from '../../components/ui/Input.js';
 import { Eyebrow } from '../../components/ui/Eyebrow.js';
 import type { SearchFilters } from '../../lib/types.js';
-import { COLOR_OPTIONS, LOCATION_OPTIONS, STYLE_OPTIONS } from './mock.js';
 
 interface FilterSidebarProps {
   filters: SearchFilters;
   onChange: (next: Partial<SearchFilters>) => void;
 }
+
+const STYLE_OPTIONS = [
+  'Landscape', 'Portrait', 'Street', 'Wedding', 'Fine Art', 'Documentary', 'Architecture', 'Wildlife',
+] as const;
+
+const COLOR_OPTIONS = [
+  { label: 'Warm',    hex: '#c4a882' },
+  { label: 'Cool',    hex: '#8aa6c4' },
+  { label: 'Green',   hex: '#8aab90' },
+  { label: 'Neutral', hex: '#a8a49c' },
+  { label: 'Mono',    hex: '#585550' },
+  { label: 'Dusk',    hex: '#9c8aae' },
+] as const;
+
+const LOCATION_OPTIONS = [
+  'Iceland', 'Japan', 'Patagonia', 'Morocco', 'Norway', 'New York', 'Scotland',
+] as const;
 
 function toggle<T>(arr: T[], item: T): T[] {
   return arr.includes(item) ? arr.filter((x) => x !== item) : [...arr, item];

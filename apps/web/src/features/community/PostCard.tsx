@@ -1,33 +1,35 @@
-import { useState } from 'react';
-import type { FeedPost } from '../../lib/types.js';
-import { PHOTOGRAPHER_GRADIENTS, relativeTime } from './mock.js';
+import type { FeedPost } from '@portfoliohub/shared';
 
-interface PostCardProps {
-  post: FeedPost & { photoGradient?: string };
+function relativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const h = Math.floor(diff / 3_600_000);
+  if (h < 1) return 'just now';
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
 }
 
-export function PostCard({ post }: PostCardProps) {
-  const [liked, setLiked] = useState(!!post.likedByMe);
-  const [likeCount, setLikeCount] = useState(post.counts.likes);
+interface PostCardProps {
+  post: FeedPost;
+  photoUrl?: string;
+  avatarSrc?: string;
+  liked: boolean;
+  onLike: () => void;
+}
 
-  function toggleLike() {
-    setLiked((prev) => {
-      const next = !prev;
-      setLikeCount((c) => c + (next ? 1 : -1));
-      return next;
-    });
-  }
-
-  const avatarGrad = PHOTOGRAPHER_GRADIENTS[post.author.id] ?? 'linear-gradient(145deg,#9a9,#6a6)';
-
+export function PostCard({ post, photoUrl, avatarSrc, liked, onLike }: PostCardProps) {
   return (
     <div className="bg-surface border border-line rounded-card p-5">
       {/* Header */}
       <div className="flex items-start gap-3 mb-3.5">
-        <div
-          className="w-11 h-11 rounded-full shrink-0"
-          style={{ background: avatarGrad }}
-        />
+        {avatarSrc ? (
+          <img
+            src={avatarSrc}
+            alt={post.author.displayName}
+            className="w-11 h-11 rounded-full shrink-0 object-cover"
+          />
+        ) : (
+          <div className="w-11 h-11 rounded-full shrink-0 bg-canvas" />
+        )}
         <div className="flex-1 min-w-0">
           <p className="font-serif text-[18px] font-[500] text-ink leading-tight">{post.author.displayName}</p>
           <p className="font-mono text-[10.5px] text-muted mt-0.5">
@@ -41,23 +43,24 @@ export function PostCard({ post }: PostCardProps) {
       <p className="text-[15px] text-ink leading-[1.55] mb-3.5">{post.body}</p>
 
       {/* Optional photo */}
-      {post.photoIds.length > 0 && post.photoGradient && (
-        <div
-          className="w-full aspect-video rounded-[10px] mb-3.5"
-          style={{ background: post.photoGradient }}
+      {post.photoIds.length > 0 && photoUrl && (
+        <img
+          src={photoUrl}
+          alt=""
+          className="w-full aspect-video object-cover rounded-[10px] mb-3.5"
         />
       )}
 
       {/* Reaction row */}
       <div className="flex items-center gap-5 pt-1 border-t border-line-2">
         <button
-          onClick={toggleLike}
+          onClick={onLike}
           className={`flex items-center gap-1.5 text-[13px] font-semibold transition-colors ${
             liked ? 'text-negative' : 'text-ink-3 hover:text-ink'
           }`}
         >
           <span>{liked ? '♥' : '♡'}</span>
-          <span>{likeCount}</span>
+          <span>{post.counts.likes}</span>
         </button>
         <button className="flex items-center gap-1.5 text-[13px] text-ink-3 hover:text-ink transition-colors">
           <span>◻</span>

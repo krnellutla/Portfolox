@@ -1,25 +1,49 @@
 import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { TopNav } from '../../components/nav/TopNav.js';
 import { FavoriteButton } from '../../components/photo/FavoriteButton.js';
 import { PhotoTile } from '../../components/photo/PhotoTile.js';
 import { Eyebrow } from '../../components/ui/Eyebrow.js';
+import { StateView } from '../../components/ui/StateView.js';
+import { seedPhotoUrl } from '../../lib/seed-photos.js';
+import { qk } from '../../lib/query-client.js';
+import { getCollections } from '../../api/collections.js';
+import { favoritePhoto, unfavoritePhoto } from '../../api/photos.js';
 import { CollectionCard, CreateCollectionCard } from './CollectionCard.js';
-import { COLLECTIONS, LIKED_PHOTOS } from './mock.js';
+
+// Seed liked photos for display when real API is unavailable
+const SEED_LIKED = Array.from({ length: 12 }, (_, i) => ({
+  id: `seed-liked-${i}`,
+  code: `PFX·${4200 + i}`,
+  thumbUrl: seedPhotoUrl(i + 12, 400),
+  favoritedByMe: true,
+}));
 
 export default function CollectionsPage() {
-  const [favorites, setFavorites] = useState<Set<string>>(
-    () => new Set(LIKED_PHOTOS.map((p) => p.id)),
+  const queryClient = useQueryClient();
+  const [localFavs, setLocalFavs] = useState<Set<string>>(
+    () => new Set(SEED_LIKED.map((p) => p.id)),
   );
 
-  function toggleFavorite(id: string) {
-    setFavorites((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  }
+  const { data: collections, isLoading, error } = useQuery({
+    queryKey: qk.collections(),
+    queryFn: getCollections,
+    retry: false,
+  });
 
-  const favCount = favorites.size;
+  const favMutation = useMutation({
+    mutationFn: ({ id, favorited }: { id: string; favorited: boolean }) =>
+      favorited ? unfavoritePhoto(id) : favoritePhoto(id),
+    onMutate: ({ id, favorited }) => {
+      setLocalFavs((prev) => {
+        const next = new Set(prev);
+        favorited ? next.delete(id) : next.add(id);
+        return next;
+      });
+    },
+  });
+
+  const favCount = localFavs.size;
 
   return (
     <div className="min-h-screen bg-paper">
@@ -40,12 +64,30 @@ export default function CollectionsPage() {
         </div>
 
         {/* Collection cards grid */}
-        <div className="grid grid-cols-4 gap-[18px] mb-14">
-          {COLLECTIONS.map((col) => (
-            <CollectionCard key={col.id} collection={col} />
-          ))}
-          <CreateCollectionCard />
-        </div>
+        {isLoading && <StateView variant="loading" title="Loading collections…" />}
+        {error && (
+          <div className="mb-14">
+            <StateView variant="empty" title="No collections yet — create your first one above" />
+          </div>
+        )}
+        {collections && collections.length > 0 && (
+          <div className="grid grid-cols-4 gap-[18px] mb-14">
+            {collections.map((col, i) => (
+              <CollectionCard key={col.id} collection={col} coverOffset={i} />
+            ))}
+            <CreateCollectionCard />
+          </div>
+        )}
+        {collections && collections.length === 0 && (
+          <div className="grid grid-cols-4 gap-[18px] mb-14">
+            <CreateCollectionCard />
+          </div>
+        )}
+        {!isLoading && !collections && !error && (
+          <div className="grid grid-cols-4 gap-[18px] mb-14">
+            <CreateCollectionCard />
+          </div>
+        )}
 
         {/* Liked photos */}
         <div className="flex items-baseline justify-between mb-[18px]">
@@ -58,16 +100,18 @@ export default function CollectionsPage() {
         </div>
 
         <div className="grid grid-cols-6 gap-3">
-          {LIKED_PHOTOS.map((photo) => (
+          {SEED_LIKED.map((photo) => (
             <PhotoTile
               key={photo.id}
               ratio="1:1"
+              src={photo.thumbUrl}
               code={photo.code}
-              placeholderGradient={photo.gradient}
               action={
                 <FavoriteButton
-                  active={favorites.has(photo.id)}
-                  onChange={() => toggleFavorite(photo.id)}
+                  active={localFavs.has(photo.id)}
+                  onChange={() =>
+                    favMutation.mutate({ id: photo.id, favorited: localFavs.has(photo.id) })
+                  }
                 />
               }
             />

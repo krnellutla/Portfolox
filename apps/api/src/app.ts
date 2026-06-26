@@ -15,24 +15,26 @@ import { healthRouter } from './routes/health.js';
 import { createMediaPublicRouter, createMediaRouter } from './routes/media.js';
 import { nodesRouter } from './routes/nodes.js';
 import { createNodesWriteRouter } from './routes/nodes-write.js';
+import { discoverRouter } from './routes/discover.js';
+import { photographersRouter } from './routes/photographers.js';
+import { photosRouter } from './routes/photos.js';
+import { searchRouter } from './routes/search-route.js';
+import { plansRouter } from './routes/plans.js';
+import { communityRouter } from './routes/community.js';
+import { conversationsRouter } from './routes/conversations.js';
+import { clientGalleryRouter } from './routes/client-gallery.js';
+import { meRouter } from './routes/me.js';
+import { galleriesRouter } from './routes/galleries.js';
+import { analyticsRouter } from './routes/analytics.js';
 import { createInProcessEnqueue } from './services/media/queue.js';
 import type { Enqueue } from './services/media/queue.js';
 import { createStorageProvider, type StorageProvider } from './services/storage/index.js';
 
 /**
- * Middleware order: request logging (first, so req.id/req.log exist for
- * every later error) -> health (pre-tenant liveness, no DB/tenant required)
- * -> tenant resolution -> CORS (credentialed cross-origin allowlist for the
- * Tauri desktop shell; same-origin web requests are unaffected) -> public
- * auth routes (login/refresh/logout, which authenticate via OAuth or the
- * refresh cookie/desktop refresh header rather than a Bearer token) -> GET
- * /nodes (public, read-only portfolio data, scoped to the host-resolved
- * tenant via RLS rather than a Bearer token) -> auth (Bearer-token guard for
- * everything else) -> route groups (Milestone 1.5+) -> 404 fallback ->
- * error handler (terminal).
- *
- * `pool` is injectable so tests can point tenant resolution at the test
- * database instead of the module-level runtime pool.
+ * Middleware order: request logging -> health -> tenant resolution -> CORS
+ * -> auth rate-limit -> auth routes -> public read routes (nodes, media,
+ * discover, photographers, photos, search, plans, community, conversations,
+ * client gallery) -> requireAuth guard -> protected write routes.
  */
 export function createApp(
   dbPool: Pool = pool,
@@ -41,10 +43,6 @@ export function createApp(
 ): Express {
   const app = express();
 
-  // Trust exactly one proxy hop (nginx). Required so express-rate-limit
-  // keys on the real client IP from X-Forwarded-For, not the proxy IP.
-  // Using 1 (not true) avoids trusting arbitrary X-Forwarded-For headers
-  // from clients not behind our proxy.
   app.set('trust proxy', 1);
 
   app.use(securityHeaders);
@@ -58,14 +56,29 @@ export function createApp(
   app.use(corsMiddleware);
   app.use('/auth', authRateLimit);
   app.use(authRouter);
+
+  // Public read routes — no Bearer token required
   app.use(nodesRouter);
   app.use(createMediaPublicRouter());
+  app.use(discoverRouter);
+  app.use(photographersRouter);
+  app.use(photosRouter);
+  app.use(searchRouter);
+  app.use(plansRouter);
+  app.use(communityRouter);
+  app.use(conversationsRouter);
+  app.use(clientGalleryRouter);
+
+  // Protected routes — Bearer token required
   app.use(requireAuth);
+  app.use(writeRateLimit);
 
   const mediaRouter = createMediaRouter(storageProvider, enqueue);
-  app.use(writeRateLimit);
   app.use(mediaRouter);
   app.use(createNodesWriteRouter());
+  app.use(meRouter);
+  app.use(galleriesRouter);
+  app.use(analyticsRouter);
 
   app.use((_req, _res, next) => {
     next(AppError.notFound('Route not found'));

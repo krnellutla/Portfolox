@@ -1,45 +1,90 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { CommunitySpace, FeedPost } from '@portfoliohub/shared';
 import { TopNav } from '../../components/nav/TopNav.js';
 import { Eyebrow } from '../../components/ui/Eyebrow.js';
-import type { CommunitySpace } from '../../lib/types.js';
+import { StateView } from '../../components/ui/StateView.js';
+import { getSpaces, getPosts, createPost, likePost, unlikePost } from '../../api/community.js';
+import { connectWs, disconnectWs } from '../../api/ws.js';
+import { qk } from '../../lib/query-client.js';
+import { seedAvatarUrl, seedPhotoUrl } from '../../lib/seed-photos.js';
 import { PostCard } from './PostCard.js';
-import {
-  ACTIVE_NOW, FEED_POSTS, PHOTOGRAPHER_GRADIENTS, SPACES, TRENDING_TAGS,
-} from './mock.js';
 
-const ME_ID = 'ph1';
-const ME_GRAD = PHOTOGRAPHER_GRADIENTS[ME_ID];
+const TRENDING_TAGS = ['#iceland', '#fineart', '#print-edition', '#critique', '#35mm', '#landscape'];
 
 export default function CommunityPage() {
+  const queryClient = useQueryClient();
   const [activeSpace, setActiveSpace] = useState<CommunitySpace>('show-your-work');
   const [composer, setComposer] = useState('');
-  const [posts, setPosts] = useState(FEED_POSTS);
 
-  function submitPost() {
-    if (!composer.trim()) return;
-    setPosts((prev) => [
-      {
-        id: `post-${Date.now()}`,
-        author: {
-          id: ME_ID,
-          handle: 'miracalder',
-          displayName: 'Mira Calder',
-          avatarUrl: null,
-          specialty: 'Landscape',
-        },
-        body: composer.trim(),
+  useEffect(() => {
+    connectWs();
+    return () => disconnectWs();
+  }, []);
+
+  const { data: spaces } = useQuery({
+    queryKey: qk.community.spaces(),
+    queryFn: getSpaces,
+  });
+
+  const { data: feed, isLoading, error } = useQuery({
+    queryKey: qk.community.feed(activeSpace),
+    queryFn: () => getPosts(activeSpace),
+    staleTime: 30_000,
+  });
+
+  const likeMutation = useMutation({
+    mutationFn: ({ id, liked }: { id: string; liked: boolean }) =>
+      liked ? unlikePost(id) : likePost(id),
+    onMutate: ({ id, liked }) => {
+      queryClient.setQueryData(
+        qk.community.feed(activeSpace),
+        (old: typeof feed) =>
+          old && {
+            ...old,
+            items: old.items.map((p) =>
+              p.id === id
+                ? { ...p, likedByMe: !liked, counts: { ...p.counts, likes: p.counts.likes + (liked ? -1 : 1) } }
+                : p,
+            ),
+          },
+      );
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: qk.community.feed(activeSpace) });
+    },
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (body: string) =>
+      createPost({ body, space: activeSpace }),
+    onMutate: (body) => {
+      const optimistic: FeedPost = {
+        id: `opt-${Date.now()}`,
+        author: { id: 'me', handle: 'me', displayName: 'You', avatarUrl: null, specialty: 'Landscape' },
+        body,
         photoIds: [],
         createdAt: new Date().toISOString(),
         counts: { likes: 0, comments: 0 },
         likedByMe: false,
         space: activeSpace,
-      },
-      ...prev,
-    ]);
-    setComposer('');
-  }
+      };
+      queryClient.setQueryData(
+        qk.community.feed(activeSpace),
+        (old: typeof feed) =>
+          old ? { ...old, items: [optimistic, ...old.items] } : old,
+      );
+      setComposer('');
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: qk.community.feed(activeSpace) });
+    },
+  });
 
-  const filtered = posts.filter((p) => p.space === activeSpace);
+  function submitPost() {
+    if (!composer.trim()) return;
+    createMutation.mutate(composer.trim());
+  }
 
   return (
     <div className="min-h-screen bg-paper animate-pfxFade">
@@ -54,7 +99,7 @@ export default function CommunityPage() {
           <Eyebrow className="mb-5">05 — Community</Eyebrow>
 
           <button
-            onClick={() => {}}
+            onClick={() => { const el = document.querySelector('textarea'); el?.focus(); }}
             className="w-full py-[11px] bg-ink text-paper rounded-[9px] font-semibold text-[14px] hover:bg-ink-2 transition-colors mb-6"
           >
             + New post
@@ -62,22 +107,33 @@ export default function CommunityPage() {
 
           <p className="font-mono text-[10px] uppercase tracking-label text-muted mb-2.5">Spaces</p>
           <div className="flex flex-col gap-1">
-            {SPACES.map((s) => (
-              <button
-                key={s.id}
-                onClick={() => setActiveSpace(s.id)}
-                className={`flex items-center justify-between px-3 py-[10px] rounded-[10px] text-left transition-colors ${
-                  activeSpace === s.id
-                    ? 'bg-surface border border-line'
-                    : 'hover:bg-canvas'
-                }`}
-              >
-                <span className={`text-[13.5px] font-semibold ${activeSpace === s.id ? 'text-ink' : 'text-ink-3'}`}>
-                  {s.label}
-                </span>
-                <span className="font-mono text-[10px] text-muted">{s.count}</span>
-              </button>
-            ))}
+            {(spaces ?? [
+              { space: 'show-your-work' as CommunitySpace, label: 'Show Your Work', count: 412 },
+              { space: 'critique' as CommunitySpace, label: 'Critique Corner', count: 189 },
+              { space: 'pricing-business' as CommunitySpace, label: 'Pricing & Business', count: 94 },
+              { space: 'gear' as CommunitySpace, label: 'Gear Talk', count: 266 },
+              { space: 'locations' as CommunitySpace, label: 'Locations', count: 137 },
+            ]).map((s) => {
+              const id = 'space' in s ? s.space : s.space;
+              const label = s.label;
+              const count = s.count;
+              return (
+                <button
+                  key={id}
+                  onClick={() => setActiveSpace(id as CommunitySpace)}
+                  className={`flex items-center justify-between px-3 py-[10px] rounded-[10px] text-left transition-colors ${
+                    activeSpace === id
+                      ? 'bg-surface border border-line'
+                      : 'hover:bg-canvas'
+                  }`}
+                >
+                  <span className={`text-[13.5px] font-semibold ${activeSpace === id ? 'text-ink' : 'text-ink-3'}`}>
+                    {label}
+                  </span>
+                  <span className="font-mono text-[10px] text-muted">{count}</span>
+                </button>
+              );
+            })}
           </div>
         </aside>
 
@@ -86,9 +142,10 @@ export default function CommunityPage() {
           {/* Composer */}
           <div className="bg-surface border border-line rounded-card p-4">
             <div className="flex gap-3">
-              <div
-                className="w-10 h-10 rounded-full shrink-0"
-                style={{ background: ME_GRAD }}
+              <img
+                src={seedAvatarUrl(0, 40)}
+                alt="me"
+                className="w-10 h-10 rounded-full shrink-0 object-cover"
               />
               <textarea
                 value={composer}
@@ -108,7 +165,7 @@ export default function CommunityPage() {
               </div>
               <button
                 onClick={submitPost}
-                disabled={!composer.trim()}
+                disabled={!composer.trim() || createMutation.isPending}
                 className="px-5 py-[8px] bg-ink text-paper rounded-[8px] font-semibold text-[13px] hover:bg-ink-2 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Post
@@ -116,18 +173,27 @@ export default function CommunityPage() {
             </div>
           </div>
 
-          {filtered.length === 0 ? (
+          {isLoading && <StateView variant="loading" title="Loading posts…" />}
+          {error && <StateView variant="error" title="Couldn't load feed" />}
+          {feed && feed.items.length === 0 && (
             <p className="text-center py-16 font-mono text-[13px] text-muted">
               No posts in this space yet.
             </p>
-          ) : (
-            filtered.map((post) => <PostCard key={post.id} post={post} />)
           )}
+          {feed?.items.map((post, i) => (
+            <PostCard
+              key={post.id}
+              post={post}
+              photoUrl={post.photoIds.length > 0 ? seedPhotoUrl(i, 800) : undefined}
+              avatarSrc={post.author.avatarUrl ?? seedAvatarUrl(i % 8, 44)}
+              liked={!!post.likedByMe}
+              onLike={() => likeMutation.mutate({ id: post.id, liked: !!post.likedByMe })}
+            />
+          ))}
         </div>
 
         {/* Right rail */}
         <aside className="hidden md:flex sticky top-[72px] self-start flex-col gap-6">
-          {/* Trending */}
           <div className="bg-surface border border-line rounded-card p-5">
             <p className="font-mono text-[10px] uppercase tracking-label text-muted mb-3">Trending</p>
             <div className="flex flex-wrap gap-2">
@@ -142,20 +208,22 @@ export default function CommunityPage() {
             </div>
           </div>
 
-          {/* Active now */}
           <div className="bg-surface border border-line rounded-card p-5">
             <p className="font-mono text-[10px] uppercase tracking-label text-muted mb-3">Active now</p>
             <div className="flex flex-col gap-3">
-              {ACTIVE_NOW.map((u) => (
-                <div key={u.id} className="flex items-center gap-2.5">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center gap-2.5">
                   <div className="relative shrink-0">
-                    <div
-                      className="w-9 h-9 rounded-full"
-                      style={{ background: u.gradient }}
+                    <img
+                      src={seedAvatarUrl(i, 36)}
+                      alt=""
+                      className="w-9 h-9 rounded-full object-cover"
                     />
                     <span className="absolute bottom-0 right-0 w-[10px] h-[10px] rounded-full bg-positive border-2 border-surface" />
                   </div>
-                  <span className="text-[13.5px] text-ink font-semibold">{u.name}</span>
+                  <span className="text-[13.5px] text-ink font-semibold">
+                    {['Ridge Studio', 'K. Møller', 'Noah Petersen'][i - 1]}
+                  </span>
                 </div>
               ))}
             </div>

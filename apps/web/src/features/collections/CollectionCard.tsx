@@ -1,12 +1,19 @@
-import type { Collection } from '../../lib/types.js';
+import type { Collection } from '@portfoliohub/shared';
+import { seedPhotoUrl } from '../../lib/seed-photos.js';
 
 interface CollectionCardProps {
-  collection: Collection & { coverGradients: string[] };
+  collection: Collection;
+  coverOffset?: number;
   onClick?: () => void;
 }
 
-export function CollectionCard({ collection, onClick }: CollectionCardProps) {
-  const covers = collection.coverGradients.slice(0, 4);
+export function CollectionCard({ collection, coverOffset = 0, onClick }: CollectionCardProps) {
+  const coverUrls = collection.coverPhotoUrls?.slice(0, 4) ?? [];
+
+  // Fill remaining slots with seed photos
+  const tiles = Array.from({ length: 4 }, (_, i) =>
+    coverUrls[i] || seedPhotoUrl(coverOffset * 4 + i, 400),
+  );
 
   return (
     <div
@@ -14,11 +21,12 @@ export function CollectionCard({ collection, onClick }: CollectionCardProps) {
       onClick={onClick}
     >
       <div className="grid grid-cols-2 grid-rows-2 gap-[2px] aspect-square">
-        {covers.map((gradient, i) => (
-          <div
+        {tiles.map((src, i) => (
+          <img
             key={i}
-            className="w-full h-full"
-            style={{ background: gradient }}
+            src={src}
+            alt=""
+            className="w-full h-full object-cover"
           />
         ))}
       </div>

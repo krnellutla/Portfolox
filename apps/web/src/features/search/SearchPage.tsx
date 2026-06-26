@@ -1,16 +1,57 @@
-import { useMemo, useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { TopNav } from '../../components/nav/TopNav.js';
 import { PhotoTile } from '../../components/photo/PhotoTile.js';
-import type { SearchFilters } from '../../lib/types.js';
+import { StateView } from '../../components/ui/StateView.js';
+import { seedPhotoUrl } from '../../lib/seed-photos.js';
+import { qk } from '../../lib/query-client.js';
+import { search } from '../../api/search.js';
+import { favoritePhoto, unfavoritePhoto } from '../../api/photos.js';
 import { FilterSidebar } from './FilterSidebar.js';
-import { DEFAULT_FILTERS, MOCK_PHOTOS, SORT_OPTIONS } from './mock.js';
+import type { SearchFilters } from '../../lib/types.js';
+import type { Photo } from '@portfoliohub/shared';
+
+const DEFAULT_FILTERS: SearchFilters = {
+  q: '',
+  styles: [],
+  colors: [],
+  locations: [],
+  sort: 'popular',
+};
+
+const SORT_OPTIONS = [
+  { value: 'popular',    label: 'Most popular' },
+  { value: 'recent',     label: 'Most recent' },
+  { value: 'price-asc',  label: 'Price: low–high' },
+  { value: 'price-desc', label: 'Price: high–low' },
+] as const;
 
 type ColorLabel = SearchFilters['colors'][number];
 type StyleLabel = SearchFilters['styles'][number];
 
 export default function SearchPage() {
-  const [filters, setFilters] = useState<SearchFilters>(DEFAULT_FILTERS);
-  const [liked, setLiked] = useState<Set<string>>(new Set());
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const [filters, setFilters] = useState<SearchFilters>(() => ({
+    ...DEFAULT_FILTERS,
+    q: searchParams.get('q') ?? '',
+    styles: searchParams.get('styles') ? [searchParams.get('styles') as StyleLabel] : [],
+  }));
+
+  // Sync URL params into filters on mount only
+  useEffect(() => {
+    const q = searchParams.get('q') ?? '';
+    const style = searchParams.get('styles');
+    setFilters((prev) => ({
+      ...prev,
+      q,
+      styles: style ? [style as StyleLabel] : prev.styles,
+    }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function updateFilters(patch: Partial<SearchFilters>) {
     setFilters((prev) => ({ ...prev, ...patch }));
@@ -32,14 +73,46 @@ export default function SearchPage() {
     ...filters.locations.map((l) => ({ label: l, remove: () => removeLocation(l) })),
   ];
 
-  const results = useMemo(() => {
-    let photos = [...MOCK_PHOTOS] as Array<typeof MOCK_PHOTOS[0] & { placeholderGradient?: string }>;
-    if (filters.q) {
-      const q = filters.q.toLowerCase();
-      photos = photos.filter((p) => p.title.toLowerCase().includes(q) || p.code.toLowerCase().includes(q));
-    }
-    return photos;
-  }, [filters.q]);
+  const searchKey = qk.search({
+    q: filters.q,
+    styles: filters.styles,
+    colors: filters.colors,
+    locations: filters.locations,
+    sort: filters.sort,
+  });
+
+  const { data: results, isLoading, error } = useQuery({
+    queryKey: searchKey,
+    queryFn: () => search({
+      q: filters.q || undefined,
+      styles: filters.styles.length ? filters.styles : undefined,
+      colors: filters.colors.length ? filters.colors : undefined,
+      locations: filters.locations.length ? filters.locations : undefined,
+      sort: filters.sort,
+    }),
+    placeholderData: (prev) => prev,
+  });
+
+  const favMutation = useMutation({
+    mutationFn: ({ id, favorited }: { id: string; favorited: boolean }) =>
+      favorited ? unfavoritePhoto(id) : favoritePhoto(id),
+    onMutate: ({ id, favorited }) => {
+      queryClient.setQueryData(searchKey, (old: typeof results) => {
+        if (!old) return old;
+        return {
+          ...old,
+          photos: old.photos.map((p: Photo) =>
+            p.id === id ? { ...p, favoritedByMe: !favorited } : p,
+          ),
+        };
+      });
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: searchKey });
+    },
+  });
+
+  const photos = results?.photos ?? [];
 
   return (
     <div className="min-h-screen bg-paper animate-pfxFade">
@@ -53,7 +126,7 @@ export default function SearchPage() {
           {/* Header row */}
           <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
             <h2 className="font-serif text-[32px] font-[500] text-ink tracking-[-0.02em]">
-              {results.length.toLocaleString()} frames
+              {isLoading ? '—' : `${(results?.total ?? photos.length).toLocaleString()} frames`}
             </h2>
             <div className="relative">
               <select
@@ -91,51 +164,53 @@ export default function SearchPage() {
             </div>
           )}
 
-          {/* 4-col photo grid */}
-          <div className="grid grid-cols-4 gap-3">
-            {results.map((photo) => {
-              const isLiked = liked.has(photo.id) || !!photo.likedByMe;
-              return (
-                <div key={photo.id} className="group relative">
-                  <PhotoTile
-                    ratio="1:1"
-                    src={photo.url || undefined}
-                    alt={photo.title}
-                    placeholderGradient={(photo as { placeholderGradient?: string }).placeholderGradient}
-                    code={photo.code}
-                    action={
-                      <button
-                        onClick={() =>
-                          setLiked((prev) => {
-                            const next = new Set(prev);
-                            next.has(photo.id) ? next.delete(photo.id) : next.add(photo.id);
-                            return next;
-                          })
-                        }
-                        className={`w-7 h-7 rounded-full flex items-center justify-center text-[14px] backdrop-blur-sm transition-colors ${
-                          isLiked ? 'bg-ink text-paper' : 'bg-white/20 text-white hover:bg-white/40'
-                        }`}
-                        aria-label={isLiked ? 'Unlike' : 'Like'}
-                      >
-                        {isLiked ? '♥' : '♡'}
-                      </button>
-                    }
-                  />
-                  <p className="mt-2 text-[13px] font-semibold text-ink truncate">{photo.title}</p>
-                  {photo.priceFrom && (
-                    <p className="font-mono text-[10.5px] text-muted mt-0.5">
-                      from ${photo.priceFrom}
-                    </p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          {isLoading && <StateView variant="loading" title="Searching…" />}
+          {error && <StateView variant="error" title="Search failed" />}
 
-          {results.length === 0 && (
-            <div className="text-center py-24 text-muted font-mono text-[13px]">
-              No frames match your filters.
-            </div>
+          {!isLoading && !error && (
+            <>
+              {photos.length === 0 ? (
+                <StateView variant="empty" title="No frames match your filters" />
+              ) : (
+                <div className="grid grid-cols-4 gap-3">
+                  {photos.map((photo, i) => {
+                    const isFavorited = !!photo.favoritedByMe;
+                    const src = photo.url || photo.thumbUrl || seedPhotoUrl(i);
+                    return (
+                      <div key={photo.id} className="group relative">
+                        <PhotoTile
+                          ratio="1:1"
+                          src={src}
+                          alt={photo.title}
+                          code={photo.code}
+                          onClick={() => navigate(`/lightbox?id=${photo.id}`)}
+                          action={
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                favMutation.mutate({ id: photo.id, favorited: isFavorited });
+                              }}
+                              className={`w-7 h-7 rounded-full flex items-center justify-center text-[14px] backdrop-blur-sm transition-colors ${
+                                isFavorited ? 'bg-ink text-paper' : 'bg-white/20 text-white hover:bg-white/40'
+                              }`}
+                              aria-label={isFavorited ? 'Unfavorite' : 'Favorite'}
+                            >
+                              {isFavorited ? '♥' : '♡'}
+                            </button>
+                          }
+                        />
+                        <p className="mt-2 text-[13px] font-semibold text-ink truncate">{photo.title}</p>
+                        {photo.priceFrom && (
+                          <p className="font-mono text-[10.5px] text-muted mt-0.5">
+                            from ${photo.priceFrom}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

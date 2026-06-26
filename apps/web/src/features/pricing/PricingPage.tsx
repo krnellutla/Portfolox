@@ -1,14 +1,33 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Eyebrow } from '../../components/ui/Eyebrow.js';
 import { TopNav } from '../../components/nav/TopNav.js';
+import { StateView } from '../../components/ui/StateView.js';
 import { PlanCard } from './PlanCard.js';
 import { PrintCard } from './PrintCard.js';
-import { PLANS, PRINT_OPTIONS } from './mock.js';
+import { getPlans, getPrintOptions } from '../../api/plans.js';
+import { qk } from '../../lib/query-client.js';
+import { PLANS as FALLBACK_PLANS, PRINT_OPTIONS as FALLBACK_PRINT_OPTIONS } from './mock.js';
 
 type Billing = 'monthly' | 'annual';
 
 export default function PricingPage() {
   const [billing, setBilling] = useState<Billing>('monthly');
+
+  const { data: plans } = useQuery({
+    queryKey: qk.plans(),
+    queryFn: getPlans,
+    placeholderData: FALLBACK_PLANS as never,
+  });
+
+  const { data: printOptions } = useQuery({
+    queryKey: qk.printOptions(),
+    queryFn: getPrintOptions,
+    placeholderData: FALLBACK_PRINT_OPTIONS as never,
+  });
+
+  const displayPlans = plans ?? FALLBACK_PLANS;
+  const displayPrints = printOptions ?? FALLBACK_PRINT_OPTIONS;
 
   return (
     <div className="min-h-screen bg-paper">
@@ -50,7 +69,7 @@ export default function PricingPage() {
 
         {/* Plan cards */}
         <div className="grid grid-cols-3 gap-[18px] mb-14">
-          {PLANS.map((plan) => (
+          {displayPlans.map((plan) => (
             <PlanCard key={plan.tier} plan={plan} billing={billing} />
           ))}
         </div>
@@ -70,8 +89,8 @@ export default function PricingPage() {
             prints fulfilled and shipped worldwide.
           </p>
           <div className="grid grid-cols-4 gap-4">
-            {PRINT_OPTIONS.map((opt) => (
-              <PrintCard key={opt.id} option={opt} />
+            {displayPrints.map((opt, i) => (
+              <PrintCard key={opt.id} option={opt} index={i} />
             ))}
           </div>
         </div>
