@@ -351,22 +351,30 @@ export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): R
       const { id } = req.params as { id: string };
 
       const objectKeysToDelete = await req.withTenant(async (client) => {
+        // Read node_id first so we can acquire the per-gallery advisory lock
         const assetRow = await client.query(
-          'SELECT id, node_id, object_key, position FROM media_assets WHERE id = $1',
+          'SELECT node_id, object_key FROM media_assets WHERE id = $1',
           [id],
         );
         if (assetRow.rowCount === 0) {
           throw AppError.notFound('Media asset not found');
         }
 
-        const { node_id, object_key, position } = assetRow.rows[0] as {
+        const { node_id, object_key } = assetRow.rows[0] as {
           node_id: string;
           object_key: string;
-          position: number;
         };
 
         // Serialize concurrent deletes/moves within this gallery node
         await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [node_id]);
+
+        // Re-read position under the lock so concurrent sibling deletes don't
+        // produce a stale value and leave a gap in the compaction UPDATE below
+        const posRow = await client.query(
+          'SELECT position FROM media_assets WHERE id = $1 FOR UPDATE',
+          [id],
+        );
+        const { position } = posRow.rows[0] as { position: number };
 
         // Collect variant keys before the cascade removes variant rows
         const variantRows = await client.query(
