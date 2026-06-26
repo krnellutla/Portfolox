@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { RequireAuth } from './auth/RequireAuth.js';
 import { SessionProvider } from './auth/SessionProvider.js';
+import { ThemeProvider } from './components/ThemeProvider.js';
 import { MobileTabBar } from './components/nav/MobileTabBar.js';
 import { StateView } from './components/ui/StateView.js';
 import AuthCallback from './pages/auth/AuthCallback.js';
@@ -34,6 +35,7 @@ function App() {
   return (
     <BrowserRouter>
       <SessionProvider>
+        <ThemeProvider>
         <Suspense fallback={<RouteFallback />}>
           <Routes>
             <Route path="/" element={<PortfolioViewer />} />
@@ -67,6 +69,7 @@ function App() {
           </Routes>
           <MobileTabBar />
         </Suspense>
+        </ThemeProvider>
       </SessionProvider>
     </BrowserRouter>
   );

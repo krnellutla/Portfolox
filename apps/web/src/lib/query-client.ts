@@ -42,4 +42,6 @@ export const qk = {
   clientGallery: (shareToken: string) => ['client-gallery', shareToken] as const,
   collections: () => ['collections'] as const,
   me: () => ['me'] as const,
+  theme: () => ['theme'] as const,
+  mySettings: () => ['me', 'settings'] as const,
 };

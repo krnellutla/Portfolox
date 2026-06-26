@@ -21,6 +21,9 @@
   --color-field: #d6d3cb;
   --color-field-bg: #faf9f6;
 
+  /* Tenant-overridable accent (default matches --color-negative / chip-warm) */
+  --color-accent: #c0683f;
+
   /* Semantic */
   --color-positive: #3f7a5e;
   --color-positive-soft: #6fae8c;
