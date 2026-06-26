@@ -374,6 +374,9 @@ export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): R
           'SELECT position FROM media_assets WHERE id = $1 FOR UPDATE',
           [id],
         );
+        if (posRow.rowCount === 0) {
+          throw AppError.notFound('Media asset not found');
+        }
         const { position } = posRow.rows[0] as { position: number };
 
         // Collect variant keys before the cascade removes variant rows
@@ -425,21 +428,34 @@ export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): R
       const { position: requestedPosition } = req.body as { position: number };
 
       const asset = await req.withTenant(async (client) => {
+        // Read node_id first so we can acquire the per-gallery advisory lock
         const assetRow = await client.query(
-          `SELECT id, tenant_id, node_id, object_key, url, mime_type, status,
-                  position, original_filename, byte_size, checksum, width, height, created_at
-           FROM media_assets WHERE id = $1`,
+          'SELECT node_id FROM media_assets WHERE id = $1',
           [id],
         );
         if (assetRow.rowCount === 0) {
           throw AppError.notFound('Media asset not found');
         }
 
-        const currentPosition = assetRow.rows[0].position as number;
         const nodeId = assetRow.rows[0].node_id as string;
 
         // Serialize concurrent moves/deletes within this gallery node
         await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [nodeId]);
+
+        // Re-read position under the lock (FOR UPDATE) so a concurrent sibling
+        // delete/move committed between the first SELECT and the lock cannot
+        // produce a stale currentPosition and leave duplicate/gap positions
+        const lockedRow = await client.query(
+          `SELECT id, tenant_id, node_id, object_key, url, mime_type, status,
+                  position, original_filename, byte_size, checksum, width, height, created_at
+           FROM media_assets WHERE id = $1 FOR UPDATE`,
+          [id],
+        );
+        if (lockedRow.rowCount === 0) {
+          throw AppError.notFound('Media asset not found');
+        }
+
+        const currentPosition = lockedRow.rows[0].position as number;
 
         // Count siblings (excluding self) to clamp position
         const countRow = await client.query(
@@ -450,7 +466,7 @@ export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): R
         const newPosition = Math.min(requestedPosition, siblingCount);
 
         if (newPosition === currentPosition) {
-          return assetRow.rows[0];
+          return lockedRow.rows[0];
         }
 
         if (newPosition > currentPosition) {
