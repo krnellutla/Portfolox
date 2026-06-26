@@ -4,6 +4,13 @@ export interface PresignedUploadResult {
   expiresAt: Date;
 }
 
+export interface PutObjectParams {
+  key: string;
+  body: Buffer;
+  contentType: string;
+  cacheControl?: string;
+}
+
 export interface StorageProvider {
   presignUpload(params: {
     key: string;
@@ -15,4 +22,8 @@ export interface StorageProvider {
   deleteObject(key: string): Promise<void>;
 
   getPublicUrl(key: string): string;
+
+  getObject(key: string): Promise<Buffer>;
+
+  putObject(params: PutObjectParams): Promise<void>;
 }

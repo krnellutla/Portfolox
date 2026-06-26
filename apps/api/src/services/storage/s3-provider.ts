@@ -1,6 +1,6 @@
-import { PutObjectCommand, DeleteObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import type { StorageProvider, PresignedUploadResult } from './provider.js';
+import type { PresignedUploadResult, PutObjectParams, StorageProvider } from './provider.js';
 
 interface S3ProviderConfig {
   bucket: string;
@@ -61,5 +61,29 @@ export class S3StorageProvider implements StorageProvider {
 
   getPublicUrl(key: string): string {
     return `${this.publicBaseUrl}/${key}`;
+  }
+
+  async getObject(key: string): Promise<Buffer> {
+    const command = new GetObjectCommand({ Bucket: this.bucket, Key: key });
+    const response = await this.client.send(command);
+    if (!response.Body) {
+      throw Object.assign(new Error(`Empty body for key: ${key}`), { code: 'NOT_FOUND' });
+    }
+    const chunks: Uint8Array[] = [];
+    for await (const chunk of response.Body as AsyncIterable<Uint8Array>) {
+      chunks.push(chunk);
+    }
+    return Buffer.concat(chunks);
+  }
+
+  async putObject(params: PutObjectParams): Promise<void> {
+    const command = new PutObjectCommand({
+      Bucket: this.bucket,
+      Key: params.key,
+      Body: params.body,
+      ContentType: params.contentType,
+      CacheControl: params.cacheControl ?? 'public, max-age=31536000, immutable',
+    });
+    await this.client.send(command);
   }
 }
