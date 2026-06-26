@@ -1,4 +1,4 @@
-import type { AuthProvider } from '@portfoliohub/shared';
+import type { AuthProvider } from '@blueflutes/shared';
 import { AppError } from './app-error.js';
 
 export interface OAuthProfile {
@@ -52,7 +52,7 @@ async function fetchGoogleProfile(accessToken: string): Promise<OAuthProfile> {
 }
 
 async function fetchGitHubProfile(accessToken: string): Promise<OAuthProfile> {
-  const headers = { Authorization: `Bearer ${accessToken}`, 'User-Agent': 'PortfolioHub' };
+  const headers = { Authorization: `Bearer ${accessToken}`, 'User-Agent': 'Blueflutes' };
 
   const userRes = await fetch('https://api.github.com/user', { headers });
   if (!userRes.ok) {

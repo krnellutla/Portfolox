@@ -1,4 +1,4 @@
-import type { AuthProvider } from '@portfoliohub/shared';
+import type { AuthProvider } from '@blueflutes/shared';
 import { GitHub, Google, type OAuth2Tokens, generateCodeVerifier, generateState } from 'arctic';
 import { env } from '../config/env.js';
 import { AppError } from './app-error.js';

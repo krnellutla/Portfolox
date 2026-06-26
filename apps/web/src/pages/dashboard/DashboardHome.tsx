@@ -14,7 +14,7 @@ export default function DashboardHome() {
     <div className="space-y-6">
       <div>
         <h1 className="text-lg font-semibold tracking-tight">Overview</h1>
-        <p className="mt-1 text-sm text-slate-400">Welcome to your PortfolioHub dashboard.</p>
+        <p className="mt-1 text-sm text-slate-400">Welcome to your Blueflutes dashboard.</p>
       </div>
 
       <div className="rounded-lg border border-slate-800 bg-slate-800/50 p-6">

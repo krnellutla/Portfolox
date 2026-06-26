@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { Photographer } from '@portfoliohub/shared';
+import type { Photographer } from '@blueflutes/shared';
 import { TopNav } from '../../components/nav/TopNav.js';
 import { Avatar } from '../../components/ui/Avatar.js';
 import { Chip } from '../../components/ui/Chip.js';

@@ -1,4 +1,4 @@
-import type { NodeResponse } from '@portfoliohub/shared';
+import type { NodeResponse } from '@blueflutes/shared';
 import {
   DndContext,
   DragOverlay,

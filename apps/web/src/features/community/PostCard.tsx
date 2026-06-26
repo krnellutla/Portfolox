@@ -1,4 +1,4 @@
-import type { FeedPost } from '@portfoliohub/shared';
+import type { FeedPost } from '@blueflutes/shared';
 
 function relativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();

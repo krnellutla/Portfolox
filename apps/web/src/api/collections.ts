@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { collectionSchema } from '@portfoliohub/shared';
+import { collectionSchema } from '@blueflutes/shared';
 import { apiFetch } from './client.js';
 
 export function getCollections() {

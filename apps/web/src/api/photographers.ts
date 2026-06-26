@@ -4,7 +4,7 @@ import {
   followResponseSchema,
   gallerySchema,
   paginatedPhotosSchema,
-} from '@portfoliohub/shared';
+} from '@blueflutes/shared';
 import { apiFetch } from './client.js';
 
 export function getProfile(handle: string) {

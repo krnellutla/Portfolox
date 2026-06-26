@@ -1,4 +1,4 @@
-# PortfolioHub
+# Blueflutes
 
 Multi-tenant portfolio platform. One React codebase serves web and desktop (Tauri) clients. Tenants are isolated via Postgres Row-Level Security and resolved by host/domain.
 

@@ -1,4 +1,4 @@
-import type { ApiEnvelope } from '@portfoliohub/shared';
+import type { ApiEnvelope } from '@blueflutes/shared';
 import type { ErrorRequestHandler } from 'express';
 import { ZodError } from 'zod';
 import { AppError } from '../lib/app-error.js';

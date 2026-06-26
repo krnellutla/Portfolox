@@ -1,4 +1,4 @@
-import type { AuthProvider } from '@portfoliohub/shared';
+import type { AuthProvider } from '@blueflutes/shared';
 import type { CookieOptions, Request, Response } from 'express';
 import { env } from '../config/env.js';
 

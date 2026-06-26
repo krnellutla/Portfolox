@@ -8,7 +8,7 @@ import { getPlans } from '../../api/plans.js';
 import { updatePlan, updateStudio, checkHandle } from '../../api/me.js';
 import { qk } from '../../lib/query-client.js';
 import { PLANS as FALLBACK_PLANS } from '../pricing/mock.js';
-import type { Specialty, PlanTier } from '@portfoliohub/shared';
+import type { Specialty, PlanTier } from '@blueflutes/shared';
 
 const SPECIALTIES: Specialty[] = ['Landscape', 'Portrait', 'Street', 'Wedding', 'Fine Art', 'Documentary'];
 
@@ -63,7 +63,7 @@ export default function OnboardingPage() {
     <div className="min-h-screen bg-paper px-6 py-12 pb-20 animate-pfxFade">
       <div className="max-w-[600px] mx-auto text-center">
         <p className="font-serif text-[28px] font-[600] tracking-[-0.015em] text-ink mb-8">
-          Portfolix
+          Blueflutes
         </p>
         <div className="mb-10">
           <StepIndicator current={step} onStepClick={(s) => s < step && setStep(s)} />
@@ -230,7 +230,7 @@ export default function OnboardingPage() {
               handleAvail === false ? 'border-negative' : handleAvail === true ? 'border-positive' : 'border-field'
             }`}>
               <span className="px-[13px] py-[13px] bg-canvas text-muted font-mono text-[13px] whitespace-nowrap">
-                portfolix.com/
+                blueflutes.com/
               </span>
               <input
                 value={handle}
@@ -290,7 +290,7 @@ export default function OnboardingPage() {
             </h1>
             <p className="text-[15px] text-ink-3 leading-[1.5] mb-7">
               Your studio is live at{' '}
-              <span className="font-mono text-ink">portfolix.com/{handle}</span>. Upload your
+              <span className="font-mono text-ink">blueflutes.com/{handle}</span>. Upload your
               first frames to get going.
             </p>
             <div className="flex gap-3 justify-center">

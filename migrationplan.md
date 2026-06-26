@@ -1,4 +1,4 @@
-# PortfolioHub → Supabase Migration Plan
+# Blueflutes → Supabase Migration Plan
 
 > Generated 2026-06-26. Covers auth, storage, database, and Express API layer.
 
@@ -6,7 +6,7 @@
 
 ## Executive Summary
 
-PortfolioHub's multi-tenancy is driven by a server-set per-transaction GUC (`app.tenant_id` via `set_config(...)`) resolved from the HTTP Host header — the opposite shape from Supabase's native model where clients talk directly to Postgres carrying a user JWT.
+Blueflutes's multi-tenancy is driven by a server-set per-transaction GUC (`app.tenant_id` via `set_config(...)`) resolved from the HTTP Host header — the opposite shape from Supabase's native model where clients talk directly to Postgres carrying a user JWT.
 
 **Recommendation: adopt Supabase as managed infrastructure (Postgres + Auth + Storage + CDN), keep `apps/api` (Express) as the sole data plane.** This is "Path A."
 
@@ -41,7 +41,7 @@ Phases 1 (DB) and 2 (Storage) are low-risk mechanical swaps. Phase 3 (Auth) is t
 ### What must change
 
 - **`DATABASE_URL`**: migrations → Supabase direct (port 5432); runtime pool → Supabase pooler (port 6543)
-- **`0002_roles.sql` + `bootstrap-roles.ts`**: verify the `NOSUPERUSER NOBYPASSRLS` custom role (`portfoliohub_app`) can be created on Supabase (validate in Phase 0 spike). Do not run the Express pool as `postgres`, `authenticated`, or `service_role` — all three undermine FORCE-RLS
+- **`0002_roles.sql` + `bootstrap-roles.ts`**: verify the `NOSUPERUSER NOBYPASSRLS` custom role (`blueflutes_app`) can be created on Supabase (validate in Phase 0 spike). Do not run the Express pool as `postgres`, `authenticated`, or `service_role` — all three undermine FORCE-RLS
 - **PostgREST hardening**: add `REVOKE` on all tenant tables from `anon`/`authenticated` to block PostgREST bypass. The existing fail-closed behavior (requests without `app.tenant_id` return zero rows) is a useful backstop but not sufficient alone
 
 ### Verification gate

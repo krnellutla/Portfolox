@@ -1,4 +1,4 @@
-import type { NodeResponse } from '@portfoliohub/shared';
+import type { NodeResponse } from '@blueflutes/shared';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ─── mock the API module ─────────────────────────────────────────────────────

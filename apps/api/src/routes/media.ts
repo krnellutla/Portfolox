@@ -12,7 +12,7 @@ import {
   moveMediaRequestSchema,
   presignRequestSchema,
   presignResponseSchema,
-} from '@portfoliohub/shared';
+} from '@blueflutes/shared';
 import { randomUUID } from 'node:crypto';
 import { Router } from 'express';
 import { z } from 'zod';

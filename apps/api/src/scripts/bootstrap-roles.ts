@@ -22,7 +22,7 @@ async function main() {
     ]);
 
     // NOBYPASSRLS/NOSUPERUSER are intentionally omitted: a CREATEROLE
-    // non-superuser (portfoliohub_migrator) cannot grant those attributes
+    // non-superuser (blueflutes_migrator) cannot grant those attributes
     // anyway, so new roles default to NOBYPASSRLS/NOSUPERUSER, and
     // explicitly restating them here raises a permissions error.
     if (rowCount === 0) {

@@ -21,7 +21,7 @@ photographersRouter.get(
         coverUrl: cdn('1506905925346-21bda4d32df4', 1200),
         location: 'Unknown',
         specialty: 'Landscape',
-        bio: 'Photographer on Portfolix.',
+        bio: 'Photographer on Blueflutes.',
         plan: 'studio',
         stats: { frames: 0, followers: 0, printsSold: 0 },
         isFollowedByMe: false,

@@ -1,4 +1,4 @@
-import type { ApiEnvelope } from '@portfoliohub/shared';
+import type { ApiEnvelope } from '@blueflutes/shared';
 import { Router } from 'express';
 
 export const healthRouter: Router = Router();

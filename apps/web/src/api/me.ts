@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { photographerSchema, handleAvailableSchema, gallerySchema } from '@portfoliohub/shared';
+import { photographerSchema, handleAvailableSchema, gallerySchema } from '@blueflutes/shared';
 import { apiFetch } from './client.js';
 
 export function getMe() {

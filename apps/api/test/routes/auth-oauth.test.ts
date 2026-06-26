@@ -240,7 +240,7 @@ describe('GET /auth/:provider and /auth/:provider/callback', () => {
 
     expect(res.status).toBe(302);
     const location = new URL(res.headers.location as string);
-    expect(`${location.protocol}//${location.host}${location.pathname}`).toBe('portfoliohub://auth/callback');
+    expect(`${location.protocol}//${location.host}${location.pathname}`).toBe('blueflutes://auth/callback');
     expect(location.searchParams.get('refresh_token')).toBeTruthy();
 
     // No refresh cookie set for the desktop flow.

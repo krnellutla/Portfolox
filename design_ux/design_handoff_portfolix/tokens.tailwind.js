@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────
-// Portfolix — Design tokens as a Tailwind v3 config extension.
+// Blueflutes — Design tokens as a Tailwind v3 config extension.
 // Merge `theme.extend` into your existing tailwind.config.js.
 // Every value below is taken verbatim from the HTML reference prototype.
 // ─────────────────────────────────────────────────────────────────────────

@@ -3,7 +3,7 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: portfoliohub
+      POSTGRES_DB: blueflutes
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     volumes:
@@ -42,8 +42,8 @@ services:
     entrypoint: >
       /bin/sh -c "
         mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin};
-        mc mb --ignore-existing local/${STORAGE_BUCKET:-portfoliohub};
-        mc anonymous set download local/${STORAGE_BUCKET:-portfoliohub};
+        mc mb --ignore-existing local/${STORAGE_BUCKET:-blueflutes};
+        mc anonymous set download local/${STORAGE_BUCKET:-blueflutes};
       "
 
   api:
@@ -61,11 +61,11 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3001
-      DATABASE_URL: postgresql://${DB_APP_ROLE:-portfoliohub_app}:${DB_APP_ROLE_PASSWORD}@postgres:5432/portfoliohub
-      DATABASE_MIGRATION_URL: postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/portfoliohub
+      DATABASE_URL: postgresql://${DB_APP_ROLE:-blueflutes_app}:${DB_APP_ROLE_PASSWORD}@postgres:5432/blueflutes
+      DATABASE_MIGRATION_URL: postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/blueflutes
       STORAGE_PROVIDER: s3
       STORAGE_ENDPOINT: http://minio:9000
-      STORAGE_PUBLIC_BASE_URL: http://localhost:9000/${STORAGE_BUCKET:-portfoliohub}
+      STORAGE_PUBLIC_BASE_URL: http://localhost:9000/${STORAGE_BUCKET:-blueflutes}
     ports:
       - "3001:3001"
     healthcheck:

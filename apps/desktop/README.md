@@ -1,17 +1,17 @@
-# @portfoliohub/desktop
+# @blueflutes/desktop
 
-Tauri 2.x shell that wraps the `@portfoliohub/web` React app for desktop (Milestone 1.6).
+Tauri 2.x shell that wraps the `@blueflutes/web` React app for desktop (Milestone 1.6).
 
 - `devUrl` points at the `apps/web` Vite dev server (`http://localhost:5173`).
-- `frontendDist` points at `apps/web/dist` (built by `@portfoliohub/web#build`).
+- `frontendDist` points at `apps/web/dist` (built by `@blueflutes/web#build`).
 
 ## Development
 
 Requires the Rust toolchain (`rustup`) in addition to Node/pnpm.
 
 ```sh
-pnpm --filter @portfoliohub/web dev   # in one terminal
-pnpm --filter @portfoliohub/desktop dev
+pnpm --filter @blueflutes/web dev   # in one terminal
+pnpm --filter @blueflutes/desktop dev
 ```
 
 ## Building
@@ -19,10 +19,10 @@ pnpm --filter @portfoliohub/desktop dev
 ```sh
 # Copy apps/web/.env.desktop.example to apps/web/.env.desktop.local first and
 # set VITE_API_BASE_URL to the production API origin (see that file).
-pnpm --filter @portfoliohub/desktop build:desktop
+pnpm --filter @blueflutes/desktop build:desktop
 ```
 
-`build:desktop` builds `@portfoliohub/web` in "desktop" mode (`vite build --mode desktop`, which
+`build:desktop` builds `@blueflutes/web` in "desktop" mode (`vite build --mode desktop`, which
 embeds the absolute `VITE_API_BASE_URL` since the bundled app has no dev proxy) before running
 `tauri build`. It is intentionally kept out of the default `turbo run build` pipeline (it requires
 the Rust toolchain and is slow/platform-specific); run it explicitly when producing a desktop
@@ -31,20 +31,20 @@ build.
 ## Auth and networking
 
 - OAuth happens in the system browser (`tauri-plugin-opener`), not the embedded webview; the API
-  redirects back via the `portfoliohub://auth/callback` deep link (`tauri-plugin-deep-link`).
+  redirects back via the `blueflutes://auth/callback` deep link (`tauri-plugin-deep-link`).
 - `capabilities/default.json`'s `opener:allow-open-url` only permits opening the API's
   `/auth/google` and `/auth/github` initiate endpoints (the API then redirects to the provider).
-  Keep its `https://api.portfoliohub.example.com/auth/*` entries in sync with `VITE_API_BASE_URL`
+  Keep its `https://api.blueflutes.example.com/auth/*` entries in sync with `VITE_API_BASE_URL`
   (same placeholder as the CSP `connect-src`, above).
 - The refresh token is stored in the OS keychain (`tauri-plugin-keyring`) and sent as
   `X-Refresh-Token` for `/auth/refresh` and `/auth/logout`, since the webview's origin can't share
   the web app's httpOnly refresh cookie with the API origin.
 - The bundled app's origin (`tauri://localhost` / `http://tauri.localhost`) must be included in
   the API's `CORS_ALLOWED_ORIGINS`, and `DESKTOP_AUTH_REDIRECT_URL` must match the
-  `portfoliohub` scheme registered below.
+  `blueflutes` scheme registered below.
 
 **Known limitation:** custom URL schemes can't be origin-verified, so any locally registered app
-could invoke `portfoliohub://auth/callback?refresh_token=...` with an attacker-supplied token
+could invoke `blueflutes://auth/callback?refresh_token=...` with an attacker-supplied token
 (session fixation — the victim would end up signed into the attacker's account, not have their
 own credentials disclosed). `SessionProvider`'s `extractRefreshToken` checks the scheme/path as
 defense-in-depth; the real mitigations are server-side: the refresh token is one-time, single-use,
@@ -64,7 +64,7 @@ LaunchServices) — bounded by the same one-time/rotation properties.
   `TAURI_SIGNING_PRIVATE_KEY` (the key contents) and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` (if any)
   as CI secrets — `tauri build` picks these up automatically. If you regenerate the keypair,
   update `pubkey` here to match.
-- `endpoints` is a placeholder (`updates.portfoliohub.example.com`) — point it at the real update
+- `endpoints` is a placeholder (`updates.blueflutes.example.com`) — point it at the real update
   manifest host before shipping.
 
 ## Content Security Policy

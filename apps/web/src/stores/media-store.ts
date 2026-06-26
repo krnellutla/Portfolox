@@ -1,4 +1,4 @@
-import type { MediaAssetWithVariants, MediaListResponse } from '@portfoliohub/shared';
+import type { MediaAssetWithVariants, MediaListResponse } from '@blueflutes/shared';
 import { create } from 'zustand';
 import {
   deleteMedia,

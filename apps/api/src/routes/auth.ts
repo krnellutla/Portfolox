@@ -1,5 +1,5 @@
-import type { ApiEnvelope, DesktopRefreshResponse, LogoutResponse, RefreshResponse } from '@portfoliohub/shared';
-import { authProvider } from '@portfoliohub/shared';
+import type { ApiEnvelope, DesktopRefreshResponse, LogoutResponse, RefreshResponse } from '@blueflutes/shared';
+import { authProvider } from '@blueflutes/shared';
 import { Router } from 'express';
 import { env } from '../config/env.js';
 import { AppError } from '../lib/app-error.js';

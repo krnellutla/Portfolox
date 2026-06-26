@@ -5,12 +5,12 @@ describe('stripLocationQuery', () => {
   it('strips the query string from a redirect Location header before logging', () => {
     const res = {
       statusCode: 302,
-      headers: { location: 'portfoliohub://auth/callback?refresh_token=super-secret-token' },
+      headers: { location: 'blueflutes://auth/callback?refresh_token=super-secret-token' },
     };
 
     const serialized = stripLocationQuery(res);
 
-    expect(serialized.headers.location).toBe('portfoliohub://auth/callback');
+    expect(serialized.headers.location).toBe('blueflutes://auth/callback');
     expect(JSON.stringify(serialized)).not.toContain('super-secret-token');
   });
 

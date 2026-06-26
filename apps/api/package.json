@@ -1,5 +1,5 @@
 {
-  "name": "@portfoliohub/api",
+  "name": "@blueflutes/api",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -17,7 +17,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1073.0",
     "@aws-sdk/s3-request-presigner": "^3.1073.0",
-    "@portfoliohub/shared": "workspace:*",
+    "@blueflutes/shared": "workspace:*",
     "arctic": "^3.7.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",

@@ -6,7 +6,7 @@ import {
   funnelStageSchema,
   buyerSummarySchema,
   orderSchema,
-} from '@portfoliohub/shared';
+} from '@blueflutes/shared';
 import { apiFetch } from './client.js';
 
 export function getSummary(range: string) {

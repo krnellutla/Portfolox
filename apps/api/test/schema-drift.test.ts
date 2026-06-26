@@ -6,7 +6,7 @@ import {
   tenantSettingsSchema,
   tokenSchema,
   userSchema,
-} from '@portfoliohub/shared';
+} from '@blueflutes/shared';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import {
@@ -21,7 +21,7 @@ import {
 
 /**
  * Guards against drift between the DB schema (Drizzle) and the API contract
- * (Zod schemas in @portfoliohub/shared): every field the contract promises
+ * (Zod schemas in @blueflutes/shared): every field the contract promises
  * must exist on the corresponding table with a compatible primitive shape.
  */
 function unwrap(schema: z.ZodTypeAny): z.ZodTypeAny {

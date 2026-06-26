@@ -10,7 +10,7 @@ import { search } from '../../api/search.js';
 import { favoritePhoto, unfavoritePhoto } from '../../api/photos.js';
 import { FilterSidebar } from './FilterSidebar.js';
 import type { SearchFilters } from '../../lib/types.js';
-import type { Photo } from '@portfoliohub/shared';
+import type { Photo } from '@blueflutes/shared';
 
 const DEFAULT_FILTERS: SearchFilters = {
   q: '',

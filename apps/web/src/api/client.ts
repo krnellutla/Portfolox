@@ -1,5 +1,5 @@
-import type { ApiEnvelope, RefreshResponse } from '@portfoliohub/shared';
-import { desktopRefreshResponseSchema, refreshResponseSchema } from '@portfoliohub/shared';
+import type { ApiEnvelope, RefreshResponse } from '@blueflutes/shared';
+import { desktopRefreshResponseSchema, refreshResponseSchema } from '@blueflutes/shared';
 import type { z } from 'zod';
 import { env } from '../config/env.js';
 import { isDesktop } from '../lib/platform.js';

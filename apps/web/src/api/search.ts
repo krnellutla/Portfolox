@@ -1,4 +1,4 @@
-import { searchResultSchema, searchFacetsSchema } from '@portfoliohub/shared';
+import { searchResultSchema, searchFacetsSchema } from '@blueflutes/shared';
 import { apiFetch } from './client.js';
 
 export interface SearchParams {

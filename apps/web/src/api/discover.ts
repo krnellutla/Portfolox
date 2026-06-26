@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { photographerSchema } from '@portfoliohub/shared';
-import { paginatedPhotosSchema } from '@portfoliohub/shared';
+import { photographerSchema } from '@blueflutes/shared';
+import { paginatedPhotosSchema } from '@blueflutes/shared';
 import { apiFetch } from './client.js';
 
 export function getFeatured() {

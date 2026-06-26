@@ -1,4 +1,4 @@
-import type { MediaAssetWithVariants } from '@portfoliohub/shared';
+import type { MediaAssetWithVariants } from '@blueflutes/shared';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { ResponsiveImage } from '../../../components/ui/ResponsiveImage.js';

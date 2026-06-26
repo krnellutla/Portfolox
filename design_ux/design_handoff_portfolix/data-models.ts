@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────
-// Portfolix — Domain data models (TypeScript).
+// Blueflutes — Domain data models (TypeScript).
 // These describe the entities the UI binds to. Field names mirror what the
 // reference prototype renders. Adapt nullability / IDs to your API.
 // ─────────────────────────────────────────────────────────────────────────
@@ -16,7 +16,7 @@ export type PlanTier = 'solo' | 'studio' | 'atelier';
 
 export interface Photographer {
   id: ID;
-  handle: string;              // unique slug, used as portfolix.com/<handle>
+  handle: string;              // unique slug, used as blueflutes.com/<handle>
   displayName: string;
   avatarUrl: string | null;
   coverUrl: string | null;

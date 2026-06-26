@@ -1,4 +1,4 @@
-import type { Collection } from '@portfoliohub/shared';
+import type { Collection } from '@blueflutes/shared';
 import { seedPhotoUrl } from '../../lib/seed-photos.js';
 
 interface CollectionCardProps {

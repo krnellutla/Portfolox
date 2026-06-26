@@ -1,4 +1,4 @@
-import type { PrintOption } from '@portfoliohub/shared';
+import type { PrintOption } from '@blueflutes/shared';
 import { PhotoTile } from '../../components/photo/PhotoTile.js';
 import { seedPhotoUrl } from '../../lib/seed-photos.js';
 

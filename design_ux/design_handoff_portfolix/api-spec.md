@@ -1,4 +1,4 @@
-# Portfolix — API surface (suggested REST contract)
+# Blueflutes — API surface (suggested REST contract)
 
 > Suggested endpoints the UI implies. Adapt verbs/shapes to your existing
 > REST or GraphQL conventions. Auth assumed via bearer token; `me` = current user.

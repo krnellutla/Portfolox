@@ -1,7 +1,7 @@
 import { env } from '../config/env.js';
 import { getAccessToken } from './client.js';
 import { queryClient, qk } from '../lib/query-client.js';
-import type { Message } from '@portfoliohub/shared';
+import type { Message } from '@blueflutes/shared';
 
 type WsEvent =
   | { type: 'message.created'; data: Message }

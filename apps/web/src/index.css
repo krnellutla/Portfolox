@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Portfolix design tokens — translated from design_ux/.../tokens.tailwind.js.
+   Blueflutes design tokens — translated from design_ux/.../tokens.tailwind.js.
    Tailwind v4 reads theme customization from @theme, not a JS config file.
    PHOTO_TONES from the handoff are reference-only (replaced by real images
    in production) and are intentionally excluded here.

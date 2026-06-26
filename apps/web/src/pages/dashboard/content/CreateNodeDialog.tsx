@@ -1,5 +1,5 @@
-import type { NodeResponse } from '@portfoliohub/shared';
-import { slugify } from '@portfoliohub/shared';
+import type { NodeResponse } from '@blueflutes/shared';
+import { slugify } from '@blueflutes/shared';
 import { useState } from 'react';
 import { Button } from '../../../components/ui/Button.js';
 import { Input } from '../../../components/ui/Input.js';

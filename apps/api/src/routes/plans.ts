@@ -7,7 +7,7 @@ const PLANS = [
   {
     tier: 'solo', name: 'Solo', priceMonthly: 6, tagline: 'For getting started',
     commissionPct: 0, highlighted: false,
-    features: ['Unlimited photo storage', '1 portfolio site', 'Community access', 'Basic print store', 'Portfolix subdomain'],
+    features: ['Unlimited photo storage', '1 portfolio site', 'Community access', 'Basic print store', 'Blueflutes subdomain'],
   },
   {
     tier: 'studio', name: 'Studio', priceMonthly: 14, tagline: 'Most popular',

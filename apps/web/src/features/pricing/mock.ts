@@ -12,7 +12,7 @@ export const PLANS: Plan[] = [
       '1 portfolio site',
       'Community access',
       'Basic print store',
-      'Portfolix subdomain',
+      'Blueflutes subdomain',
     ],
     highlighted: false,
   },

@@ -1,4 +1,4 @@
-import type { ThemeTokens } from '@portfoliohub/shared';
+import type { ThemeTokens } from '@blueflutes/shared';
 
 // Maps font token enum values to CSS font-family stacks.
 // Restricted to already-bundled or system fonts — no remote @font-face needed.

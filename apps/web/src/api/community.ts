@@ -5,7 +5,7 @@ import {
   feedPostSchema,
   likeResponseSchema,
   commentListSchema,
-} from '@portfoliohub/shared';
+} from '@blueflutes/shared';
 import { apiFetch } from './client.js';
 
 export function getSpaces() {

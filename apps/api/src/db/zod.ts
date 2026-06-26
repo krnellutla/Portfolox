@@ -1,4 +1,4 @@
-import { ALLOWED_MIME_TYPES, fontTokenSchema, galleryLayoutSchema } from '@portfoliohub/shared';
+import { ALLOWED_MIME_TYPES, fontTokenSchema, galleryLayoutSchema } from '@blueflutes/shared';
 import { createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 import * as schema from './schema/index.js';

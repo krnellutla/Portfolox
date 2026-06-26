@@ -15,7 +15,7 @@ export function TopNav() {
           to="/discover"
           className="font-serif text-[21px] font-[600] tracking-[-0.015em] text-ink"
         >
-          Portfolix
+          Blueflutes
         </NavLink>
 
         <nav className="hidden md:flex items-center gap-1">

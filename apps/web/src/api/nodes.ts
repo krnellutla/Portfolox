@@ -6,7 +6,7 @@ import {
   type NodeListResponse,
   type NodeResponse,
   type UpdateNodeRequest,
-} from '@portfoliohub/shared';
+} from '@blueflutes/shared';
 import { z } from 'zod';
 import { apiFetch } from './client.js';
 

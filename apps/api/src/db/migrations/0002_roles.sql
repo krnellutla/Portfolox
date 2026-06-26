@@ -1,4 +1,4 @@
--- Grants for the restricted runtime role (portfoliohub_app).
+-- Grants for the restricted runtime role (blueflutes_app).
 --
 -- The role itself is NOT created here: role creation/password provisioning
 -- is an env-driven bootstrap step (see src/scripts/bootstrap-roles.ts) so no
@@ -9,7 +9,7 @@
 -- The runtime role MUST remain NOSUPERUSER / NOBYPASSRLS, or the RLS
 -- policies in 0001_rls_policies.sql are silently bypassed.
 
-GRANT USAGE ON SCHEMA public TO portfoliohub_app;
+GRANT USAGE ON SCHEMA public TO blueflutes_app;
 --> statement-breakpoint
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON
@@ -19,4 +19,4 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON
   "tokens",
   "nodes",
   "media_assets"
-TO portfoliohub_app;
+TO blueflutes_app;

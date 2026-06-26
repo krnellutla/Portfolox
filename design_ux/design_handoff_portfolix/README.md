@@ -1,7 +1,7 @@
-# Handoff: Portfolix — photographer portfolio + print store + community
+# Handoff: Blueflutes — photographer portfolio + print store + community
 
 ## Overview
-**Portfolix** is a platform for professional photographers to host portfolios, sell
+**Blueflutes** is a platform for professional photographers to host portfolios, sell
 prints affordably, run private client galleries, and talk to peers in a community
 space. This bundle covers **15 screens** across three areas — Public, Account, and
 Admin/Studio — plus a mobile pass. The differentiator is **affordability**: the
@@ -21,7 +21,7 @@ Your task is to **re-implement these designs in the target codebase** —
 **React (Vite) + Tailwind CSS, custom components (no component library), talking to a
 REST/GraphQL API** — using that project's established patterns.
 
-- `reference/Portfolix.dc.html` — all 15 screens. It is a single-file component
+- `reference/Blueflutes.dc.html` — all 15 screens. It is a single-file component
   framework prototype; ignore its `<x-dc>` / `support.js` runtime entirely. Read it
   for **markup structure, exact inline style values, copy, and interaction logic**.
 - `reference/ios-frame.jsx` — the iPhone bezel used only to present the mobile screens.
@@ -29,7 +29,7 @@ REST/GraphQL API** — using that project's established patterns.
   breakpoints of the real screens.
 - `reference/support.js` — prototype runtime. **Ignore.**
 
-How to open the reference: open `Portfolix.dc.html` in a browser. A dark **switcher
+How to open the reference: open `Blueflutes.dc.html` in a browser. A dark **switcher
 bar** across the top lets you jump between every screen (grouped Public / Account /
 Admin / Mobile). The bar is a **preview tool, not part of the product** — do not build it.
 
@@ -241,7 +241,7 @@ Build these once; every screen composes them.
     "Create account →".
   - **1 Plan:** PlanCard-as-radio-rows (radio + name/tag + price); Back + "Continue →".
   - **2 Studio setup:** avatar upload (72px + ＋ badge), Display name, **handle** input
-    with `portfolix.com/` prefix, Specialty chips, Back + "Finish setup →".
+    with `blueflutes.com/` prefix, Specialty chips, Back + "Finish setup →".
   - **3 Done:** ink check circle, "You're all set, Mira.", live URL line, "Upload photos"
     + "Build a gallery" CTAs.
 - **Behavior:** step state 0–3; dots are clickable; Back/Continue step through. Persist
@@ -336,10 +336,10 @@ reproduces the placeholder gradients (replace with real images).
   stand-ins. Swap for your icon set (e.g. Lucide): search, share, download, check,
   heart/heart-filled, grip-vertical, home, message-square, user, chevrons, lock,
   more-horizontal.
-- No logo asset — "Portfolix" is set in Newsreader 600.
+- No logo asset — "Blueflutes" is set in Newsreader 600.
 
 ## Files in this bundle
-- `reference/Portfolix.dc.html` — all 15 screens (design reference; ignore the runtime).
+- `reference/Blueflutes.dc.html` — all 15 screens (design reference; ignore the runtime).
 - `reference/ios-frame.jsx`, `reference/support.js` — prototype scaffolding; do not ship.
 - `tokens.tailwind.js` — design tokens for `theme.extend` (+ `PHOTO_TONES`).
 - `data-models.ts` — TypeScript domain models.

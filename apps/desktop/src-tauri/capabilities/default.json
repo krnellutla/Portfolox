@@ -15,8 +15,8 @@
       "allow": [
         { "url": "http://localhost:3001/auth/google*" },
         { "url": "http://localhost:3001/auth/github*" },
-        { "url": "https://api.portfoliohub.example.com/auth/google*" },
-        { "url": "https://api.portfoliohub.example.com/auth/github*" }
+        { "url": "https://api.blueflutes.example.com/auth/google*" },
+        { "url": "https://api.blueflutes.example.com/auth/github*" }
       ]
     }
   ]

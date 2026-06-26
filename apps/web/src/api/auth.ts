@@ -1,4 +1,4 @@
-import { logoutResponseSchema, type LogoutResponse } from '@portfoliohub/shared';
+import { logoutResponseSchema, type LogoutResponse } from '@blueflutes/shared';
 import { isDesktop } from '../lib/platform.js';
 import { clearRefreshToken } from '../lib/secure-storage.js';
 import { apiFetch, refreshAccessToken, setAccessToken } from './client.js';

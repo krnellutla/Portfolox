@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import type { Photographer } from '@portfoliohub/shared';
+import type { Photographer } from '@blueflutes/shared';
 import { Avatar } from '../../components/ui/Avatar.js';
 import { PhotoTile } from '../../components/photo/PhotoTile.js';
 import { seedPhotoUrl, seedAvatarUrl } from '../../lib/seed-photos.js';

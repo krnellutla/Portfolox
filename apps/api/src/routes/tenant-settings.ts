@@ -3,7 +3,7 @@ import {
   type ThemeTokens,
   themeTokensSchema,
   updateTenantSettingsRequestSchema,
-} from '@portfoliohub/shared';
+} from '@blueflutes/shared';
 import { Router } from 'express';
 import { AppError } from '../lib/app-error.js';
 import { asyncHandler } from '../lib/async-handler.js';

@@ -1,4 +1,4 @@
-import type { MediaAssetWithVariants } from '@portfoliohub/shared';
+import type { MediaAssetWithVariants } from '@blueflutes/shared';
 
 interface Props {
   asset: MediaAssetWithVariants;

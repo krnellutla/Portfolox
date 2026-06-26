@@ -1,4 +1,4 @@
-import type { PublicNode } from '@portfoliohub/shared';
+import type { PublicNode } from '@blueflutes/shared';
 
 export interface NodeTreeItem extends PublicNode {
   children: NodeTreeItem[];

@@ -1,4 +1,4 @@
-import { ErrorCode } from '@portfoliohub/shared';
+import { ErrorCode } from '@blueflutes/shared';
 
 const DEFAULT_STATUS_BY_CODE: Record<ErrorCode, number> = {
   [ErrorCode.BAD_REQUEST]: 400,

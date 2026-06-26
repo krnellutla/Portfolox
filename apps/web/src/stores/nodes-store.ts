@@ -1,4 +1,4 @@
-import type { NodeResponse } from '@portfoliohub/shared';
+import type { NodeResponse } from '@blueflutes/shared';
 import { create } from 'zustand';
 import { createNode, deleteNode, listNodes, moveNode, updateNode } from '../api/nodes.js';
 

@@ -1,5 +1,5 @@
-import type { ApiEnvelope, NodeListResponse } from '@portfoliohub/shared';
-import { nodeListResponseSchema } from '@portfoliohub/shared';
+import type { ApiEnvelope, NodeListResponse } from '@blueflutes/shared';
+import { nodeListResponseSchema } from '@blueflutes/shared';
 import { Router } from 'express';
 import { AppError } from '../lib/app-error.js';
 import { asyncHandler } from '../lib/async-handler.js';

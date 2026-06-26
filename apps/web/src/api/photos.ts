@@ -5,7 +5,7 @@ import {
   favoriteResponseSchema,
   commentListSchema,
   commentSchema,
-} from '@portfoliohub/shared';
+} from '@blueflutes/shared';
 import { apiFetch } from './client.js';
 
 export function getPhoto(id: string) {

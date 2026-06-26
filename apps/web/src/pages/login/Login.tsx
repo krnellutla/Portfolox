@@ -19,7 +19,7 @@ function authUrl(provider: Provider): string {
  * On desktop, the embedded webview can't receive the httpOnly cookie or
  * complete a provider redirect back into itself, so the link instead opens
  * the system browser (`?client=desktop`); the API redirects the result to
- * the app's `portfoliohub://auth/callback` deep link, handled in
+ * the app's `blueflutes://auth/callback` deep link, handled in
  * SessionProvider.
  */
 async function handleClick(event: MouseEvent<HTMLAnchorElement>, provider: Provider) {
@@ -34,7 +34,7 @@ export default function Login() {
     <main className="flex min-h-screen items-center justify-center bg-slate-900 px-4 text-slate-100">
       <div className="w-full max-w-sm space-y-6 rounded-xl border border-slate-800 bg-slate-800/50 p-8 shadow-xl">
         <div className="space-y-1 text-center">
-          <h1 className="text-xl font-semibold tracking-tight">PortfolioHub</h1>
+          <h1 className="text-xl font-semibold tracking-tight">Blueflutes</h1>
           <p className="text-sm text-slate-400">Sign in to manage your portfolio</p>
         </div>
 

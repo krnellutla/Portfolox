@@ -1,4 +1,4 @@
-// Domain models for the Portfolix web UI.
+// Domain models for the Blueflutes web UI.
 // Field names mirror the design handoff data-models.ts.
 
 export type ID = string;

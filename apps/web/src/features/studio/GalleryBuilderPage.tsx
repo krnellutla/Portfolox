@@ -28,7 +28,7 @@ import { StateView } from '../../components/ui/StateView.js';
 import { getMyGalleries, reorderGallery, updateGallery } from '../../api/me.js';
 import { qk, queryClient } from '../../lib/query-client.js';
 import { seedPhotoUrl } from '../../lib/seed-photos.js';
-import type { Gallery } from '@portfoliohub/shared';
+import type { Gallery } from '@blueflutes/shared';
 
 interface Frame {
   id: string;

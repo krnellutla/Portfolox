@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { clientGallerySchema } from '@portfoliohub/shared';
+import { clientGallerySchema } from '@blueflutes/shared';
 import { apiFetch } from './client.js';
 
 export function getClientGallery(shareToken: string) {

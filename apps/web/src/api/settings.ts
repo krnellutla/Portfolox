@@ -1,5 +1,5 @@
-import { themeTokensSchema, updateTenantSettingsRequestSchema } from '@portfoliohub/shared';
-import type { ThemeTokens, UpdateTenantSettingsRequest } from '@portfoliohub/shared';
+import { themeTokensSchema, updateTenantSettingsRequestSchema } from '@blueflutes/shared';
+import type { ThemeTokens, UpdateTenantSettingsRequest } from '@blueflutes/shared';
 import { apiFetch } from './client.js';
 
 export function getPublicTheme(): Promise<ThemeTokens> {

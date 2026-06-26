@@ -127,7 +127,7 @@ describe('SessionProvider', () => {
       await screen.findByText('Login page');
       await vi.waitFor(() => expect(handler).toBeDefined());
 
-      handler!(['portfoliohub://auth/callback?refresh_token=one-time-token']);
+      handler!(['blueflutes://auth/callback?refresh_token=one-time-token']);
 
       expect(await screen.findByText('Dashboard page')).toBeDefined();
       expect(setRefreshToken).toHaveBeenCalledWith('one-time-token');
@@ -149,7 +149,7 @@ describe('SessionProvider', () => {
       await screen.findByText('Login page');
       await vi.waitFor(() => expect(handler).toBeDefined());
 
-      handler!(['portfoliohub://something/else?refresh_token=attacker-token']);
+      handler!(['blueflutes://something/else?refresh_token=attacker-token']);
 
       await screen.findByText('Login page');
       expect(setRefreshToken).not.toHaveBeenCalled();

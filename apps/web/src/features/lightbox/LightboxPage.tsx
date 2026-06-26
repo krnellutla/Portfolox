@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { Comment } from '@portfoliohub/shared';
+import type { Comment } from '@blueflutes/shared';
 import { StateView } from '../../components/ui/StateView.js';
 import { getPhoto, likePhoto, unlikePhoto, getComments, postComment } from '../../api/photos.js';
 import { getPrintOptions } from '../../api/plans.js';

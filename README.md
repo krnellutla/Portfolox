@@ -1,4 +1,4 @@
-# Portfolix
+# Blueflutes
 
 A multi-tenant photographer portfolio platform. One React codebase serves both web and desktop (Tauri) clients. Tenants are isolated via PostgreSQL Row-Level Security and resolved by host/domain.
 
@@ -33,7 +33,7 @@ A multi-tenant photographer portfolio platform. One React codebase serves both w
 - JWT access tokens (15 min TTL, in-memory on client) + refresh tokens with rotation
 - Reuse detection: consuming a rotated token invalidates the entire family
 - Web: httpOnly Secure SameSite cookie for refresh token
-- Desktop: OS keychain storage via Tauri keychain plugin; deep-link OAuth callback (`portfoliohub://auth/callback`)
+- Desktop: OS keychain storage via Tauri keychain plugin; deep-link OAuth callback (`blueflutes://auth/callback`)
 - `/auth/refresh`, `/auth/logout` (server-side revocation)
 
 ### API
@@ -118,13 +118,13 @@ pnpm install
 cp apps/api/.env.example apps/api/.env
 
 # Start Postgres (Docker)
-docker run --name portfolix-pg -e POSTGRES_PASSWORD=postgres \
+docker run --name blueflutes-pg -e POSTGRES_PASSWORD=postgres \
   -p 5432:5432 -d postgres:16
 
 # Bootstrap DB roles, run migrations, and seed dev data
-pnpm --filter @portfoliohub/api db:bootstrap-roles
-pnpm --filter @portfoliohub/api db:migrate
-pnpm --filter @portfoliohub/api db:seed
+pnpm --filter @blueflutes/api db:bootstrap-roles
+pnpm --filter @blueflutes/api db:migrate
+pnpm --filter @blueflutes/api db:seed
 
 # Start all services in watch mode
 pnpm dev
@@ -147,7 +147,7 @@ API: http://localhost:3001
 
 ```bash
 pnpm test                             # all workspaces
-pnpm --filter @portfoliohub/api test  # API only (76 tests)
+pnpm --filter @blueflutes/api test  # API only (76 tests)
 ```
 
 ### Build
@@ -171,7 +171,7 @@ See [`apps/api/.env.example`](apps/api/.env.example) for the full annotated list
 | `CORS_ALLOWED_ORIGINS` | Comma-separated extra origins (e.g. `tauri://localhost`) |
 | `GOOGLE_CLIENT_ID/SECRET` | Google OAuth app credentials |
 | `GITHUB_CLIENT_ID/SECRET` | GitHub OAuth app credentials |
-| `DESKTOP_AUTH_REDIRECT_URL` | Deep-link for desktop OAuth (`portfoliohub://auth/callback`) |
+| `DESKTOP_AUTH_REDIRECT_URL` | Deep-link for desktop OAuth (`blueflutes://auth/callback`) |
 
 ---
 

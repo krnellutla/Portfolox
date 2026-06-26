@@ -30,7 +30,7 @@ export default function DashboardLayout() {
         }`}
       >
         <nav className="flex flex-col gap-1 p-4 text-sm">
-          <span className="mb-2 px-2 py-1 text-base font-semibold tracking-tight text-slate-100">PortfolioHub</span>
+          <span className="mb-2 px-2 py-1 text-base font-semibold tracking-tight text-slate-100">Blueflutes</span>
           <NavLink to="/dashboard" end className={NAV_LINK_CLASS}>
             Overview
           </NavLink>

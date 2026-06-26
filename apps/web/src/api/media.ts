@@ -7,7 +7,7 @@ import {
   type MediaAsset,
   type MediaListResponse,
   type PresignResponse,
-} from '@portfoliohub/shared';
+} from '@blueflutes/shared';
 import { z } from 'zod';
 import { apiFetch, getAccessToken } from './client.js';
 

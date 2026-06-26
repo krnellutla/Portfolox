@@ -1,4 +1,4 @@
-import type { User } from '@portfoliohub/shared';
+import type { User } from '@blueflutes/shared';
 import { create } from 'zustand';
 
 export type SessionStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated';

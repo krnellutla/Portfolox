@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { planSchema, printOptionSchema } from '@portfoliohub/shared';
+import { planSchema, printOptionSchema } from '@blueflutes/shared';
 import { apiFetch } from './client.js';
 
 export function getPlans() {

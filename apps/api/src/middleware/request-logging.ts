@@ -8,7 +8,7 @@ import { logger } from '../lib/logger.js';
  * hits the log, mirroring the request-side `url` stripping below. Needed so
  * the desktop OAuth callback's one-time refresh token
  * (`/auth/:provider/callback?...&refresh_token=...` -> `Location:
- * portfoliohub://auth/callback?refresh_token=...`) is never written to logs
+ * blueflutes://auth/callback?refresh_token=...`) is never written to logs
  * in plaintext.
  */
 export function stripLocationQuery<T extends { headers?: { location?: unknown } }>(res: T): T {

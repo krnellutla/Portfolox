@@ -20,12 +20,12 @@
       "cache": false,
       "persistent": true
     },
-    "@portfoliohub/web#build:desktop": {
+    "@blueflutes/web#build:desktop": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
     },
-    "@portfoliohub/desktop#build:desktop": {
-      "dependsOn": ["@portfoliohub/web#build:desktop"],
+    "@blueflutes/desktop#build:desktop": {
+      "dependsOn": ["@blueflutes/web#build:desktop"],
       "outputs": ["src-tauri/target/release/bundle/**"]
     }
   }

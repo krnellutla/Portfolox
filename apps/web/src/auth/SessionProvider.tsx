@@ -9,17 +9,17 @@ import { useAuthStore } from '../stores/auth-store.js';
 
 /**
  * Extracts `refresh_token` from the first deep-link URL that looks like the
- * API's OAuth callback (`portfoliohub://auth/callback?...`). Custom URL
+ * API's OAuth callback (`blueflutes://auth/callback?...`). Custom URL
  * schemes can't be origin-verified — any locally registered app can invoke
- * `portfoliohub://...` — so this is defense-in-depth against unrelated
- * `portfoliohub:` links, not a substitute for the server-side mitigations
+ * `blueflutes://...` — so this is defense-in-depth against unrelated
+ * `blueflutes:` links, not a substitute for the server-side mitigations
  * (one-time, single-use, rotated-on-exchange token; stripped from logs).
  */
 function extractRefreshToken(urls: string[]): string | null {
   for (const raw of urls) {
     try {
       const url = new URL(raw);
-      if (url.protocol !== 'portfoliohub:' || `${url.host}${url.pathname}` !== 'auth/callback') continue;
+      if (url.protocol !== 'blueflutes:' || `${url.host}${url.pathname}` !== 'auth/callback') continue;
       const token = url.searchParams.get('refresh_token');
       if (token) return token;
     } catch {
@@ -35,7 +35,7 @@ function extractRefreshToken(urls: string[]): string | null {
  * app renders a splash screen so protected routes don't briefly flash a
  * logged-out state on page load/reload.
  *
- * On desktop, also listens for the `portfoliohub://auth/callback` deep link
+ * On desktop, also listens for the `blueflutes://auth/callback` deep link
  * that the system-browser OAuth flow redirects to: persists the one-time
  * refresh token to the OS keychain, exchanges it for a session, and
  * navigates into the dashboard.

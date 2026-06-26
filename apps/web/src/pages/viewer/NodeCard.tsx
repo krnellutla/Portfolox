@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { MediaListResponse } from '@portfoliohub/shared';
+import type { MediaListResponse } from '@blueflutes/shared';
 import { getNodeMedia } from '../../api/media.js';
 import { ResponsiveImage } from '../../components/ui/ResponsiveImage.js';
 import type { NodeTreeItem } from '../../lib/build-tree.js';

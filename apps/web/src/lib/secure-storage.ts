@@ -1,6 +1,6 @@
 import { isDesktop } from './platform.js';
 
-const SERVICE = 'com.portfoliohub.desktop';
+const SERVICE = 'com.blueflutes.desktop';
 const ACCOUNT = 'refresh_token';
 
 /**

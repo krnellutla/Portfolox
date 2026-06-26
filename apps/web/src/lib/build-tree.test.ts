@@ -1,4 +1,4 @@
-import type { PublicNode } from '@portfoliohub/shared';
+import type { PublicNode } from '@blueflutes/shared';
 import { describe, expect, it } from 'vitest';
 import { buildNodeTree } from './build-tree.js';
 

@@ -1,4 +1,4 @@
-import type { NodeResponse } from '@portfoliohub/shared';
+import type { NodeResponse } from '@blueflutes/shared';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useState } from 'react';

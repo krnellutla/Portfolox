@@ -10,7 +10,7 @@ const envSchema = z.object({
   DATABASE_TEST_MIGRATION_URL: z.string().url().optional(),
   DB_POOL_MAX: z.coerce.number().int().positive().default(10),
   DB_POOL_IDLE_TIMEOUT_MS: z.coerce.number().int().nonnegative().default(30_000),
-  DB_APP_ROLE: z.string().min(1).default('portfoliohub_app'),
+  DB_APP_ROLE: z.string().min(1).default('blueflutes_app'),
   DB_APP_ROLE_PASSWORD: z.string().min(1).optional(),
 
   JWT_SECRET: z.string().min(32),
@@ -47,9 +47,9 @@ const envSchema = z.object({
   DESKTOP_AUTH_REDIRECT_URL: z
     .string()
     .url()
-    .default('portfoliohub://auth/callback')
-    .refine((value) => new URL(value).protocol === 'portfoliohub:', {
-      message: 'DESKTOP_AUTH_REDIRECT_URL must use the portfoliohub: scheme',
+    .default('blueflutes://auth/callback')
+    .refine((value) => new URL(value).protocol === 'blueflutes:', {
+      message: 'DESKTOP_AUTH_REDIRECT_URL must use the blueflutes: scheme',
     }),
 
   // Storage (S3-compatible: AWS S3, Cloudflare R2, MinIO)

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { conversationSchema, messageListSchema, messageSchema } from '@portfoliohub/shared';
+import { conversationSchema, messageListSchema, messageSchema } from '@blueflutes/shared';
 import { apiFetch } from './client.js';
 
 export function listConversations() {
