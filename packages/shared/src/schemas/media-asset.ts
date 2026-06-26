@@ -81,3 +81,19 @@ export type ConfirmRequest = z.infer<typeof confirmRequestSchema>;
 export const confirmParamsSchema = z.object({
   id: z.string().uuid(),
 });
+
+export const mediaParamsSchema = z.object({
+  id: z.string().uuid(),
+});
+
+export const moveMediaRequestSchema = z.object({
+  position: z.number().int().nonnegative(),
+});
+
+export type MoveMediaRequest = z.infer<typeof moveMediaRequestSchema>;
+
+export const deleteMediaResponseSchema = z.object({
+  id: z.string().uuid(),
+});
+
+export type DeleteMediaResponse = z.infer<typeof deleteMediaResponseSchema>;
