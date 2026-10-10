@@ -7,14 +7,8 @@ export interface ProcessJob {
   assetId: string;
 }
 
-export type Enqueue = (job: ProcessJob) => void;
+export type Enqueue = (job: ProcessJob) => Promise<void>;
 
 export function createInProcessEnqueue(deps: { pool: Pool; storage: StorageProvider }): Enqueue {
-  return (job: ProcessJob) => {
-    setImmediate(() => {
-      processAsset(deps, job).catch((err: unknown) => {
-        console.error({ msg: 'media-processor-error', tenantId: job.tenantId, assetId: job.assetId, err });
-      });
-    });
-  };
+  return (job: ProcessJob) => processAsset(deps, job);
 }

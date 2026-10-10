@@ -230,7 +230,7 @@ export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): R
         return row.rows[0];
       });
 
-      enqueue({ tenantId: req.tenant.id, assetId: id });
+      await enqueue({ tenantId: req.tenant.id, assetId: id });
 
       const data: MediaAsset = mediaAssetSchema.parse({
         id: asset.id,

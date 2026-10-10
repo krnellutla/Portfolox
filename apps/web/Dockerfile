@@ -14,8 +14,8 @@ COPY tsconfig.base.json ./
 COPY packages/shared ./packages/shared
 COPY apps/web ./apps/web
 
-RUN pnpm --filter @portfoliohub/shared build
-RUN pnpm --filter @portfoliohub/web build
+RUN pnpm --filter @blueflutes/shared build
+RUN pnpm --filter @blueflutes/web build
 
 # ---- runtime stage ----
 FROM nginx:1.27-alpine AS runtime
