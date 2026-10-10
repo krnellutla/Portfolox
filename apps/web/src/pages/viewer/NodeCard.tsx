@@ -16,6 +16,33 @@ const TYPE_LABEL: Record<NodeTreeItem['type'], string> = {
   page: 'Page',
 };
 
+function CameraPlaceholder() {
+  return (
+    <div className="flex aspect-video w-full items-center justify-center rounded-t-xl bg-gray-100">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-10 w-10 text-gray-300"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.5}
+        aria-hidden="true"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"
+        />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z"
+        />
+      </svg>
+    </div>
+  );
+}
+
 function GalleryCard({ node }: { node: NodeTreeItem }) {
   const [media, setMedia] = useState<MediaListResponse | null>(null);
 
@@ -23,33 +50,30 @@ function GalleryCard({ node }: { node: NodeTreeItem }) {
     let cancelled = false;
     getNodeMedia(node.id)
       .then((data) => { if (!cancelled) setMedia(data); })
-      .catch(() => { /* silently fall back to icon */ });
+      .catch(() => { /* silently fall back to placeholder */ });
     return () => { cancelled = true; };
   }, [node.id]);
 
-  if (media && media.length > 0) {
-    const first = media[0]!;
-    return (
-      <article className="group relative overflow-hidden rounded-lg border border-slate-800 bg-slate-900">
+  return (
+    <article className="group overflow-hidden rounded-xl bg-white shadow-sm transition-shadow duration-200 hover:shadow-md">
+      {media && media.length > 0 ? (
         <ResponsiveImage
-          asset={first}
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          className="aspect-square w-full object-cover transition-transform duration-200 group-hover:scale-105"
+          asset={media[0]!}
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          className="aspect-video w-full object-cover rounded-t-xl"
           alt={node.name}
         />
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900/80 to-transparent px-3 py-2">
-          <span className="text-sm font-medium text-slate-100">{node.name}</span>
-          <span className="ml-2 text-xs text-slate-400">{media.length} photo{media.length === 1 ? '' : 's'}</span>
-        </div>
-      </article>
-    );
-  }
-
-  return (
-    <article className="flex aspect-square flex-col items-center justify-center gap-2 rounded-lg border border-slate-800 bg-slate-800/50 p-4 text-center transition-colors hover:border-slate-700 hover:bg-slate-800">
-      <span aria-hidden="true" className="text-2xl">{TYPE_ICON.gallery}</span>
-      <span className="text-sm font-medium text-slate-100">{node.name}</span>
-      <span className="text-xs uppercase tracking-wide text-slate-400">{TYPE_LABEL.gallery}</span>
+      ) : (
+        <CameraPlaceholder />
+      )}
+      <div className="px-4 py-3">
+        <p className="font-semibold text-gray-900">{node.name}</p>
+        {media !== null && (
+          <p className="text-sm text-gray-500">
+            {media.length} photo{media.length === 1 ? '' : 's'}
+          </p>
+        )}
+      </div>
     </article>
   );
 }
@@ -65,12 +89,12 @@ export function NodeCard({ node }: { node: NodeTreeItem }) {
       : TYPE_LABEL[node.type];
 
   return (
-    <article className="flex aspect-square flex-col items-center justify-center gap-2 rounded-lg border border-slate-800 bg-slate-800/50 p-4 text-center transition-colors hover:border-slate-700 hover:bg-slate-800">
-      <span aria-hidden="true" className="text-2xl">
-        {TYPE_ICON[node.type]}
-      </span>
-      <span className="text-sm font-medium text-slate-100">{node.name}</span>
-      <span className="text-xs uppercase tracking-wide text-slate-400">{subtitle}</span>
+    <article className="group overflow-hidden rounded-xl bg-white shadow-sm transition-shadow duration-200 hover:shadow-md">
+      <CameraPlaceholder />
+      <div className="px-4 py-3">
+        <p className="font-semibold text-gray-900">{node.name}</p>
+        <p className="text-sm text-gray-500">{subtitle}</p>
+      </div>
     </article>
   );
 }
