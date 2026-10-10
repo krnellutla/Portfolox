@@ -1,72 +1,116 @@
-# Deploying Portfolix to portfolix.tinkeryard.dev
+# Deployment — portfolix.tinkeryard.dev
 
-Stack: Supabase (Postgres + Storage), one Render web service (nginx + API in one container), GitHub sign-in.
+## Architecture
 
-How requests flow: the browser calls `https://portfolix.tinkeryard.dev/api/...`. nginx in the container
-proxies `/api/*` to the API and keeps the browser's `Host` header, so the API picks the tenant from
-`portfolix.tinkeryard.dev` in the `tenant_domains` table. If that row is missing, every request is a 404.
+One Vercel project serves both the React SPA and the Express API:
 
-## 1. Supabase
-1. Create a project. Save the database password.
-2. **Session pooler** (Connect, Session pooler, port 5432, user `postgres.<project-ref>`): this is `DATABASE_MIGRATION_URL`.
-   Do not use the "Direct connection" string: its host is IPv6-only and fails with `ENOTFOUND` on IPv4 networks.
-3. **Transaction pooler** (port 6543): this is the base for `DATABASE_URL`, but the user must be the app role:
-   `postgres://blueflutes_app.<project-ref>:<DB_APP_ROLE_PASSWORD>@<pooler-host>:6543/postgres`.
-4. Storage: create a **public** bucket. Bucket names are case-sensitive: use the exact name everywhere (below it is `portfolix`; if yours is `Portfolix`, use that in `STORAGE_BUCKET` and the public URL). Under Storage, S3 Connection, create an access key.
-   - `STORAGE_ENDPOINT` = `https://<project-ref>.storage.supabase.co/storage/v1/s3`
-   - `STORAGE_REGION` = your project's region (for example `us-east-1`)
-   - `STORAGE_PUBLIC_BASE_URL` = `https://<project-ref>.supabase.co/storage/v1/object/public/portfolix`
-   - `STORAGE_ORIGIN` = `https://<project-ref>.supabase.co`
-
-## 2. Set up the database (run once, from your machine)
-Put the values in a local file that is never committed, `.env.supabase`:
 ```
-DATABASE_MIGRATION_URL=...        # session pooler, port 5432, user postgres.<ref>
-DATABASE_URL=...                  # pooler, user blueflutes_app.<ref>
+Browser → portfolix.tinkeryard.dev
+  /api/*  → Vercel serverless function (api/index.ts)
+            Strips /api prefix, calls Express app.
+            Host header = portfolix.tinkeryard.dev (preserved by Vercel).
+            Tenant is resolved from req.headers.host — no X-Forwarded-Host trust.
+  /*      → apps/web/dist static SPA (index.html fallback for client-side routing)
+```
+
+## Vercel project settings
+
+| Setting | Value |
+|---|---|
+| Framework | Other (no framework detection) |
+| Root directory | `.` (repo root) |
+| Install command | `pnpm install --frozen-lockfile` |
+| Build command | `pnpm --filter @blueflutes/shared build && pnpm --filter @blueflutes/api build && pnpm --filter @blueflutes/web build` |
+| Output directory | `apps/web/dist` |
+| Node version | 22 |
+
+Build settings and rewrites are in `vercel.json` — do not override them in the dashboard.
+
+## Domain migration (one-time, dashboard only)
+
+1. Open the **geo-mvp-tracker** project → Settings → Domains  
+   → find `portfolix.tinkeryard.dev` → **Remove**
+2. Open the **new Blueflutes project** → Settings → Domains  
+   → **Add** `portfolix.tinkeryard.dev`  
+   DNS already uses Vercel nameservers — no DNS record change needed.
+
+## Environment variables (set in Vercel dashboard → Settings → Environment Variables)
+
+Set all of the following for the **Production** environment.  
+Mark secrets (JWT_SECRET, DB passwords, OAuth secrets, storage keys) as **Sensitive**.
+
+```
+NODE_ENV=production
+
+# Database — Supabase transaction pooler (port 6543) for runtime
+DATABASE_URL=postgresql://blueflutes_app.pxvyvkmjpomwpwcpgjwu:<password>@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres
+# Session pooler (port 5432) satisfies config validation; migrations run locally
+DATABASE_MIGRATION_URL=postgresql://postgres.pxvyvkmjpomwpwcpgjwu:<password>@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres
+
 DB_APP_ROLE=blueflutes_app
-DB_APP_ROLE_PASSWORD=...          # choose a long random password
-JWT_SECRET=...                    # any 32+ characters; not used by these commands
+DB_POOL_MAX=2
+
+# Auth
+JWT_SECRET=<openssl rand -base64 36>
+GITHUB_CLIENT_ID=Ov23li6yA85mi2YcWLzh
+GITHUB_CLIENT_SECRET=<from GitHub OAuth app>
+OAUTH_REDIRECT_BASE_URL=https://portfolix.tinkeryard.dev/api
+WEB_APP_URL=https://portfolix.tinkeryard.dev
+AUTH_COOKIE_PATH=/api/auth
+
+# Storage (Supabase S3-compatible)
+STORAGE_PROVIDER=s3
+STORAGE_BUCKET=Portfolix
+STORAGE_REGION=ap-southeast-1
+STORAGE_ENDPOINT=https://pxvyvkmjpomwpwcpgjwu.storage.supabase.co/storage/v1/s3
+STORAGE_PUBLIC_BASE_URL=https://pxvyvkmjpomwpwcpgjwu.supabase.co/storage/v1/object/public/Portfolix
+STORAGE_ACCESS_KEY_ID=<Supabase storage access key>
+STORAGE_SECRET_ACCESS_KEY=<Supabase storage secret key>
+
+# Frontend (build-time)
+VITE_API_BASE_URL=/api
 ```
-Then, in this order (the role must exist before the grants migration):
+
+Generate JWT_SECRET locally:
 ```bash
-set -a; . ./.env.supabase; set +a
-export DOTENV_CONFIG_PATH=/dev/null   # ignore apps/api/.env so local dev database values are not picked up
-pnpm --filter @blueflutes/api db:bootstrap-roles
-pnpm --filter @blueflutes/api db:migrate
-TENANT_NAME="Portfolix" TENANT_HOST=portfolix.tinkeryard.dev pnpm --filter @blueflutes/api db:create-tenant
+openssl rand -base64 36
 ```
-Check that Supabase accepted the restricted role: the API refuses to start if its database role can bypass
-row-level security (`assert-runtime-role`), so a bad role shows up as a boot error, not silent data leakage.
 
-## 3. GitHub OAuth app
-github.com/settings/developers, New OAuth App:
-- Homepage URL: `https://portfolix.tinkeryard.dev`
-- Authorization callback URL: `https://portfolix.tinkeryard.dev/api/auth/github/callback`
+## GitHub OAuth callback URL
 
-Keep the client ID and secret for step 4.
+The GitHub OAuth app callback must be exactly:
+```
+https://portfolix.tinkeryard.dev/api/auth/github/callback
+```
 
-## 4. Render
-1. New, Blueprint, pick this repo and the `deploy/render` branch. Render reads `render.yaml`.
-2. Fill the secrets it asks for: both database URLs, `DB_APP_ROLE_PASSWORD`, the GitHub ID and secret,
-   and the storage values from step 1. `JWT_SECRET` is generated for you.
-3. Wait for the first deploy. `https://<service>.onrender.com/api/health` should return 200.
-   The free plan sleeps when idle, so the first request after a pause takes about a minute.
+## Image processing
 
-## 5. Domain
-1. In Vercel, project `geo-mvp-tracker`, Settings, Domains: remove `portfolix.tinkeryard.dev`
-   (it is attached there today, which is why the subdomain returns 404).
-2. In Render, service Settings, Custom Domains: add `portfolix.tinkeryard.dev`. Render shows a CNAME target.
-3. In Vercel, Domains, `tinkeryard.dev`, DNS Records: add `portfolix` CNAME pointing at that target.
-4. Wait for Render to issue the certificate, then open https://portfolix.tinkeryard.dev.
+`POST /api/media/confirm` runs `sharp` synchronously before responding.  
+Vercel `maxDuration` for the function is 60 seconds (set in `vercel.json`).
 
-## What changed in the code for this
-- `AUTH_COOKIE_PATH` (default `/auth`): set to `/api/auth` so the refresh cookie is sent behind the `/api` prefix.
-- The web app accepts `VITE_API_BASE_URL=/api` (path prefix) as well as an absolute URL.
-- Both Dockerfiles built the old `@portfoliohub/*` package names; fixed to `@blueflutes/*`.
-- `Dockerfile.render`, `deploy/`, `render.yaml`: single-container deploy.
-- `db:create-tenant`: creates a tenant for a real host (the seed script only creates `localhost`).
+## Health check
 
-## Not covered
-- Google sign-in (add `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, plus a Google OAuth client).
-- Chat over WebSocket: the web client opens `/ws`, but the API has no WebSocket server yet.
-- The free Render plan has no persistent disk and sleeps when idle.
+```
+GET https://portfolix.tinkeryard.dev/api/health
+```
+Should return `200 { "data": { "status": "ok" }, "error": null }`.
+
+## Running migrations
+
+Always run migrations locally against the session pooler, never from a serverless function:
+
+```bash
+DOTENV_CONFIG_PATH=/dev/null \
+  DATABASE_MIGRATION_URL=<session-pooler-url> \
+  pnpm --filter @blueflutes/api db:migrate
+```
+
+## Tenant
+
+The tenant for `portfolix.tinkeryard.dev` is seeded in Supabase (ap-southeast-1).  
+To add a new tenant:
+```bash
+DOTENV_CONFIG_PATH=/dev/null \
+  DATABASE_MIGRATION_URL=<session-pooler-url> \
+  pnpm --filter @blueflutes/api db:create-tenant
+```
