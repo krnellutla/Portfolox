@@ -4,9 +4,9 @@ import { Spinner } from './Spinner.js';
 export type StateViewVariant = 'loading' | 'error' | 'empty';
 
 const TITLE_CLASSES: Record<StateViewVariant, string> = {
-  loading: 'text-slate-200',
-  error: 'text-red-400',
-  empty: 'text-slate-200',
+  loading: 'text-ink',
+  error: 'text-negative',
+  empty: 'text-ink',
 };
 
 export interface StateViewProps {
@@ -26,16 +26,16 @@ export function StateView({ variant, title, description, action, fullScreen = fa
     >
       {variant === 'loading' && <Spinner size="lg" decorative />}
       <p className={`text-sm font-medium ${TITLE_CLASSES[variant]}`}>{title}</p>
-      {description && <p className="max-w-sm text-sm text-slate-400">{description}</p>}
+      {description && <p className="max-w-sm text-sm text-muted">{description}</p>}
       {action}
     </div>
   );
 
   if (fullScreen) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-900 text-slate-100">{content}</div>
+      <div className="flex min-h-screen items-center justify-center bg-paper text-ink">{content}</div>
     );
   }
 
-  return <div className="flex flex-col items-center justify-center py-16 text-slate-100">{content}</div>;
+  return <div className="flex flex-col items-center justify-center py-16 text-ink">{content}</div>;
 }

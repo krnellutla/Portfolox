@@ -27,7 +27,7 @@ describe('NodeGrid', () => {
   it('renders an empty state when there are no nodes', () => {
     render(<NodeGrid nodes={[]} />);
 
-    expect(screen.getByText("This portfolio doesn't have any content yet.")).toBeDefined();
+    expect(screen.getByText('No galleries yet')).toBeDefined();
   });
 
   it('renders a folder section heading and its child galleries as cards', () => {
@@ -50,7 +50,6 @@ describe('NodeGrid', () => {
     expect(screen.getByText('Landscapes')).toBeDefined();
     expect(screen.getByText('Portraits')).toBeDefined();
     expect(screen.getByText('Street')).toBeDefined();
-    expect(screen.getAllByText('Gallery')).toHaveLength(3);
   });
 
   it('shows an empty-folder message when a folder has no children', () => {

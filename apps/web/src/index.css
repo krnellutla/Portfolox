@@ -14,11 +14,12 @@
   --color-ink: #16150f;
   --color-ink-2: #2a2924;
   --color-ink-3: #56544c;
-  --color-muted: #9a988f;
-  --color-muted-2: #8c8a82;
+  --color-muted: #6b6960;
+  --color-muted-2: #56544c;
+  --color-muted-inverse: #9a988f;
   --color-line: #e0ded8;
   --color-line-2: #ecebe6;
-  --color-field: #d6d3cb;
+  --color-field: #8a877f;
   --color-field-bg: #faf9f6;
 
   /* Tenant-overridable accent (default matches --color-negative / chip-warm) */
@@ -27,7 +28,7 @@
   /* Semantic */
   --color-positive: #3f7a5e;
   --color-positive-soft: #6fae8c;
-  --color-negative: #c0683f;
+  --color-negative: #a8552f;
 
   /* Filter color chips (only saturated swatches in the product) */
   --color-chip-warm: #c0683f;

@@ -15,7 +15,7 @@ const DEFAULT_THEME: ThemeTokens = {
   colorBg: '#f4f3f0',
   colorInk: '#16150f',
   colorAccent: '#c0683f',
-  colorMuted: '#9a988f',
+  colorMuted: '#6b6960',
   fontHeading: 'newsreader',
   fontBody: 'hanken',
   galleryLayout: 'grid',
@@ -102,7 +102,7 @@ tenantSettingsRouter.patch(
          VALUES
            ($1,
             COALESCE($2, '#f4f3f0'), COALESCE($3, '#16150f'),
-            COALESCE($4, '#c0683f'), COALESCE($5, '#9a988f'),
+            COALESCE($4, '#c0683f'), COALESCE($5, '#6b6960'),
             COALESCE($6, 'newsreader'), COALESCE($7, 'hanken'),
             COALESCE($8, 'grid'), COALESCE($9, 5))
          ON CONFLICT (tenant_id) DO UPDATE SET

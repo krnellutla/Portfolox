@@ -11,7 +11,7 @@ describe('applyTheme', () => {
     expect(s.getPropertyValue('--color-paper')).toBe('#f4f3f0');
     expect(s.getPropertyValue('--color-ink')).toBe('#16150f');
     expect(s.getPropertyValue('--color-accent')).toBe('#c0683f');
-    expect(s.getPropertyValue('--color-muted')).toBe('#9a988f');
+    expect(s.getPropertyValue('--color-muted')).toBe('#6b6960');
   });
 
   it('resolves font tokens to the correct stack strings', () => {

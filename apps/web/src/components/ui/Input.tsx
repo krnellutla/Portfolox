@@ -2,8 +2,9 @@ import type { InputHTMLAttributes, TextareaHTMLAttributes } from 'react';
 
 const BASE =
   'w-full rounded-[9px] border border-field bg-surface px-[14px] py-[12px] text-sm text-ink ' +
-  'placeholder:text-[#a9a79d] outline-none transition-colors duration-150 ' +
-  'focus:border-ink disabled:cursor-not-allowed disabled:opacity-50';
+  'placeholder:text-muted-inverse transition-colors duration-150 ' +
+  'focus:border-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ' +
+  'disabled:cursor-not-allowed disabled:opacity-50';
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   recessed?: boolean;

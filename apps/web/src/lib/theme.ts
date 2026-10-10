@@ -14,7 +14,7 @@ export const DEFAULT_THEME: ThemeTokens = {
   colorBg: '#f4f3f0',
   colorInk: '#16150f',
   colorAccent: '#c0683f',
-  colorMuted: '#9a988f',
+  colorMuted: '#6b6960',
   fontHeading: 'newsreader',
   fontBody: 'hanken',
   galleryLayout: 'grid',
