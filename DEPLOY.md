@@ -8,7 +8,8 @@ proxies `/api/*` to the API and keeps the browser's `Host` header, so the API pi
 
 ## 1. Supabase
 1. Create a project. Save the database password.
-2. **Direct connection** (Project Settings, Database, port 5432): this is `DATABASE_MIGRATION_URL`.
+2. **Session pooler** (Connect, Session pooler, port 5432, user `postgres.<project-ref>`): this is `DATABASE_MIGRATION_URL`.
+   Do not use the "Direct connection" string: its host is IPv6-only and fails with `ENOTFOUND` on IPv4 networks.
 3. **Transaction pooler** (port 6543): this is the base for `DATABASE_URL`, but the user must be the app role:
    `postgres://blueflutes_app.<project-ref>:<DB_APP_ROLE_PASSWORD>@<pooler-host>:6543/postgres`.
 4. Storage: create a **public** bucket named `portfolix`. Under Storage, S3 Connection, create an access key.
@@ -20,7 +21,7 @@ proxies `/api/*` to the API and keeps the browser's `Host` header, so the API pi
 ## 2. Set up the database (run once, from your machine)
 Put the values in a local file that is never committed, `.env.supabase`:
 ```
-DATABASE_MIGRATION_URL=...        # direct, port 5432, user postgres
+DATABASE_MIGRATION_URL=...        # session pooler, port 5432, user postgres.<ref>
 DATABASE_URL=...                  # pooler, user blueflutes_app.<ref>
 DB_APP_ROLE=blueflutes_app
 DB_APP_ROLE_PASSWORD=...          # choose a long random password
@@ -29,6 +30,7 @@ JWT_SECRET=...                    # any 32+ characters; not used by these comman
 Then, in this order (the role must exist before the grants migration):
 ```bash
 set -a; . ./.env.supabase; set +a
+export DOTENV_CONFIG_PATH=/dev/null   # ignore apps/api/.env so local dev database values are not picked up
 pnpm --filter @blueflutes/api db:bootstrap-roles
 pnpm --filter @blueflutes/api db:migrate
 TENANT_NAME="Portfolix" TENANT_HOST=portfolix.tinkeryard.dev pnpm --filter @blueflutes/api db:create-tenant
