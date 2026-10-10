@@ -12,7 +12,7 @@ proxies `/api/*` to the API and keeps the browser's `Host` header, so the API pi
    Do not use the "Direct connection" string: its host is IPv6-only and fails with `ENOTFOUND` on IPv4 networks.
 3. **Transaction pooler** (port 6543): this is the base for `DATABASE_URL`, but the user must be the app role:
    `postgres://blueflutes_app.<project-ref>:<DB_APP_ROLE_PASSWORD>@<pooler-host>:6543/postgres`.
-4. Storage: create a **public** bucket named `portfolix`. Under Storage, S3 Connection, create an access key.
+4. Storage: create a **public** bucket. Bucket names are case-sensitive: use the exact name everywhere (below it is `portfolix`; if yours is `Portfolix`, use that in `STORAGE_BUCKET` and the public URL). Under Storage, S3 Connection, create an access key.
    - `STORAGE_ENDPOINT` = `https://<project-ref>.storage.supabase.co/storage/v1/s3`
    - `STORAGE_REGION` = your project's region (for example `us-east-1`)
    - `STORAGE_PUBLIC_BASE_URL` = `https://<project-ref>.supabase.co/storage/v1/object/public/portfolix`
