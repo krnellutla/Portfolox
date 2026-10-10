@@ -21,7 +21,7 @@ function cookieOptions(): CookieOptions {
     httpOnly: true,
     secure: env.NODE_ENV === 'production',
     sameSite: 'lax',
-    path: '/auth',
+    path: env.AUTH_COOKIE_PATH,
   };
 }
 

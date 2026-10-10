@@ -15,7 +15,7 @@ function cookieOptions() {
     httpOnly: true,
     secure: isProduction,
     sameSite: (isProduction ? 'strict' : 'lax') as 'strict' | 'lax',
-    path: '/auth',
+    path: env.AUTH_COOKIE_PATH,
   };
 }
 

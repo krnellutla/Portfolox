@@ -23,6 +23,9 @@ const envSchema = z.object({
   GITHUB_CLIENT_SECRET: z.string().min(1).optional(),
   OAUTH_REDIRECT_BASE_URL: z.string().url().default('http://localhost:3001'),
   WEB_APP_URL: z.string().url().default('http://localhost:5173'),
+  // Path the auth cookies are scoped to. Must match the public path of the /auth
+  // routes: '/auth' when the API is served at the root, '/api/auth' behind a /api prefix.
+  AUTH_COOKIE_PATH: z.string().regex(/^\//).default('/auth'),
 
   // Comma-separated list of additional origins allowed to make
   // credentialed cross-origin requests (e.g. the Tauri desktop shell's

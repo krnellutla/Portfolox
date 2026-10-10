@@ -1,0 +1,38 @@
+# Single-container build for hosts that run one service (Render, Fly).
+# nginx serves the web app and proxies /api/* to the API on localhost, passing
+# the browser's Host header through so host-based tenant resolution works.
+FROM node:22-alpine
+RUN apk add --no-cache nginx gettext su-exec \
+ && corepack enable && corepack prepare pnpm@9.15.0 --activate
+WORKDIR /app
+ENV CI=true
+
+# Manifests first for layer caching. All workspaces are listed so the
+# frozen lockfile matches.
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml .npmrc ./
+COPY packages/shared/package.json packages/shared/
+COPY apps/api/package.json apps/api/
+COPY apps/web/package.json apps/web/
+COPY apps/desktop/package.json apps/desktop/
+RUN pnpm install --frozen-lockfile
+
+COPY tsconfig.base.json ./
+COPY packages/shared packages/shared
+COPY apps/api apps/api
+COPY apps/web apps/web
+
+# The web app calls the API under /api on its own origin.
+ENV VITE_API_BASE_URL=/api
+RUN pnpm --filter @blueflutes/shared build \
+ && pnpm --filter @blueflutes/api build \
+ && pnpm --filter @blueflutes/web build
+
+RUN mkdir -p /usr/share/nginx/html \
+ && cp -r apps/web/dist/. /usr/share/nginx/html/ \
+ && rm -f /etc/nginx/http.d/default.conf
+COPY deploy/nginx.render.conf.template /etc/nginx/portfolix.conf.template
+COPY deploy/start.sh /start.sh
+RUN chmod +x /start.sh && chown -R node:node /app
+
+ENV NODE_ENV=production
+CMD ["/start.sh"]

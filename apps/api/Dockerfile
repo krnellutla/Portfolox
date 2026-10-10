@@ -16,8 +16,8 @@ COPY tsconfig.base.json ./
 COPY packages/shared ./packages/shared
 COPY apps/api ./apps/api
 
-RUN pnpm --filter @portfoliohub/shared build
-RUN pnpm --filter @portfoliohub/api build
+RUN pnpm --filter @blueflutes/shared build
+RUN pnpm --filter @blueflutes/api build
 
 # ---- runtime stage ----
 FROM node:22-alpine AS runtime
