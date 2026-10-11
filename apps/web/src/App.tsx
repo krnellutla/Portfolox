@@ -12,6 +12,7 @@ const PortfolioViewer = lazy(() => import('./pages/viewer/PortfolioViewer.js'));
 const DashboardLayout = lazy(() => import('./pages/dashboard/DashboardLayout.js'));
 const DashboardHome = lazy(() => import('./pages/dashboard/DashboardHome.js'));
 const GalleryManager = lazy(() => import('./pages/dashboard/content/GalleryManager.js'));
+const ThemeEditor = lazy(() => import('./pages/dashboard/settings/ThemeEditor.js'));
 const PricingPage = lazy(() => import('./features/pricing/PricingPage.js'));
 const CollectionsPage = lazy(() => import('./features/collections/CollectionsPage.js'));
 const PortfolioPage = lazy(() => import('./features/portfolio/PortfolioPage.js'));
@@ -62,6 +63,7 @@ function App() {
               <Route path="/dashboard" element={<DashboardLayout />}>
                 <Route index element={<DashboardHome />} />
                 <Route path="content" element={<GalleryManager />} />
+                <Route path="theme" element={<ThemeEditor />} />
               </Route>
             </Route>
 
