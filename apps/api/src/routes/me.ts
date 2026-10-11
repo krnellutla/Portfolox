@@ -68,3 +68,109 @@ meRouter.get(
     res.json({ data: { available: handle.length >= 2 }, error: null });
   }),
 );
+
+// ---------------------------------------------------------------------------
+// Settings endpoints — stubs (Phase 1 scaffold; real persistence in Phase 2)
+// ---------------------------------------------------------------------------
+
+const putProfileSchema = z.object({
+  displayName: z.string().min(1).max(120),
+  handle: z.string().min(2).max(40).regex(/^[a-z0-9_-]+$/),
+  location: z.string().max(100).optional(),
+  bio: z.string().max(500).optional(),
+  specialties: z.array(z.string()).optional(),
+  avatarUrl: z.string().url().nullable().optional(),
+});
+
+meRouter.get(
+  '/me/profile',
+  asyncHandler(async (req, res) => {
+    if (!req.user) throw AppError.unauthorized('Not authenticated');
+    res.json({
+      data: {
+        displayName: '',
+        handle: '',
+        location: '',
+        bio: '',
+        specialties: [] as string[],
+        avatarUrl: null as string | null,
+      },
+      error: null,
+    });
+  }),
+);
+
+meRouter.put(
+  '/me/profile',
+  asyncHandler(async (req, res) => {
+    if (!req.user) throw AppError.unauthorized('Not authenticated');
+    const body = putProfileSchema.parse(req.body);
+    res.json({ data: body, error: null });
+  }),
+);
+
+meRouter.get(
+  '/me/domain',
+  asyncHandler(async (req, res) => {
+    if (!req.user) throw AppError.unauthorized('Not authenticated');
+    res.json({
+      data: { subdomain: 'handle.blueflutes.com', customDomain: null, status: 'none' },
+      error: null,
+    });
+  }),
+);
+
+const domainVerifySchema = z.object({ domain: z.string().min(3).max(253) });
+
+/** Stub: returns { status: 'pending' }. Actual DNS verification is server-side
+ *  (never trusts a client-sent domain claim directly). */
+meRouter.post(
+  '/me/domain/verify',
+  asyncHandler(async (req, res) => {
+    if (!req.user) throw AppError.unauthorized('Not authenticated');
+    domainVerifySchema.parse(req.body);
+    res.json({ data: { status: 'pending' }, error: null });
+  }),
+);
+
+const notifSchema = z.object({
+  newOrder: z.boolean().optional(),
+  newMessage: z.boolean().optional(),
+  clientSelects: z.boolean().optional(),
+  newFollower: z.boolean().optional(),
+});
+
+meRouter.get(
+  '/me/notifications',
+  asyncHandler(async (req, res) => {
+    if (!req.user) throw AppError.unauthorized('Not authenticated');
+    res.json({
+      data: { newOrder: true, newMessage: true, clientSelects: true, newFollower: false },
+      error: null,
+    });
+  }),
+);
+
+meRouter.put(
+  '/me/notifications',
+  asyncHandler(async (req, res) => {
+    if (!req.user) throw AppError.unauthorized('Not authenticated');
+    const body = notifSchema.parse(req.body);
+    res.json({ data: body, error: null });
+  }),
+);
+
+meRouter.get(
+  '/me/invoices',
+  asyncHandler(async (req, res) => {
+    if (!req.user) throw AppError.unauthorized('Not authenticated');
+    res.json({
+      data: [
+        { date: '2026-10-01', amountMinorUnits: 1400, currency: 'USD', pdfUrl: null },
+        { date: '2026-09-01', amountMinorUnits: 1400, currency: 'USD', pdfUrl: null },
+        { date: '2026-08-01', amountMinorUnits: 1400, currency: 'USD', pdfUrl: null },
+      ],
+      error: null,
+    });
+  }),
+);
