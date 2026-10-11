@@ -37,13 +37,39 @@ clientGalleryRouter.get('/client/:shareToken', asyncHandler(async (req, res) => 
       expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
       allowDownload: true,
       favoritePhotoIds: [],
+      viewerRole: 'client',
+      selectLimit: null,
+      selectsSubmittedAt: null,
+      expired: false,
     },
     error: null,
   });
 }));
 
 const favoritesSchema = z.object({ photoIds: z.array(z.string()) });
+
+// Legacy POST (kept for backward compat)
 clientGalleryRouter.post('/client/:shareToken/favorites', asyncHandler(async (req, res) => {
   favoritesSchema.parse(req.body);
   res.json({ data: { ok: true }, error: null });
+}));
+
+// PUT /client/:shareToken/favorites — replaces full favorites list
+clientGalleryRouter.put('/client/:shareToken/favorites', asyncHandler(async (req, res) => {
+  const { photoIds } = favoritesSchema.parse(req.body);
+  // In production this would persist to DB; stub returns the same list
+  res.json({ data: { favoritePhotoIds: photoIds }, error: null });
+}));
+
+// POST /client/:shareToken/submit — submit selects
+clientGalleryRouter.post('/client/:shareToken/submit', asyncHandler(async (req, res) => {
+  // In production: check selectLimit, persist to DB
+  res.json({ data: { selectsSubmittedAt: new Date().toISOString() }, error: null });
+}));
+
+// POST /client/:shareToken/download — download zip
+const downloadSchema = z.object({ photoIds: z.array(z.string()).optional() });
+clientGalleryRouter.post('/client/:shareToken/download', asyncHandler(async (req, res) => {
+  downloadSchema.parse(req.body);
+  res.json({ data: { url: 'https://download.example.com/stub.zip' }, error: null });
 }));
