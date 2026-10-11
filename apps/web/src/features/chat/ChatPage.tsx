@@ -90,15 +90,12 @@ export default function ChatPage() {
     <div className="min-h-screen bg-paper animate-pfxFade">
       <TopNav />
 
-      <div className="max-w-shell mx-auto px-4 md:px-8 pt-8 pb-32 md:pb-24">
+      <div className="max-w-shell mx-auto px-4 md:px-6 lg:px-8 pt-8 pb-32 md:pb-24">
         <Eyebrow className="mb-4">06 — Chat</Eyebrow>
 
-        <div
-          className="border border-line rounded-[16px] overflow-hidden"
-          style={{ height: '660px', display: 'flex' }}
-        >
-          {/* Conversation list */}
-          <div className="w-[320px] shrink-0 border-r border-line flex flex-col bg-[#faf9f6]">
+        <div className="border border-line rounded-[16px] overflow-hidden h-[calc(100dvh-4rem)] flex md:grid md:grid-cols-[280px_1fr]">
+          {/* Conversation list — hidden on mobile when a conversation is active */}
+          <div className={`${activeConvId ? 'hidden md:flex' : 'flex'} shrink-0 border-r border-line flex-col bg-[#faf9f6] w-full md:w-auto`}>
             <div className="p-4 border-b border-line">
               <p className="font-serif text-[20px] font-[500] text-ink mb-3">Messages</p>
               <input
@@ -153,12 +150,19 @@ export default function ChatPage() {
             </div>
           </div>
 
-          {/* Message thread */}
-          <div className="flex-1 flex flex-col">
+          {/* Message thread — hidden on mobile when no conversation is active */}
+          <div className={`${activeConvId ? 'flex' : 'hidden md:flex'} flex-1 flex-col min-w-0`}>
             {activeConv ? (
               <>
                 {/* Thread header */}
                 <div className="flex items-center gap-3 px-5 py-3.5 border-b border-line bg-surface">
+                  <button
+                    onClick={() => setActiveConvId(null)}
+                    className="md:hidden mr-1 text-ink-3 hover:text-ink transition-colors text-[18px] whitespace-nowrap"
+                    aria-label="Back to conversations"
+                  >
+                    ←
+                  </button>
                   <div className="relative">
                     <img
                       src={activeConv.participants[0]?.avatarUrl ?? seedAvatarUrl(0, 36)}
@@ -242,7 +246,7 @@ export default function ChatPage() {
                   <button
                     onClick={handleSend}
                     disabled={!input.trim() || sendMutation.isPending}
-                    className="px-4 py-[9px] bg-ink text-paper rounded-[9px] font-semibold text-[13px] hover:bg-ink-2 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="px-4 py-[9px] bg-ink text-paper rounded-[9px] font-semibold text-[13px] hover:bg-ink-2 disabled:opacity-40 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
                   >
                     Send
                   </button>

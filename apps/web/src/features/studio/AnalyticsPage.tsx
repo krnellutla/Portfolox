@@ -54,7 +54,7 @@ export default function AnalyticsPage() {
     <div className="min-h-screen bg-paper animate-pfxFade">
       <TopNav />
 
-      <div className="max-w-shell mx-auto px-4 md:px-8 pt-8 pb-32 md:pb-24">
+      <div className="max-w-shell mx-auto px-4 md:px-6 lg:px-8 pt-8 pb-32 md:pb-24">
         {/* Header */}
         <div className="flex items-end justify-between mb-7 flex-wrap gap-4">
           <div>
@@ -80,7 +80,7 @@ export default function AnalyticsPage() {
         {summaryLoading ? (
           <StateView variant="loading" title="Loading stats…" />
         ) : (
-          <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {kpis.map((k) => (
               <StatCard
                 key={k.label}
@@ -96,15 +96,17 @@ export default function AnalyticsPage() {
         )}
 
         {/* Main 2-col */}
-        <div className="grid gap-5" style={{ gridTemplateColumns: '1.55fr 1fr' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-5">
           {/* Top performing frames */}
           <div className="bg-surface border border-line rounded-card overflow-hidden">
+
             <div className="px-5 pt-5 pb-3.5 border-b border-line">
               <p className="font-serif text-[20px] font-[500] text-ink">Top performing frames</p>
             </div>
             {framesLoading ? (
               <div className="p-5"><StateView variant="loading" title="Loading…" /></div>
             ) : (
+              <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-line">
@@ -153,6 +155,7 @@ export default function AnalyticsPage() {
                   )}
                 </tbody>
               </table>
+              </div>
             )}
           </div>
 

@@ -53,7 +53,7 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-paper animate-pfxFade">
       <TopNav />
 
-      <div className="max-w-shell mx-auto px-4 md:px-8 pt-[34px] pb-32 md:pb-24">
+      <div className="max-w-shell mx-auto px-4 md:px-6 lg:px-8 pt-[34px] pb-32 md:pb-24">
         {/* Header */}
         <div className="flex items-end justify-between mb-[30px] flex-wrap gap-4">
           <div>
@@ -63,7 +63,7 @@ export default function DashboardPage() {
             </h1>
           </div>
           <div className="flex gap-2.5 items-center">
-            <button className="px-4 py-[10px] bg-surface border border-field rounded-[9px] font-mono text-[12px] text-ink-3 hover:border-ink transition-colors duration-150">
+            <button className="px-4 py-[10px] bg-surface border border-field rounded-[9px] font-mono text-[12px] text-ink-3 hover:border-ink transition-colors duration-150 whitespace-nowrap">
               Last 30 days ▾
             </button>
             <Link
@@ -79,7 +79,7 @@ export default function DashboardPage() {
         {summaryLoading ? (
           <StateView variant="loading" title="Loading stats…" />
         ) : (
-          <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {kpis.map((s) => (
               <StatCard
                 key={s.label}
@@ -95,7 +95,7 @@ export default function DashboardPage() {
         )}
 
         {/* Revenue chart + Recent sales */}
-        <div className="grid gap-4 mb-6" style={{ gridTemplateColumns: '1.4fr 1fr' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4 mb-6">
           {/* Bar chart */}
           <div className="bg-surface border border-line rounded-card p-6">
             <div className="flex items-baseline justify-between mb-6">
@@ -161,7 +161,7 @@ export default function DashboardPage() {
           {galleriesLoading ? (
             <StateView variant="loading" title="Loading galleries…" />
           ) : (
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {(galleries ?? []).slice(0, 4).map((g, i) => (
                 <div key={g.id} className="cursor-pointer group">
                   <div className="relative aspect-video rounded-tile overflow-hidden mb-3">
