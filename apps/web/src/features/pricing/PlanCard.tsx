@@ -1,3 +1,4 @@
+import { formatMoney } from '../../lib/format-money.js';
 import type { Plan } from '../../lib/types.js';
 
 interface PlanCardProps {
@@ -7,7 +8,10 @@ interface PlanCardProps {
 
 export function PlanCard({ plan, billing }: PlanCardProps) {
   const { highlighted } = plan;
-  const price = billing === 'annual' ? Math.round(plan.priceMonthly * 0.8) : plan.priceMonthly;
+  // prices are in minor units; annual = 20% off, shown as per-month
+  const priceMinor = billing === 'annual'
+    ? Math.round(plan.priceMonthly * 0.8)
+    : plan.priceMonthly;
 
   return (
     <div
@@ -24,9 +28,15 @@ export function PlanCard({ plan, billing }: PlanCardProps) {
       </p>
 
       <div className="flex items-baseline gap-1 mb-1.5 mt-4">
-        <span className="font-serif text-[48px] leading-none">${price}</span>
+        <span className="font-serif text-[48px] leading-none">{formatMoney(priceMinor)}</span>
         <span className={`text-[15px] ${highlighted ? 'opacity-60' : 'text-muted'}`}>/mo</span>
       </div>
+
+      {billing === 'annual' && (
+        <p className={`font-mono text-[10px] uppercase tracking-[0.12em] mb-1 ${highlighted ? 'text-paper/50' : 'text-muted'}`}>
+          Billed annually
+        </p>
+      )}
 
       <p className="font-serif text-[24px] mb-[22px]">{plan.name}</p>
 
@@ -44,14 +54,18 @@ export function PlanCard({ plan, billing }: PlanCardProps) {
         ))}
       </ul>
 
+      <p className={`font-mono text-[12px] uppercase tracking-[0.14em] mt-3 mb-[22px] ${highlighted ? 'text-paper/50' : 'text-muted'}`}>
+        {plan.commissionPct}% commission on print sales
+      </p>
+
       <button
-        className={`mt-auto w-full py-[13px] rounded-[9px] font-semibold text-[14.5px] transition-colors duration-150 ${
+        className={`mt-auto w-full py-[13px] rounded-[9px] font-semibold text-[14.5px] transition-colors duration-150 whitespace-nowrap ${
           highlighted
             ? 'bg-paper text-ink hover:bg-canvas'
             : 'bg-ink text-paper hover:bg-ink-2'
         }`}
       >
-        Start free trial
+        Start 14-day free trial
       </button>
     </div>
   );

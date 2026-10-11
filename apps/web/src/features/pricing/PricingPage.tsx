@@ -2,14 +2,32 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Eyebrow } from '../../components/ui/Eyebrow.js';
 import { TopNav } from '../../components/nav/TopNav.js';
-import { StateView } from '../../components/ui/StateView.js';
 import { PlanCard } from './PlanCard.js';
-import { PrintCard } from './PrintCard.js';
-import { getPlans, getPrintOptions } from '../../api/plans.js';
+import { getPlans } from '../../api/plans.js';
 import { qk } from '../../lib/query-client.js';
-import { PLANS as FALLBACK_PLANS, PRINT_OPTIONS as FALLBACK_PRINT_OPTIONS } from './mock.js';
+import { PLANS as FALLBACK_PLANS } from './mock.js';
 
 type Billing = 'monthly' | 'annual';
+
+// Payout example: 16×20" archival matte, $45 sale price, $22 print cost
+const EXAMPLE_SALE = 4500;   // minor units
+const EXAMPLE_COST = 2200;   // minor units
+const EXAMPLE_MARKUP = EXAMPLE_SALE - EXAMPLE_COST; // 2300
+
+const PAYOUT_PLANS = [
+  { label: 'Solo',    commissionPct: 12 },
+  { label: 'Studio',  commissionPct: 8 },
+  { label: 'Atelier', commissionPct: 4 },
+] as const;
+
+function formatDollar(minorUnits: number) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(minorUnits / 100);
+}
 
 export default function PricingPage() {
   const [billing, setBilling] = useState<Billing>('monthly');
@@ -20,14 +38,7 @@ export default function PricingPage() {
     placeholderData: FALLBACK_PLANS as never,
   });
 
-  const { data: printOptions } = useQuery({
-    queryKey: qk.printOptions(),
-    queryFn: getPrintOptions,
-    placeholderData: FALLBACK_PRINT_OPTIONS as never,
-  });
-
   const displayPlans = plans ?? FALLBACK_PLANS;
-  const displayPrints = printOptions ?? FALLBACK_PRINT_OPTIONS;
 
   return (
     <div className="min-h-screen bg-paper">
@@ -42,8 +53,8 @@ export default function PricingPage() {
           </h1>
           <p className="text-[17px] leading-[1.55] text-ink-3 max-w-[50ch] mx-auto mb-6">
             Showing your work should never cost more than making it. Every plan includes
-            the portfolio, the community, and a print store — with the lowest commissions
-            in the business.
+            the portfolio, the community, and a print store — you set the markup. We take
+            a small commission on it — as low as 4%.
           </p>
 
           {/* Billing toggle */}
@@ -68,31 +79,40 @@ export default function PricingPage() {
         </div>
 
         {/* Plan cards */}
-        <div className="grid grid-cols-3 gap-[18px] mb-14">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-[18px] mb-14">
           {displayPlans.map((plan) => (
             <PlanCard key={plan.tier} plan={plan} billing={billing} />
           ))}
         </div>
 
-        {/* À la carte prints */}
-        <div className="border-t border-line pt-12">
-          <div className="flex items-baseline justify-between mb-2 flex-wrap gap-3">
-            <h2 className="font-serif text-[32px] font-[500] text-ink tracking-[-0.01em]">
-              À la carte prints
-            </h2>
-            <span className="font-mono text-[11px] tracking-label text-muted">
-              NO SUBSCRIPTION REQUIRED
-            </span>
-          </div>
-          <p className="text-[15px] text-ink-3 mb-6 max-w-[56ch]">
-            Buyers pay once, photographers keep the most. Set your own markup on archival
-            prints fulfilled and shipped worldwide.
+        {/* Payout example card */}
+        <div className="bg-surface border border-line rounded-[14px] p-6 max-w-[var(--container-prose)] mx-auto mt-8">
+          <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted mb-1">
+            Payout example
           </p>
-          <div className="grid grid-cols-4 gap-4">
-            {displayPrints.map((opt, i) => (
-              <PrintCard key={opt.id} option={opt} index={i} />
-            ))}
+          <h2 className="font-serif text-[22px] font-[500] text-ink mb-6">
+            What you keep
+          </h2>
+
+          <div className="grid grid-cols-3 gap-6 divide-x divide-line">
+            {PAYOUT_PLANS.map(({ label, commissionPct }) => {
+              const keeps = Math.round(EXAMPLE_MARKUP * (1 - commissionPct / 100));
+              return (
+                <div key={label} className="pl-6 first:pl-0">
+                  <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted mb-1">
+                    {label}
+                  </p>
+                  <p className="font-serif text-[28px] font-[500] text-ink leading-tight">
+                    {formatDollar(keeps)}
+                  </p>
+                </div>
+              );
+            })}
           </div>
+
+          <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted mt-5">
+            16 × 20″ archival matte · $45 sale price · $22 print cost
+          </p>
         </div>
       </div>
     </div>

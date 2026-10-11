@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { formatMoney } from '../../lib/format-money.js';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Chip } from '../../components/ui/Chip.js';
 import { Input } from '../../components/ui/Input.js';
@@ -79,7 +80,7 @@ export default function OnboardingPage() {
               Create your account
             </h1>
             <p className="text-[14.5px] text-ink-3 text-center mb-[26px]">
-              Start free. No card required for 14 days.
+              Free for 14 days. No card required.
             </p>
 
             <div className="flex flex-col gap-[11px] mb-[18px]">
@@ -162,7 +163,7 @@ export default function OnboardingPage() {
                     <p className="text-[13px] text-ink-3">{p.tagline}</p>
                   </div>
                   <div className="text-right">
-                    <span className="font-serif text-[24px] text-ink">${p.priceMonthly}</span>
+                    <span className="font-serif text-[24px] text-ink">{formatMoney(p.priceMonthly)}</span>
                     <span className="text-[13px] text-muted">/mo</span>
                   </div>
                 </div>

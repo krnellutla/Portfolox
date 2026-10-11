@@ -89,8 +89,10 @@ export interface Plan {
   tier: PlanTier;
   name: string;
   priceMonthly: number;
+  priceAnnual?: number;
   tagline: string;
   commissionPct: number;
+  trialDays?: number;
   features: string[];
   highlighted: boolean;
 }

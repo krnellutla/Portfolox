@@ -4,10 +4,11 @@ import { planTier } from './photographer.js';
 export const planSchema = z.object({
   tier: planTier,
   name: z.string(),
-  priceMonthly: z.number(),
-  priceAnnual: z.number().optional(),
+  priceMonthly: z.number().int(),
+  priceAnnual: z.number().int().optional(),
   tagline: z.string(),
   commissionPct: z.number(),
+  trialDays: z.number().int().optional(),
   features: z.array(z.string()),
   highlighted: z.boolean(),
 });
