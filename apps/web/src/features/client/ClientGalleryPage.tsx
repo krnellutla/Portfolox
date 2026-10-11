@@ -89,12 +89,12 @@ export default function ClientGalleryPage() {
             </p>
           </div>
           <div className="flex items-center gap-2.5 mt-2">
-            <button className="px-4 py-[10px] bg-surface border border-field rounded-[9px] font-semibold text-[14px] text-ink hover:border-ink transition-colors">
+            <button className="px-4 py-[10px] bg-surface border border-field rounded-[9px] font-semibold text-[14px] text-ink hover:border-ink transition-colors whitespace-nowrap">
               ↓ Download all
             </button>
             <button
               onClick={() => void navigator.clipboard.writeText(window.location.href)}
-              className="px-4 py-[10px] bg-ink text-paper rounded-[9px] font-semibold text-[14px] hover:bg-ink-2 transition-colors"
+              className="px-4 py-[10px] bg-ink text-paper rounded-[9px] font-semibold text-[14px] hover:bg-ink-2 transition-colors whitespace-nowrap"
             >
               ↗ Share link
             </button>
@@ -118,8 +118,8 @@ export default function ClientGalleryPage() {
           ))}
         </div>
 
-        {/* 4-col grid */}
-        <div className="grid grid-cols-4 gap-3">
+        {/* Photo grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           {filtered.map((photo) => {
             const isSel = selected.has(photo.id);
             const isFav = photo.favoritedByMe;
@@ -163,7 +163,7 @@ export default function ClientGalleryPage() {
 
       {/* Selection pill */}
       {selected.size > 0 && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 px-6 py-3.5 bg-ink text-paper rounded-[999px] shadow-xl">
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 md:relative md:bottom-auto md:translate-x-0 z-50 flex items-center gap-4 px-6 py-3.5 bg-ink text-paper rounded-[999px] shadow-xl">
           <span className="font-semibold text-[14px]">{selected.size} selected</span>
           <span className="w-px h-4 bg-paper/20" />
           <button

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { TopNav } from '../../components/nav/TopNav.js';
-import { PhotoGrid } from '../../components/photo/PhotoGrid.js';
 import { PhotoTile } from '../../components/photo/PhotoTile.js';
 import { Eyebrow } from '../../components/ui/Eyebrow.js';
 import { Input } from '../../components/ui/Input.js';
@@ -101,7 +100,7 @@ export default function DiscoverPage() {
             <h2 className="font-serif text-[30px] font-[500] text-ink tracking-[-0.01em]">
               Featured photographers
             </h2>
-            <button className="font-mono text-[11px] tracking-label text-ink-3 hover:text-ink transition-colors duration-150">
+            <button className="font-mono text-[11px] tracking-label text-ink-3 hover:text-ink transition-colors duration-150 whitespace-nowrap">
               VIEW ALL →
             </button>
           </div>
@@ -109,17 +108,33 @@ export default function DiscoverPage() {
           {featuredLoading && <StateView variant="loading" title="Loading…" />}
           {featuredError && <StateView variant="error" title="Couldn't load featured photographers" />}
           {featured && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
-              {featured.map((p, i) => (
-                <FeaturedCard
-                  key={p.id}
-                  photographer={p}
-                  coverImageIndex={i}
-                  followed={!!p.isFollowedByMe}
-                  onFollow={() => followMutation.mutate({ id: p.id, following: !!p.isFollowedByMe })}
-                />
-              ))}
-            </div>
+            <>
+              {/* Mobile: horizontal scroll rail */}
+              <div className="flex md:hidden overflow-x-auto gap-4 snap-x snap-mandatory pb-2 -mx-4 px-4">
+                {featured.map((p, i) => (
+                  <div key={p.id} className="snap-start flex-shrink-0 w-[80vw] max-w-[320px]">
+                    <FeaturedCard
+                      photographer={p}
+                      coverImageIndex={i}
+                      followed={!!p.isFollowedByMe}
+                      onFollow={() => followMutation.mutate({ id: p.id, following: !!p.isFollowedByMe })}
+                    />
+                  </div>
+                ))}
+              </div>
+              {/* md+: grid */}
+              <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+                {featured.map((p, i) => (
+                  <FeaturedCard
+                    key={p.id}
+                    photographer={p}
+                    coverImageIndex={i}
+                    followed={!!p.isFollowedByMe}
+                    onFollow={() => followMutation.mutate({ id: p.id, following: !!p.isFollowedByMe })}
+                  />
+                ))}
+              </div>
+            </>
           )}
         </div>
 
@@ -135,7 +150,7 @@ export default function DiscoverPage() {
           </div>
           {freshLoading && <StateView variant="loading" title="Loading…" />}
           {fresh && (
-            <PhotoGrid cols={2} gap="sm" className="md:[grid-template-columns:repeat(4,minmax(0,1fr))]">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               {fresh.items.map((photo) => (
                 <PhotoTile
                   key={photo.id}
@@ -146,7 +161,7 @@ export default function DiscoverPage() {
                   onClick={() => navigate(`/lightbox?id=${photo.id}`)}
                 />
               ))}
-            </PhotoGrid>
+            </div>
           )}
         </div>
       </div>

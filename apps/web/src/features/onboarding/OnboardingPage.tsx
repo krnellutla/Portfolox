@@ -60,8 +60,8 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-paper px-6 py-12 pb-20 animate-pfxFade">
-      <div className="max-w-[600px] mx-auto text-center">
+    <div className="min-h-screen bg-paper px-4 md:px-6 py-12 pb-20 animate-pfxFade">
+      <div className="w-full max-w-lg mx-auto text-center">
         <p className="font-serif text-[28px] font-[600] tracking-[-0.015em] text-ink mb-8">
           Blueflutes
         </p>
@@ -70,7 +70,7 @@ export default function OnboardingPage() {
         </div>
       </div>
 
-      <div className="max-w-[520px] mx-auto bg-surface border border-line rounded-panel px-9 py-9">
+      <div className="w-full max-w-lg mx-auto px-4 md:px-0 bg-surface border border-line rounded-panel md:px-9 py-9">
 
         {/* Step 0 — Account */}
         {step === 0 && (

@@ -68,7 +68,7 @@ export default function PricingPage() {
         </div>
 
         {/* Plan cards */}
-        <div className="grid grid-cols-3 gap-[18px] mb-14">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-[18px] mb-14">
           {displayPlans.map((plan) => (
             <PlanCard key={plan.tier} plan={plan} billing={billing} />
           ))}
@@ -88,7 +88,7 @@ export default function PricingPage() {
             Buyers pay once, photographers keep the most. Set your own markup on archival
             prints fulfilled and shipped worldwide.
           </p>
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {displayPrints.map((opt, i) => (
               <PrintCard key={opt.id} option={opt} index={i} />
             ))}

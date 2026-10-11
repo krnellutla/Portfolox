@@ -45,7 +45,7 @@ export function PlanCard({ plan, billing }: PlanCardProps) {
       </ul>
 
       <button
-        className={`mt-auto w-full py-[13px] rounded-[9px] font-semibold text-[14.5px] transition-colors duration-150 ${
+        className={`mt-auto w-full py-[13px] rounded-[9px] font-semibold text-[14.5px] transition-colors duration-150 whitespace-nowrap ${
           highlighted
             ? 'bg-paper text-ink hover:bg-canvas'
             : 'bg-ink text-paper hover:bg-ink-2'

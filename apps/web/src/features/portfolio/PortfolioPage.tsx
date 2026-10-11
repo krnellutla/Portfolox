@@ -5,7 +5,6 @@ import type { Photographer } from '@blueflutes/shared';
 import { TopNav } from '../../components/nav/TopNav.js';
 import { Avatar } from '../../components/ui/Avatar.js';
 import { Chip } from '../../components/ui/Chip.js';
-import { PhotoGrid } from '../../components/photo/PhotoGrid.js';
 import { PhotoTile } from '../../components/photo/PhotoTile.js';
 import { StateView } from '../../components/ui/StateView.js';
 import { getProfile, getGalleries, getPhotos, follow, unfollow } from '../../api/photographers.js';
@@ -75,7 +74,7 @@ export default function PortfolioPage() {
       <TopNav />
 
       {/* Cover band */}
-      <div className="relative h-[300px] overflow-hidden">
+      <div className="relative h-[200px] md:h-[260px] lg:h-[300px] overflow-hidden">
         <img src={coverSrc} alt="Cover" className="absolute inset-0 w-full h-full object-cover" />
         <div
           className="absolute inset-0"
@@ -99,11 +98,11 @@ export default function PortfolioPage() {
               @{photographer.handle} · {photographer.location} · {photographer.specialty}
             </p>
           </div>
-          <div className="flex gap-2.5 pb-[10px]">
+          <div className="flex flex-col md:flex-row gap-2.5 pb-[10px]">
             <button
               onClick={() => followMutation.mutate({ id: photographer.id, isFollowing: isFollowed })}
               disabled={followMutation.isPending}
-              className={`px-[22px] py-[11px] rounded-[9px] font-semibold text-sm transition-colors duration-150 ${
+              className={`w-full md:w-auto px-[22px] py-[11px] rounded-[9px] font-semibold text-sm transition-colors duration-150 whitespace-nowrap ${
                 isFollowed
                   ? 'bg-canvas text-ink border border-line hover:bg-line'
                   : 'bg-ink text-paper hover:bg-ink-2'
@@ -111,7 +110,7 @@ export default function PortfolioPage() {
             >
               {isFollowed ? 'Following' : 'Follow'}
             </button>
-            <button className="px-5 py-[11px] bg-surface text-ink border border-field rounded-[9px] font-semibold text-sm hover:border-ink transition-colors duration-150">
+            <button className="w-full md:w-auto px-5 py-[11px] bg-surface text-ink border border-field rounded-[9px] font-semibold text-sm hover:border-ink transition-colors duration-150 whitespace-nowrap">
               Message
             </button>
           </div>
@@ -151,7 +150,7 @@ export default function PortfolioPage() {
         {/* Photo grid */}
         {photosLoading && <StateView variant="loading" title="Loading photos…" />}
         {!photosLoading && (
-          <PhotoGrid cols={2} gap="sm" className="md:[grid-template-columns:repeat(5,minmax(0,1fr))]">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
             {photos.map((photo, i) => (
               <PhotoTile
                 key={photo.id}
@@ -162,7 +161,7 @@ export default function PortfolioPage() {
                 onClick={() => navigate(`/lightbox?id=${photo.id}&photographer=${handle}`)}
               />
             ))}
-          </PhotoGrid>
+          </div>
         )}
       </div>
     </div>
