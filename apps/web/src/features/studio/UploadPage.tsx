@@ -1,12 +1,12 @@
-import { useRef, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useRef, useState } from 'react';
 import { TopNav } from '../../components/nav/TopNav.js';
 import { Eyebrow } from '../../components/ui/Eyebrow.js';
 import { StateView } from '../../components/ui/StateView.js';
 import { SkeletonRow } from '../../components/ui/Skeleton.js';
-import { getMyGalleries } from '../../api/me.js';
-import { qk } from '../../lib/query-client.js';
 import { seedThumbUrl } from '../../lib/seed-photos.js';
+import { CreateNodeDialog } from '../../pages/dashboard/content/CreateNodeDialog.js';
+import { NodeTree } from '../../pages/dashboard/content/NodeTree.js';
+import { useNodesStore } from '../../stores/nodes-store.js';
 
 interface QueueItem {
   id: string;
@@ -42,25 +42,24 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
 }
 
+type DialogMode = 'folder' | 'album' | null;
+
 export default function UploadPage() {
-  const [activeAlbumId, setActiveAlbumId] = useState<string | null>(null);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [frames] = useState<Frame[]>(INIT_FRAMES);
   const [draggingOver, setDraggingOver] = useState(false);
+  const [dialogMode, setDialogMode] = useState<DialogMode>(null);
+  const [toast, setToast] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: galleries, isLoading: galleriesLoading } = useQuery({
-    queryKey: qk.myGalleries(),
-    queryFn: getMyGalleries,
-    select: (data) => {
-      if (!activeAlbumId && data.length > 0) {
-        // set initial active album after first load
-      }
-      return data;
-    },
-  });
+  const { nodes, status, load, createNode, updateNode, deleteNode, moveNodeOptimistic } = useNodesStore();
 
-  const activeAlbum = galleries?.find((g) => g.id === activeAlbumId) ?? galleries?.[0];
+  useEffect(() => {
+    if (status === 'idle') {
+      void load();
+    }
+  }, [status, load]);
 
   function enqueue(files: FileList | null) {
     if (!files) return;
@@ -83,47 +82,121 @@ export default function UploadPage() {
     });
   }
 
+  function showToast(msg: string) {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2000);
+  }
+
+  async function handleCreate(
+    type: 'folder' | 'gallery' | 'page',
+    name: string,
+    slug: string,
+    parentId: string | null,
+  ) {
+    await createNode(parentId, type, name, slug);
+  }
+
+  async function handleRename(id: string, name: string) {
+    await updateNode(id, name);
+  }
+
+  async function handleDelete(id: string) {
+    await deleteNode(id);
+    if (selectedNodeId === id) setSelectedNodeId(null);
+  }
+
+  async function handleMove(id: string, targetParentId: string | null, targetPosition: number) {
+    await moveNodeOptimistic(id, targetParentId, targetPosition);
+  }
+
+  // HTML5 drag handlers for photo-to-album
+  function handlePhotoDragStart(e: React.DragEvent, frameId: string) {
+    e.dataTransfer.setData('text/plain', frameId);
+    e.dataTransfer.effectAllowed = 'move';
+  }
+
+  function handleAlbumDragOver(e: React.DragEvent) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  }
+
+  function handleAlbumDrop(e: React.DragEvent, nodeId: string, nodeName: string) {
+    e.preventDefault();
+    const photoId = e.dataTransfer.getData('text/plain');
+    if (photoId) {
+      console.log('Move photo', photoId, 'to album', nodeId);
+      showToast(`Moved to ${nodeName}`);
+    }
+  }
+
+  const selectedNode = nodes.find((n) => n.id === selectedNodeId);
+  const dialogType = dialogMode === 'folder' ? 'folder' : 'gallery';
+
   return (
     <div className="min-h-screen bg-paper animate-pfxFade">
       <TopNav />
+
+      {/* Toast */}
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 bg-ink text-paper rounded-[10px] font-mono text-[12px] shadow-lg pointer-events-none">
+          {toast}
+        </div>
+      )}
 
       <div
         className="max-w-shell mx-auto px-4 md:px-6 lg:px-8 pt-8 pb-32 md:pb-24 flex flex-col lg:grid lg:gap-8"
         style={{ gridTemplateColumns: '236px 1fr' }}
       >
-        {/* Left rail — albums */}
+        {/* Left rail — node tree */}
         <aside className="hidden lg:block sticky top-[72px] self-start">
           <Eyebrow className="mb-4">13 — Upload & manage</Eyebrow>
           <div className="flex items-center justify-between mb-2.5">
-            <p className="font-mono text-[10.5px] uppercase tracking-label text-muted">Albums</p>
-            <button className="font-mono text-[11px] text-ink-3 hover:text-ink transition-colors">＋</button>
+            <p className="font-mono text-[10.5px] uppercase tracking-wider text-ink-3">Albums</p>
+            <div className="flex items-center gap-1">
+              {/* New folder button */}
+              <button
+                title="New folder"
+                onClick={() => setDialogMode('folder')}
+                className="w-6 h-6 flex items-center justify-center rounded-[5px] text-ink-3 hover:text-ink hover:bg-canvas transition-colors text-[14px]"
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M1 3.5A1.5 1.5 0 0 1 2.5 2H5l1 1.5h5.5A1.5 1.5 0 0 1 13 5v5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 1 10V3.5Z" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round"/>
+                  <path d="M7 6.5v3M5.5 8H8.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
+                </svg>
+              </button>
+              {/* New album button */}
+              <button
+                title="New album"
+                onClick={() => setDialogMode('album')}
+                className="w-6 h-6 flex items-center justify-center rounded-[5px] text-ink-3 hover:text-ink hover:bg-canvas transition-colors text-[16px] font-light"
+              >
+                +
+              </button>
+            </div>
           </div>
-          {galleriesLoading ? (
+
+          {status === 'loading' ? (
             <div className="flex flex-col">
               {Array.from({ length: 4 }).map((_, i) => (
                 <SkeletonRow key={i} />
               ))}
             </div>
           ) : (
-            <div className="flex flex-col gap-1">
-              {(galleries ?? []).map((gallery) => (
-                <button
-                  key={gallery.id}
-                  onClick={() => setActiveAlbumId(gallery.id)}
-                  className={`flex items-center justify-between px-3 py-[10px] rounded-[10px] transition-colors text-left ${
-                    activeAlbum?.id === gallery.id ? 'bg-surface border border-line' : 'hover:bg-canvas'
-                  }`}
-                >
-                  <span className={`text-[13.5px] font-semibold truncate ${activeAlbum?.id === gallery.id ? 'text-ink' : 'text-ink-3'}`}>
-                    {gallery.visibility === 'private' && <span className="mr-1 text-muted">🔒</span>}
-                    {gallery.title}
-                  </span>
-                  <span className="font-mono text-[10px] text-muted ml-2 shrink-0">{gallery.counts.frames}</span>
-                </button>
-              ))}
-              {!galleriesLoading && !galleries?.length && (
-                <p className="font-mono text-[11px] text-muted px-3 py-2">No albums yet.</p>
-              )}
+            <div
+              onDragOver={handleAlbumDragOver}
+              onDrop={(e) => {
+                // dropped on tree root — only albums handle it per-node
+                e.preventDefault();
+              }}
+            >
+              <NodeTree
+                nodes={nodes}
+                selectedId={selectedNodeId}
+                onSelect={(id) => setSelectedNodeId(id)}
+                onRename={handleRename}
+                onDelete={handleDelete}
+                onMove={handleMove}
+              />
             </div>
           )}
         </aside>
@@ -133,12 +206,15 @@ export default function UploadPage() {
           {/* Mobile/tablet album selector */}
           <select
             className="w-full rounded-[9px] border border-field px-3 py-2 text-sm text-ink bg-surface lg:hidden"
-            value={activeAlbum?.id ?? ''}
-            onChange={(e) => setActiveAlbumId(e.target.value)}
+            value={selectedNodeId ?? ''}
+            onChange={(e) => setSelectedNodeId(e.target.value || null)}
           >
-            {(galleries ?? []).map((g) => (
-              <option key={g.id} value={g.id}>{g.title}</option>
-            ))}
+            <option value="">All photos</option>
+            {nodes
+              .filter((n) => n.type === 'gallery')
+              .map((n) => (
+                <option key={n.id} value={n.id}>{n.name}</option>
+              ))}
           </select>
 
           {/* Dropzone */}
@@ -156,7 +232,7 @@ export default function UploadPage() {
             <div className="text-center">
               <p className="text-[15px] font-semibold text-ink mb-1">Drop RAW or JPEG here</p>
               <p className="font-mono text-[11px] text-muted">
-                Target: <span className="text-ink-3 font-semibold">{activeAlbum?.title ?? '—'}</span>
+                Target: <span className="text-ink-3 font-semibold">{selectedNode?.name ?? '—'}</span>
               </p>
             </div>
             <button
@@ -226,11 +302,16 @@ export default function UploadPage() {
             {/* Card list — mobile/tablet only */}
             <div className="md:hidden flex flex-col divide-y divide-line">
               {frames.map((frame, i) => (
-                <div key={frame.id} className="flex gap-3 p-4">
+                <div
+                  key={frame.id}
+                  className="flex gap-3 p-4"
+                  draggable
+                  onDragStart={(e) => handlePhotoDragStart(e, frame.id)}
+                >
                   <img
                     src={seedThumbUrl(frame.thumbIndex)}
                     alt={frame.title}
-                    className="w-12 h-12 rounded-[6px] shrink-0 object-cover"
+                    className="w-12 h-12 rounded-[6px] shrink-0 object-cover cursor-grab"
                   />
                   <div className="flex-1 min-w-0">
                     <p className="text-[13px] font-semibold text-ink">{frame.title}</p>
@@ -261,7 +342,12 @@ export default function UploadPage() {
               </thead>
               <tbody>
                 {frames.map((frame, i) => (
-                  <tr key={frame.id} className={`border-b border-line-2 last:border-0 ${i % 2 === 0 ? '' : 'bg-canvas/50'}`}>
+                  <tr
+                    key={frame.id}
+                    className={`border-b border-line-2 last:border-0 ${i % 2 === 0 ? '' : 'bg-canvas/50'} cursor-grab`}
+                    draggable
+                    onDragStart={(e) => handlePhotoDragStart(e, frame.id)}
+                  >
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
                         <img
@@ -294,6 +380,17 @@ export default function UploadPage() {
           </div>
         </div>
       </div>
+
+      {/* Create node dialog */}
+      {dialogMode !== null && (
+        <CreateNodeDialog
+          parentId={selectedNodeId}
+          onConfirm={async (type, name, slug, parentId) => {
+            await handleCreate(type, name, slug, parentId);
+          }}
+          onClose={() => setDialogMode(null)}
+        />
+      )}
     </div>
   );
 }

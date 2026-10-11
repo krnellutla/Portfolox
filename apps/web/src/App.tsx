@@ -1,6 +1,5 @@
 import { Suspense, lazy } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
-import { RequireAuth } from './auth/RequireAuth.js';
 import { SessionProvider } from './auth/SessionProvider.js';
 import { ThemeProvider } from './components/ThemeProvider.js';
 import { MobileTabBar } from './components/nav/MobileTabBar.js';
@@ -9,10 +8,6 @@ import AuthCallback from './pages/auth/AuthCallback.js';
 import Login from './pages/login/Login.js';
 
 const PortfolioViewer = lazy(() => import('./pages/viewer/PortfolioViewer.js'));
-const DashboardLayout = lazy(() => import('./pages/dashboard/DashboardLayout.js'));
-const DashboardHome = lazy(() => import('./pages/dashboard/DashboardHome.js'));
-const GalleryManager = lazy(() => import('./pages/dashboard/content/GalleryManager.js'));
-const ThemeEditor = lazy(() => import('./pages/dashboard/settings/ThemeEditor.js'));
 const PricingPage = lazy(() => import('./features/pricing/PricingPage.js'));
 const CollectionsPage = lazy(() => import('./features/collections/CollectionsPage.js'));
 const PortfolioPage = lazy(() => import('./features/portfolio/PortfolioPage.js'));
@@ -61,13 +56,8 @@ function App() {
             <Route path="/studio/builder" element={<GalleryBuilderPage />} />
             <Route path="/studio/orders" element={<OrdersPage />} />
 
-            <Route element={<RequireAuth />}>
-              <Route path="/dashboard" element={<DashboardLayout />}>
-                <Route index element={<DashboardHome />} />
-                <Route path="content" element={<GalleryManager />} />
-                <Route path="theme" element={<ThemeEditor />} />
-              </Route>
-            </Route>
+            <Route path="/dashboard" element={<Navigate to="/studio/dashboard" replace />} />
+            <Route path="/dashboard/*" element={<Navigate to="/studio/dashboard" replace />} />
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
