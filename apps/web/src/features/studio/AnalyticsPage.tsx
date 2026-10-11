@@ -7,6 +7,7 @@ import { StateView } from '../../components/ui/StateView.js';
 import { getSummary, getPhotoPerformance, getFunnel, getBuyers } from '../../api/analytics.js';
 import { qk } from '../../lib/query-client.js';
 import { seedThumbUrl, seedAvatarUrl } from '../../lib/seed-photos.js';
+import { formatMoney } from '../../lib/format-money.js';
 
 type Range = '30d' | '90d' | 'all';
 
@@ -17,6 +18,33 @@ const RANGES: { id: Range; label: string }[] = [
 ];
 
 const MAX_SPARK = 65;
+
+const KPI_DEFINITIONS: Record<string, string> = {
+  'Profile views':  'Visits to your portfolio page.',
+  'Photo views':    'A photo shown on screen ≥ 1 second. Top of funnel.',
+  'Lightbox opens': 'Photo opened in the lightbox.',
+  'Added to cart':  'Print added to a cart.',
+  'Purchases':      'Paid orders.',
+  'Conversion':     'Purchases ÷ photo views for the selected range.',
+  'Avg. order':     'Print revenue ÷ purchases.',
+};
+
+function KpiLabel({ label }: { label: string }) {
+  const tip = KPI_DEFINITIONS[label];
+  return (
+    <span className="relative group inline-flex items-center gap-1">
+      {label}
+      {tip && (
+        <>
+          <span className="text-ink-3 cursor-help text-[11px]">ⓘ</span>
+          <span className="absolute bottom-full left-0 mb-1 hidden group-hover:block w-48 bg-ink text-paper text-[11px] rounded px-2 py-1 z-10 leading-snug pointer-events-none">
+            {tip}
+          </span>
+        </>
+      )}
+    </span>
+  );
+}
 
 export default function AnalyticsPage() {
   const [range, setRange] = useState<Range>('30d');
@@ -43,10 +71,34 @@ export default function AnalyticsPage() {
 
   const kpis = summary
     ? [
-        { label: 'Photo views',   value: summary.views.toLocaleString(), delta: summary.deltas.views ? `${summary.deltas.views > 0 ? '+' : ''}${summary.deltas.views}%` : '', dir: summary.deltas.views >= 0 ? ('up' as const) : ('down' as const), sub: 'vs. prior period' },
-        { label: 'Conversion',    value: `${summary.conversionPct}%`, delta: summary.deltas.conversion ? `${summary.deltas.conversion > 0 ? '+' : ''}${summary.deltas.conversion}%` : '', dir: summary.deltas.conversion >= 0 ? ('up' as const) : ('down' as const), sub: 'vs. prior period' },
-        { label: 'Avg. order',    value: `$${summary.avgOrder}`, delta: summary.deltas.avgOrder ? `${summary.deltas.avgOrder > 0 ? '+' : ''}$${summary.deltas.avgOrder}` : '', dir: summary.deltas.avgOrder >= 0 ? ('up' as const) : ('down' as const), sub: 'vs. prior period' },
-        { label: 'Print revenue', value: `$${summary.revenue.toLocaleString()}`, delta: summary.deltas.revenue ? `${summary.deltas.revenue > 0 ? '+' : ''}${summary.deltas.revenue}%` : '', dir: summary.deltas.revenue >= 0 ? ('up' as const) : ('down' as const), sub: 'vs. prior period' },
+        {
+          label: 'Photo views',
+          value: summary.photoViews.toLocaleString(),
+          delta: summary.deltas.photoViews ? `${summary.deltas.photoViews > 0 ? '+' : ''}${(summary.deltas.photoViews * 100).toFixed(0)}%` : '',
+          dir: summary.deltas.photoViews >= 0 ? ('up' as const) : ('down' as const),
+          sub: 'vs. prior period',
+        },
+        {
+          label: 'Conversion',
+          value: `${summary.conversionPct}%`,
+          delta: summary.deltas.conversion ? `${summary.deltas.conversion > 0 ? '+' : ''}${(summary.deltas.conversion * 100).toFixed(0)}%` : '',
+          dir: summary.deltas.conversion >= 0 ? ('up' as const) : ('down' as const),
+          sub: 'vs. prior period',
+        },
+        {
+          label: 'Avg. order',
+          value: formatMoney(summary.avgOrderMinorUnits, summary.currency),
+          delta: summary.deltas.avgOrder ? `${summary.deltas.avgOrder > 0 ? '+' : ''}${(summary.deltas.avgOrder * 100).toFixed(0)}%` : '',
+          dir: summary.deltas.avgOrder >= 0 ? ('up' as const) : ('down' as const),
+          sub: 'vs. prior period',
+        },
+        {
+          label: 'Print revenue',
+          value: formatMoney(summary.revenue, summary.currency),
+          delta: summary.deltas.revenue ? `${summary.deltas.revenue > 0 ? '+' : ''}${(summary.deltas.revenue * 100).toFixed(0)}%` : '',
+          dir: summary.deltas.revenue >= 0 ? ('up' as const) : ('down' as const),
+          sub: 'vs. prior period',
+        },
       ]
     : [];
 
@@ -84,7 +136,7 @@ export default function AnalyticsPage() {
             {kpis.map((k) => (
               <StatCard
                 key={k.label}
-                label={k.label}
+                label={<KpiLabel label={k.label} />}
                 value={k.value}
                 delta={k.delta || undefined}
                 deltaDirection={k.dir}
@@ -108,9 +160,17 @@ export default function AnalyticsPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-line">
-                    {['Frame', 'Views', 'Sales', 'Revenue', 'Conv.', '7 days'].map((col) => (
+                    {['Frame', 'Views', 'Sales', 'Revenue', 'Per-frame Conv.', '7 days'].map((col) => (
                       <th key={col} className="px-4 py-2.5 text-left font-mono text-[10px] uppercase tracking-label text-muted first:pl-5">
-                        {col}
+                        {col === 'Per-frame Conv.' ? (
+                          <span className="relative group inline-flex items-center gap-1">
+                            Per-frame Conv.
+                            <span className="text-ink-3 cursor-help text-[11px] normal-case">ⓘ</span>
+                            <span className="absolute bottom-full left-0 mb-1 hidden group-hover:block w-48 bg-ink text-paper text-[11px] rounded px-2 py-1 z-10 leading-snug pointer-events-none normal-case font-sans tracking-normal">
+                              This photo&apos;s sales ÷ this photo&apos;s photo views.
+                            </span>
+                          </span>
+                        ) : col}
                       </th>
                     ))}
                   </tr>
@@ -133,7 +193,7 @@ export default function AnalyticsPage() {
                       </td>
                       <td className="px-4 py-3.5 font-mono text-[12px] text-ink-3">{f.views.toLocaleString()}</td>
                       <td className="px-4 py-3.5 font-mono text-[12px] text-ink-3">{f.sales}</td>
-                      <td className="px-4 py-3.5 font-serif text-[14px] text-ink">${f.revenue}</td>
+                      <td className="px-4 py-3.5 font-serif text-[14px] text-ink">{formatMoney(f.revenue)}</td>
                       <td className="px-4 py-3.5 font-mono text-[12px] text-positive">{f.conversionPct}%</td>
                       <td className="px-4 py-3.5">
                         <div className="flex items-end gap-[2px] h-[24px] w-[48px]">
@@ -168,15 +228,20 @@ export default function AnalyticsPage() {
                   {(funnel ?? []).map((stage, i) => (
                     <div key={stage.label}>
                       <div className="flex items-center justify-between mb-1.5">
-                        <span className="font-mono text-[11px] text-ink-3">{stage.label}</span>
-                        <span className="font-mono text-[11px] text-muted">{stage.pctOfTop}%</span>
+                        <span className="font-mono text-[11px] text-ink-3">
+                          {stage.label}
+                          {stage.isSeparate && (
+                            <span className="ml-1 text-[9px] text-muted">(separate)</span>
+                          )}
+                        </span>
+                        <span className="font-mono text-[11px] text-muted">{stage.value.toLocaleString()}</span>
                       </div>
                       <div className="h-[26px] rounded-[6px] bg-canvas overflow-hidden">
                         <div
                           className="h-full rounded-[6px] bg-ink flex items-center pl-3 transition-all"
-                          style={{ width: `${stage.pctOfTop}%`, opacity: 1 - i * 0.18 }}
+                          style={{ width: `${Math.max(stage.pctOfTop * 100, 2)}%`, opacity: stage.isSeparate ? 0.4 : 1 - i * 0.18 }}
                         >
-                          <span className="font-mono text-[10px] text-paper/80">{stage.pctOfTop}%</span>
+                          <span className="font-mono text-[10px] text-paper/80">{(stage.pctOfTop * 100).toFixed(1)}%</span>
                         </div>
                       </div>
                     </div>
@@ -203,7 +268,7 @@ export default function AnalyticsPage() {
                         <p className="font-mono text-[12px] text-ink">@{b.buyerHandle}</p>
                         <p className="font-mono text-[10px] text-muted">{b.orders} orders</p>
                       </div>
-                      <span className="font-serif text-[20px] text-ink">${b.spent}</span>
+                      <span className="font-serif text-[20px] text-ink">{formatMoney(b.spent)}</span>
                     </div>
                   ))}
                   {!buyersLoading && !buyers?.length && (

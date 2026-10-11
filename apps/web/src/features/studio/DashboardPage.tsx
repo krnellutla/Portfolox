@@ -9,11 +9,32 @@ import { getSummary, getRevenue, getRecentSales } from '../../api/analytics.js';
 import { getMyGalleries } from '../../api/me.js';
 import { qk } from '../../lib/query-client.js';
 import { seedPhotoUrl } from '../../lib/seed-photos.js';
+import { formatMoney } from '../../lib/format-money.js';
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-function fmtCurrency(n: number) {
-  return n >= 1000 ? `$${(n / 1000).toFixed(1)}k` : `$${n}`;
+const KPI_DEFINITIONS: Record<string, string> = {
+  'Profile views': 'Visits to your portfolio page.',
+  'Print revenue': 'Print revenue ÷ purchases.',
+  'Avg. order':    'Print revenue ÷ purchases.',
+  'Conversion':    'Purchases ÷ photo views for the selected range.',
+};
+
+function KpiLabel({ label }: { label: string }) {
+  const tip = KPI_DEFINITIONS[label];
+  return (
+    <span className="relative group inline-flex items-center gap-1">
+      {label}
+      {tip && (
+        <>
+          <span className="text-ink-3 cursor-help text-[11px]">ⓘ</span>
+          <span className="absolute bottom-full left-0 mb-1 hidden group-hover:block w-48 bg-ink text-paper text-[11px] rounded px-2 py-1 z-10 leading-snug pointer-events-none">
+            {tip}
+          </span>
+        </>
+      )}
+    </span>
+  );
 }
 
 export default function DashboardPage() {
@@ -42,10 +63,10 @@ export default function DashboardPage() {
 
   const kpis = summary
     ? [
-        { label: 'Profile views',  value: summary.views.toLocaleString(), delta: summary.deltas.views > 0 ? `+${summary.deltas.views}%` : `${summary.deltas.views}%`, dir: summary.deltas.views >= 0 ? ('up' as const) : ('down' as const), sub: 'vs. prior period' },
-        { label: 'Print revenue',  value: fmtCurrency(summary.revenue), delta: summary.deltas.revenue > 0 ? `+${summary.deltas.revenue}%` : `${summary.deltas.revenue}%`, dir: summary.deltas.revenue >= 0 ? ('up' as const) : ('down' as const), sub: 'vs. prior period' },
-        { label: 'Avg. order',     value: fmtCurrency(summary.avgOrder), delta: summary.deltas.avgOrder > 0 ? `+$${summary.deltas.avgOrder}` : `$${summary.deltas.avgOrder}`, dir: summary.deltas.avgOrder >= 0 ? ('up' as const) : ('down' as const), sub: 'vs. prior period' },
-        { label: 'Conversion',     value: `${summary.conversionPct}%`, delta: summary.deltas.conversion > 0 ? `+${summary.deltas.conversion}%` : `${summary.deltas.conversion}%`, dir: summary.deltas.conversion >= 0 ? ('up' as const) : ('down' as const), sub: 'vs. prior period' },
+        { label: 'Profile views', value: summary.profileViews.toLocaleString(), delta: summary.deltas.profileViews > 0 ? `+${(summary.deltas.profileViews * 100).toFixed(0)}%` : `${(summary.deltas.profileViews * 100).toFixed(0)}%`, dir: summary.deltas.profileViews >= 0 ? ('up' as const) : ('down' as const), sub: 'vs. prior period' },
+        { label: 'Print revenue', value: formatMoney(summary.revenue, summary.currency), delta: summary.deltas.revenue > 0 ? `+${(summary.deltas.revenue * 100).toFixed(0)}%` : `${(summary.deltas.revenue * 100).toFixed(0)}%`, dir: summary.deltas.revenue >= 0 ? ('up' as const) : ('down' as const), sub: 'vs. prior period' },
+        { label: 'Avg. order',    value: formatMoney(summary.avgOrderMinorUnits, summary.currency), delta: summary.deltas.avgOrder > 0 ? `+${(summary.deltas.avgOrder * 100).toFixed(0)}%` : `${(summary.deltas.avgOrder * 100).toFixed(0)}%`, dir: summary.deltas.avgOrder >= 0 ? ('up' as const) : ('down' as const), sub: 'vs. prior period' },
+        { label: 'Conversion',    value: `${summary.conversionPct}%`, delta: summary.deltas.conversion > 0 ? `+${(summary.deltas.conversion * 100).toFixed(0)}%` : `${(summary.deltas.conversion * 100).toFixed(0)}%`, dir: summary.deltas.conversion >= 0 ? ('up' as const) : ('down' as const), sub: 'vs. prior period' },
       ]
     : [];
 
@@ -83,7 +104,7 @@ export default function DashboardPage() {
             {kpis.map((s) => (
               <StatCard
                 key={s.label}
-                label={s.label}
+                label={<KpiLabel label={s.label} />}
                 value={s.value}
                 delta={s.delta}
                 deltaDirection={s.dir}

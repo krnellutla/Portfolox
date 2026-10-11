@@ -1,5 +1,7 @@
+import type { ReactNode } from 'react';
+
 export interface StatCardProps {
-  label: string;
+  label: ReactNode;
   value: string;
   delta?: string;
   deltaDirection?: 'up' | 'down' | 'neutral';
