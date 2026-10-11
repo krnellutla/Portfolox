@@ -30,7 +30,7 @@ function toggle<T>(arr: T[], item: T): T[] {
 
 export function FilterSidebar({ filters, onChange }: FilterSidebarProps) {
   return (
-    <aside className="w-[262px] shrink-0 sticky top-[72px] self-start max-h-[calc(100vh-88px)] overflow-y-auto pr-2 pb-10">
+    <aside className="w-[262px] shrink-0 lg:sticky top-[72px] self-start max-h-[calc(100vh-88px)] overflow-y-auto pr-2 pb-10">
       <Eyebrow className="mb-4">02 — Search</Eyebrow>
 
       <Input

@@ -90,9 +90,33 @@ export default function CommunityPage() {
     <div className="min-h-screen bg-paper animate-pfxFade">
       <TopNav />
 
+      {/* Mobile: spaces as horizontal chip row */}
+      <div className="md:hidden px-4 pt-6 pb-0">
+        <div className="flex overflow-x-auto gap-2 pb-2">
+          {([
+            { space: 'show-your-work' as const, label: 'Show Your Work', count: 412 },
+            { space: 'critique' as const, label: 'Critique Corner', count: 189 },
+            { space: 'pricing-business' as const, label: 'Pricing & Business', count: 94 },
+            { space: 'gear' as const, label: 'Gear Talk', count: 266 },
+            { space: 'locations' as const, label: 'Locations', count: 137 },
+          ]).map((s) => (
+            <button
+              key={s.space}
+              onClick={() => setActiveSpace(s.space)}
+              className={`shrink-0 px-3 py-1.5 rounded-[999px] font-mono text-[11px] whitespace-nowrap border transition-colors ${
+                activeSpace === s.space
+                  ? 'bg-ink text-paper border-ink'
+                  : 'bg-surface border-line text-ink-3 hover:border-ink hover:text-ink'
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div
-        className="max-w-shell mx-auto px-4 md:px-8 pt-8 pb-32 md:pb-24 flex flex-col md:grid md:gap-8"
-        style={{ gridTemplateColumns: '236px 1fr 280px' }}
+        className="max-w-shell mx-auto px-4 md:px-6 lg:px-8 pt-8 pb-32 md:pb-24 grid grid-cols-1 md:grid md:gap-8 lg:grid-cols-[200px_1fr_200px] md:grid-cols-[200px_1fr]"
       >
         {/* Left rail */}
         <aside className="hidden md:block sticky top-[72px] self-start">
@@ -193,7 +217,7 @@ export default function CommunityPage() {
         </div>
 
         {/* Right rail */}
-        <aside className="hidden md:flex sticky top-[72px] self-start flex-col gap-6">
+        <aside className="hidden lg:flex sticky top-[72px] self-start flex-col gap-6">
           <div className="bg-surface border border-line rounded-card p-5">
             <p className="font-mono text-[10px] uppercase tracking-label text-muted mb-3">Trending</p>
             <div className="flex flex-wrap gap-2">

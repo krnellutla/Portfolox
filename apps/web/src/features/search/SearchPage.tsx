@@ -9,6 +9,7 @@ import { qk } from '../../lib/query-client.js';
 import { search } from '../../api/search.js';
 import { favoritePhoto, unfavoritePhoto } from '../../api/photos.js';
 import { FilterSidebar } from './FilterSidebar.js';
+import { FiltersSheet } from './FiltersSheet.js';
 import type { SearchFilters } from '../../lib/types.js';
 import type { Photo } from '@blueflutes/shared';
 
@@ -34,6 +35,7 @@ export default function SearchPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [filtersSheetOpen, setFiltersSheetOpen] = useState(false);
 
   const [filters, setFilters] = useState<SearchFilters>(() => ({
     ...DEFAULT_FILTERS,
@@ -118,11 +120,30 @@ export default function SearchPage() {
     <div className="min-h-screen bg-paper animate-pfxFade">
       <TopNav />
 
-      <div className="max-w-shell mx-auto px-4 md:px-8 pt-8 pb-32 md:pb-24 flex gap-10">
-        <FilterSidebar filters={filters} onChange={updateFilters} />
+      <FiltersSheet
+        open={filtersSheetOpen}
+        onClose={() => setFiltersSheetOpen(false)}
+        filters={filters}
+        onChange={updateFilters}
+      />
+
+      <div className="max-w-shell mx-auto px-4 md:px-6 lg:px-8 pt-8 pb-32 md:pb-24 flex gap-10">
+        <div className="hidden lg:block">
+          <FilterSidebar filters={filters} onChange={updateFilters} />
+        </div>
 
         {/* Results column */}
         <div className="flex-1 min-w-0">
+          {/* Mobile filters button */}
+          <div className="flex lg:hidden mb-4">
+            <button
+              onClick={() => setFiltersSheetOpen(true)}
+              className="flex items-center gap-2 px-4 py-[10px] border border-field rounded-[9px] font-mono text-[12px] text-ink-3 hover:border-ink transition-colors whitespace-nowrap"
+            >
+              ⚙ Filters
+            </button>
+          </div>
+
           {/* Header row */}
           <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
             <h2 className="font-serif text-[32px] font-[500] text-ink tracking-[-0.02em]">
@@ -172,7 +193,7 @@ export default function SearchPage() {
               {photos.length === 0 ? (
                 <StateView variant="empty" title="No frames match your filters" />
               ) : (
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                   {photos.map((photo, i) => {
                     const isFavorited = !!photo.favoritedByMe;
                     const src = photo.url || photo.thumbUrl || seedPhotoUrl(i);
