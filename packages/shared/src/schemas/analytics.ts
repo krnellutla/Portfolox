@@ -5,12 +5,18 @@ export type AnalyticsRange = z.infer<typeof analyticsRange>;
 
 export const analyticsSummarySchema = z.object({
   range: analyticsRange,
-  views: z.number(),
+  profileViews: z.number(),
+  photoViews: z.number(),
+  lightboxOpens: z.number(),
+  addedToCart: z.number(),
+  purchases: z.number(),
   conversionPct: z.number(),
-  avgOrder: z.number(),
+  avgOrderMinorUnits: z.number(),
   revenue: z.number(),
+  currency: z.string(),
   deltas: z.object({
-    views: z.number(),
+    profileViews: z.number(),
+    photoViews: z.number(),
     conversion: z.number(),
     avgOrder: z.number(),
     revenue: z.number(),
@@ -41,6 +47,7 @@ export const funnelStageSchema = z.object({
   label: z.string(),
   value: z.number(),
   pctOfTop: z.number(),
+  isSeparate: z.boolean().optional(),
 });
 export type FunnelStage = z.infer<typeof funnelStageSchema>;
 
