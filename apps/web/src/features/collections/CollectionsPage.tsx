@@ -58,7 +58,7 @@ export default function CollectionsPage() {
               Saved &amp; organized
             </h1>
           </div>
-          <button className="px-5 py-[11px] bg-ink text-paper rounded-[9px] font-semibold text-sm hover:bg-ink-2 transition-colors duration-150">
+          <button className="px-5 py-[11px] bg-ink text-paper rounded-[9px] font-semibold text-sm hover:bg-ink-2 transition-colors duration-150 whitespace-nowrap">
             + New collection
           </button>
         </div>
@@ -71,7 +71,7 @@ export default function CollectionsPage() {
           </div>
         )}
         {collections && collections.length > 0 && (
-          <div className="grid grid-cols-4 gap-[18px] mb-14">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[18px] mb-14">
             {collections.map((col, i) => (
               <CollectionCard key={col.id} collection={col} coverOffset={i} />
             ))}
@@ -79,12 +79,12 @@ export default function CollectionsPage() {
           </div>
         )}
         {collections && collections.length === 0 && (
-          <div className="grid grid-cols-4 gap-[18px] mb-14">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[18px] mb-14">
             <CreateCollectionCard />
           </div>
         )}
         {!isLoading && !collections && !error && (
-          <div className="grid grid-cols-4 gap-[18px] mb-14">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[18px] mb-14">
             <CreateCollectionCard />
           </div>
         )}
@@ -99,7 +99,7 @@ export default function CollectionsPage() {
           </span>
         </div>
 
-        <div className="grid grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
           {SEED_LIKED.map((photo) => (
             <PhotoTile
               key={photo.id}

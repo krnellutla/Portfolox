@@ -23,7 +23,7 @@ export function StepIndicator({ current, onStepClick }: StepIndicatorProps) {
             >
               {String(i + 1).padStart(2, '0')}
             </span>
-            <span className="text-[13px] font-semibold text-ink-3">{label}</span>
+            <span className="hidden md:block text-[13px] font-semibold text-ink-3">{label}</span>
           </button>
           {i < STEPS.length - 1 && (
             <span className="w-[34px] h-px bg-field mx-[14px]" />
