@@ -157,7 +157,19 @@ export default function ClientGalleryPage() {
         </div>
 
         {filtered.length === 0 && (
-          <p className="text-center py-24 font-mono text-[13px] text-muted">No frames in this category.</p>
+          <StateView
+            variant="empty"
+            title="No frames in this view"
+            description="Switch back to all photos."
+            action={
+              <button
+                onClick={() => setActiveCategory('all')}
+                className="px-5 py-[10px] bg-ink text-paper rounded-[9px] font-semibold text-[14px] hover:bg-ink-2 transition-colors"
+              >
+                All photos
+              </button>
+            }
+          />
         )}
       </div>
 

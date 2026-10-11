@@ -5,6 +5,7 @@ import { PhotoTile } from '../../components/photo/PhotoTile.js';
 import { Eyebrow } from '../../components/ui/Eyebrow.js';
 import { StatCard } from '../../components/ui/StatCard.js';
 import { StateView } from '../../components/ui/StateView.js';
+import { SkeletonTile, SkeletonRow } from '../../components/ui/Skeleton.js';
 import { getSummary, getRevenue, getRecentSales } from '../../api/analytics.js';
 import { getMyGalleries } from '../../api/me.js';
 import { qk } from '../../lib/query-client.js';
@@ -77,7 +78,11 @@ export default function DashboardPage() {
 
         {/* KPI cards */}
         {summaryLoading ? (
-          <StateView variant="loading" title="Loading stats…" />
+          <div className="grid grid-cols-4 gap-4 mb-6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <SkeletonTile key={i} className="h-[100px]" />
+            ))}
+          </div>
         ) : (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {kpis.map((s) => (
@@ -103,7 +108,15 @@ export default function DashboardPage() {
               <span className="font-mono text-[11px] text-muted">monthly</span>
             </div>
             {revenueLoading ? (
-              <StateView variant="loading" title="Loading…" />
+              <div className="flex items-end gap-2 h-[180px]">
+                {[40, 55, 70, 50, 80, 65, 90, 75, 60, 85, 95, 100].map((h, i) => (
+                  <div
+                    key={i}
+                    className="flex-1 bg-field-bg border border-line rounded-[4px] animate-[pfxPulse_1.2s_ease-in-out_infinite]"
+                    style={{ height: `${h}%` }}
+                  />
+                ))}
+              </div>
             ) : (
               <div className="flex items-end gap-2 h-[180px]">
                 {revenueBars.map((bar, i) => (
@@ -125,7 +138,11 @@ export default function DashboardPage() {
           <div className="bg-surface border border-line rounded-card p-6">
             <h2 className="font-serif text-[22px] font-[500] text-ink mb-[18px]">Recent sales</h2>
             {salesLoading ? (
-              <StateView variant="loading" title="Loading…" />
+              <div className="flex flex-col">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <SkeletonRow key={i} />
+                ))}
+              </div>
             ) : (
               <div className="flex flex-col">
                 {(recentSales ?? []).map((r) => (
@@ -140,7 +157,19 @@ export default function DashboardPage() {
                   </div>
                 ))}
                 {!salesLoading && !recentSales?.length && (
-                  <p className="font-mono text-[11px] text-muted py-4">No sales yet.</p>
+                  <StateView
+                    variant="empty"
+                    title="No data for this range"
+                    description="Sales and views will appear once your work is live."
+                    action={
+                      <Link
+                        to="/studio/upload"
+                        className="px-5 py-[10px] bg-ink text-paper rounded-[9px] font-semibold text-[14px] hover:bg-ink-2 transition-colors"
+                      >
+                        Upload photos
+                      </Link>
+                    }
+                  />
                 )}
               </div>
             )}
@@ -159,7 +188,11 @@ export default function DashboardPage() {
             </Link>
           </div>
           {galleriesLoading ? (
-            <StateView variant="loading" title="Loading galleries…" />
+            <div className="grid grid-cols-4 gap-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <SkeletonTile key={i} className="aspect-video" />
+              ))}
+            </div>
           ) : (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {(galleries ?? []).slice(0, 4).map((g, i) => (
@@ -180,7 +213,21 @@ export default function DashboardPage() {
                 </div>
               ))}
               {!galleriesLoading && !galleries?.length && (
-                <p className="col-span-4 font-mono text-[11px] text-muted">No galleries yet.</p>
+                <div className="col-span-4">
+                  <StateView
+                    variant="empty"
+                    title="No data for this range"
+                    description="Sales and views will appear once your work is live."
+                    action={
+                      <Link
+                        to="/studio/upload"
+                        className="px-5 py-[10px] bg-ink text-paper rounded-[9px] font-semibold text-[14px] hover:bg-ink-2 transition-colors"
+                      >
+                        Upload photos
+                      </Link>
+                    }
+                  />
+                </div>
               )}
             </div>
           )}

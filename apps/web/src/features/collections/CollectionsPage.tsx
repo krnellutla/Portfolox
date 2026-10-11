@@ -5,6 +5,7 @@ import { FavoriteButton } from '../../components/photo/FavoriteButton.js';
 import { PhotoTile } from '../../components/photo/PhotoTile.js';
 import { Eyebrow } from '../../components/ui/Eyebrow.js';
 import { StateView } from '../../components/ui/StateView.js';
+import { SkeletonTile } from '../../components/ui/Skeleton.js';
 import { seedPhotoUrl } from '../../lib/seed-photos.js';
 import { qk } from '../../lib/query-client.js';
 import { getCollections } from '../../api/collections.js';
@@ -58,20 +59,39 @@ export default function CollectionsPage() {
               Saved &amp; organized
             </h1>
           </div>
-          <button className="px-5 py-[11px] bg-ink text-paper rounded-[9px] font-semibold text-sm hover:bg-ink-2 transition-colors duration-150 whitespace-nowrap">
+          <button className="px-5 py-[11px] bg-ink text-paper rounded-[9px] font-semibold text-sm hover:bg-ink-2 transition-colors duration-150">
             + New collection
           </button>
         </div>
 
         {/* Collection cards grid */}
-        {isLoading && <StateView variant="loading" title="Loading collections…" />}
+        {isLoading && (
+          <div className="grid grid-cols-4 gap-[18px] mb-14">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <SkeletonTile key={i} className="aspect-square" />
+            ))}
+          </div>
+        )}
         {error && (
           <div className="mb-14">
-            <StateView variant="empty" title="No collections yet — create your first one above" />
+            <StateView
+              variant="error"
+              title="Couldn't load collections"
+              description="Something went wrong. Try refreshing the page."
+              eyebrow="LOAD ERROR"
+              action={
+                <button
+                  onClick={() => void 0}
+                  className="px-5 py-[10px] border border-field rounded-[9px] font-mono text-[12px] text-ink hover:border-ink transition-colors"
+                >
+                  Try again
+                </button>
+              }
+            />
           </div>
         )}
         {collections && collections.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[18px] mb-14">
+          <div className="grid grid-cols-4 gap-[18px] mb-14">
             {collections.map((col, i) => (
               <CollectionCard key={col.id} collection={col} coverOffset={i} />
             ))}
@@ -79,12 +99,21 @@ export default function CollectionsPage() {
           </div>
         )}
         {collections && collections.length === 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[18px] mb-14">
-            <CreateCollectionCard />
+          <div className="mb-14">
+            <StateView
+              variant="empty"
+              title="No collections yet"
+              description="Save frames you love and group them here."
+              action={
+                <button className="px-5 py-[10px] bg-ink text-paper rounded-[9px] font-semibold text-[14px] hover:bg-ink-2 transition-colors">
+                  New collection
+                </button>
+              }
+            />
           </div>
         )}
         {!isLoading && !collections && !error && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[18px] mb-14">
+          <div className="grid grid-cols-4 gap-[18px] mb-14">
             <CreateCollectionCard />
           </div>
         )}
@@ -99,7 +128,7 @@ export default function CollectionsPage() {
           </span>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+        <div className="grid grid-cols-6 gap-3">
           {SEED_LIKED.map((photo) => (
             <PhotoTile
               key={photo.id}

@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { TopNav } from '../../components/nav/TopNav.js';
 import { PhotoTile } from '../../components/photo/PhotoTile.js';
 import { StateView } from '../../components/ui/StateView.js';
+import { SkeletonTile } from '../../components/ui/Skeleton.js';
 import { seedPhotoUrl } from '../../lib/seed-photos.js';
 import { qk } from '../../lib/query-client.js';
 import { search } from '../../api/search.js';
@@ -185,13 +186,46 @@ export default function SearchPage() {
             </div>
           )}
 
-          {isLoading && <StateView variant="loading" title="Searching…" />}
-          {error && <StateView variant="error" title="Search failed" />}
+          {isLoading && (
+            <div className="grid grid-cols-4 gap-3">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <SkeletonTile key={i} className="aspect-square" />
+              ))}
+            </div>
+          )}
+          {error && (
+            <StateView
+              variant="error"
+              title="Search failed"
+              description="We couldn't complete your search. Check your connection and try again."
+              eyebrow="SEARCH ERROR"
+              action={
+                <button
+                  onClick={() => void 0}
+                  className="px-5 py-[10px] border border-field rounded-[9px] font-mono text-[12px] text-ink hover:border-ink transition-colors"
+                >
+                  Try again
+                </button>
+              }
+            />
+          )}
 
           {!isLoading && !error && (
             <>
               {photos.length === 0 ? (
-                <StateView variant="empty" title="No frames match your filters" />
+                <StateView
+                  variant="empty"
+                  title="No frames match"
+                  description="Try removing a filter or searching a wider area."
+                  action={
+                    <button
+                      onClick={() => setFilters(DEFAULT_FILTERS)}
+                      className="px-5 py-[10px] bg-ink text-paper rounded-[9px] font-semibold text-[14px] hover:bg-ink-2 transition-colors"
+                    >
+                      Clear filters
+                    </button>
+                  }
+                />
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                   {photos.map((photo, i) => {

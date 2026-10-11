@@ -5,8 +5,10 @@ import type { Photographer } from '@blueflutes/shared';
 import { TopNav } from '../../components/nav/TopNav.js';
 import { Avatar } from '../../components/ui/Avatar.js';
 import { Chip } from '../../components/ui/Chip.js';
+import { PhotoGrid } from '../../components/photo/PhotoGrid.js';
 import { PhotoTile } from '../../components/photo/PhotoTile.js';
 import { StateView } from '../../components/ui/StateView.js';
+import { SkeletonTile } from '../../components/ui/Skeleton.js';
 import { getProfile, getGalleries, getPhotos, follow, unfollow } from '../../api/photographers.js';
 import { qk } from '../../lib/query-client.js';
 import { seedPhotoUrl, seedAvatarUrl } from '../../lib/seed-photos.js';
@@ -74,7 +76,7 @@ export default function PortfolioPage() {
       <TopNav />
 
       {/* Cover band */}
-      <div className="relative h-[200px] md:h-[260px] lg:h-[300px] overflow-hidden">
+      <div className="relative h-[300px] overflow-hidden">
         <img src={coverSrc} alt="Cover" className="absolute inset-0 w-full h-full object-cover" />
         <div
           className="absolute inset-0"
@@ -98,11 +100,11 @@ export default function PortfolioPage() {
               @{photographer.handle} · {photographer.location} · {photographer.specialty}
             </p>
           </div>
-          <div className="flex flex-col md:flex-row gap-2.5 pb-[10px]">
+          <div className="flex gap-2.5 pb-[10px]">
             <button
               onClick={() => followMutation.mutate({ id: photographer.id, isFollowing: isFollowed })}
               disabled={followMutation.isPending}
-              className={`w-full md:w-auto px-[22px] py-[11px] rounded-[9px] font-semibold text-sm transition-colors duration-150 whitespace-nowrap ${
+              className={`px-[22px] py-[11px] rounded-[9px] font-semibold text-sm transition-colors duration-150 ${
                 isFollowed
                   ? 'bg-canvas text-ink border border-line hover:bg-line'
                   : 'bg-ink text-paper hover:bg-ink-2'
@@ -110,7 +112,7 @@ export default function PortfolioPage() {
             >
               {isFollowed ? 'Following' : 'Follow'}
             </button>
-            <button className="w-full md:w-auto px-5 py-[11px] bg-surface text-ink border border-field rounded-[9px] font-semibold text-sm hover:border-ink transition-colors duration-150 whitespace-nowrap">
+            <button className="px-5 py-[11px] bg-surface text-ink border border-field rounded-[9px] font-semibold text-sm hover:border-ink transition-colors duration-150">
               Message
             </button>
           </div>
@@ -148,9 +150,31 @@ export default function PortfolioPage() {
         </div>
 
         {/* Photo grid */}
-        {photosLoading && <StateView variant="loading" title="Loading photos…" />}
-        {!photosLoading && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+        {photosLoading && (
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <SkeletonTile key={i} className="aspect-square" />
+            ))}
+          </div>
+        )}
+        {!photosLoading && photos.length === 0 && (
+          <StateView
+            variant="empty"
+            title="Nothing published yet"
+            description="Follow to hear when new work goes up."
+            action={
+              <button
+                onClick={() => followMutation.mutate({ id: photographer.id, isFollowing: isFollowed })}
+                disabled={followMutation.isPending || isFollowed}
+                className="px-5 py-[10px] bg-ink text-paper rounded-[9px] font-semibold text-[14px] hover:bg-ink-2 disabled:opacity-60 transition-colors"
+              >
+                {isFollowed ? 'Following' : 'Follow'}
+              </button>
+            }
+          />
+        )}
+        {!photosLoading && photos.length > 0 && (
+          <PhotoGrid cols={2} gap="sm" className="md:[grid-template-columns:repeat(5,minmax(0,1fr))]">
             {photos.map((photo, i) => (
               <PhotoTile
                 key={photo.id}
@@ -161,7 +185,7 @@ export default function PortfolioPage() {
                 onClick={() => navigate(`/lightbox?id=${photo.id}&photographer=${handle}`)}
               />
             ))}
-          </div>
+          </PhotoGrid>
         )}
       </div>
     </div>
