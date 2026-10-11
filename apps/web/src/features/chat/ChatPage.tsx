@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Message } from '@blueflutes/shared';
 import { TopNav } from '../../components/nav/TopNav.js';
 import { Eyebrow } from '../../components/ui/Eyebrow.js';
+import { useEyebrow } from '../../lib/eyebrow.js';
 import { StateView } from '../../components/ui/StateView.js';
 import { SkeletonRow } from '../../components/ui/Skeleton.js';
 import { listConversations, getMessages, sendMessage } from '../../api/conversations.js';
@@ -17,6 +18,7 @@ function fmt(iso: string): string {
 const ME_AVATAR = seedAvatarUrl(0, 28);
 
 export default function ChatPage() {
+  const eyebrow = useEyebrow('06 — Chat');
   const queryClient = useQueryClient();
   const [activeConvId, setActiveConvId] = useState<string | null>(null);
   const [input, setInput] = useState('');
@@ -92,7 +94,7 @@ export default function ChatPage() {
       <TopNav />
 
       <div className="max-w-shell mx-auto px-4 md:px-6 lg:px-8 pt-8 pb-32 md:pb-24">
-        <Eyebrow className="mb-4">06 — Chat</Eyebrow>
+        <Eyebrow className="mb-4">{eyebrow}</Eyebrow>
 
         <div className="border border-line rounded-[16px] overflow-hidden h-[calc(100dvh-4rem)] flex md:grid md:grid-cols-[280px_1fr]">
           {/* Conversation list — hidden on mobile when a conversation is active */}
@@ -137,7 +139,14 @@ export default function ChatPage() {
                 return (
                   <button
                     key={conv.id}
-                    onClick={() => setActiveConvId(conv.id)}
+                    onClick={() => {
+                      queryClient.setQueryData(
+                        qk.conversations(),
+                        (old: typeof conversations) =>
+                          old?.map((c) => c.id === conv.id ? { ...c, unreadCount: 0 } : c),
+                      );
+                      setActiveConvId(conv.id);
+                    }}
                     className={`w-full flex items-center gap-3 px-4 py-3.5 text-left transition-colors ${
                       isActive ? 'bg-surface border-r-2 border-ink' : 'hover:bg-canvas'
                     }`}

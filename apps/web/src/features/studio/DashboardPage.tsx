@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { TopNav } from '../../components/nav/TopNav.js';
 import { PhotoTile } from '../../components/photo/PhotoTile.js';
 import { Eyebrow } from '../../components/ui/Eyebrow.js';
+import { useEyebrow } from '../../lib/eyebrow.js';
 import { StatCard } from '../../components/ui/StatCard.js';
 import { StateView } from '../../components/ui/StateView.js';
 import { SkeletonTile, SkeletonRow } from '../../components/ui/Skeleton.js';
@@ -39,6 +40,7 @@ function KpiLabel({ label }: { label: string }) {
 }
 
 export default function DashboardPage() {
+  const eyebrow = useEyebrow('11 — Studio Dashboard');
   const { data: summary, isLoading: summaryLoading } = useQuery({
     queryKey: qk.analytics.summary('30d'),
     queryFn: () => getSummary('30d'),
@@ -79,7 +81,7 @@ export default function DashboardPage() {
         {/* Header */}
         <div className="flex items-end justify-between mb-[30px] flex-wrap gap-4">
           <div>
-            <Eyebrow className="mb-3">11 — Studio Dashboard</Eyebrow>
+            <Eyebrow className="mb-3">{eyebrow}</Eyebrow>
             <h1 className="font-serif text-display-m font-[500] text-ink tracking-[-0.02em]">
               Good morning.
             </h1>

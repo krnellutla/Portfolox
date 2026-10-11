@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Eyebrow } from '../../components/ui/Eyebrow.js';
+import { useEyebrow } from '../../lib/eyebrow.js';
 import { TopNav } from '../../components/nav/TopNav.js';
 import { PlanCard } from './PlanCard.js';
 import { getPlans } from '../../api/plans.js';
@@ -30,6 +31,7 @@ function formatDollar(minorUnits: number) {
 }
 
 export default function PricingPage() {
+  const eyebrow = useEyebrow('08 — Pricing');
   const [billing, setBilling] = useState<Billing>('monthly');
 
   const { data: plans } = useQuery({
@@ -47,7 +49,7 @@ export default function PricingPage() {
       <div className="max-w-prose mx-auto px-4 md:px-8 pt-16 pb-32 md:pb-24 animate-pfxFade">
         {/* Header */}
         <div className="text-center mb-12">
-          <Eyebrow className="mb-5">08 — Pricing</Eyebrow>
+          <Eyebrow className="mb-5">{eyebrow}</Eyebrow>
           <h1 className="font-serif text-display-l font-[500] text-ink mb-4 leading-[1.05] tracking-[-0.02em]">
             Pricing that gets out of the way.
           </h1>

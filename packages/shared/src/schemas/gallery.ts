@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const galleryVisibility = z.enum(['public', 'unlisted', 'private']);
 export type GalleryVisibility = z.infer<typeof galleryVisibility>;
 
-export const galleryLayout = z.enum(['grid', 'masonry', 'feature']);
+export const galleryLayout = z.enum(['grid', 'masonry', 'editorial']);
 export type GalleryLayout = z.infer<typeof galleryLayout>;
 
 export const gallerySchema = z.object({

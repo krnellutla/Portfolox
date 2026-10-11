@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { TopNav } from '../../components/nav/TopNav.js';
 import { Eyebrow } from '../../components/ui/Eyebrow.js';
+import { useEyebrow } from '../../lib/eyebrow.js';
 import { StateView } from '../../components/ui/StateView.js';
 import { SkeletonRow } from '../../components/ui/Skeleton.js';
 import { getMyGalleries } from '../../api/me.js';
@@ -43,6 +44,7 @@ function formatBytes(bytes: number): string {
 }
 
 export default function UploadPage() {
+  const eyebrow = useEyebrow('13 — Upload & manage');
   const [activeAlbumId, setActiveAlbumId] = useState<string | null>(null);
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [frames] = useState<Frame[]>(INIT_FRAMES);
@@ -93,7 +95,7 @@ export default function UploadPage() {
       >
         {/* Left rail — albums */}
         <aside className="hidden lg:block sticky top-[72px] self-start">
-          <Eyebrow className="mb-4">13 — Upload & manage</Eyebrow>
+          <Eyebrow className="mb-4">{eyebrow}</Eyebrow>
           <div className="flex items-center justify-between mb-2.5">
             <p className="font-mono text-[10.5px] uppercase tracking-label text-muted">Albums</p>
             <button className="font-mono text-[11px] text-ink-3 hover:text-ink transition-colors">＋</button>

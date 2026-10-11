@@ -4,6 +4,7 @@ import { TopNav } from '../../components/nav/TopNav.js';
 import { FavoriteButton } from '../../components/photo/FavoriteButton.js';
 import { PhotoTile } from '../../components/photo/PhotoTile.js';
 import { Eyebrow } from '../../components/ui/Eyebrow.js';
+import { useEyebrow } from '../../lib/eyebrow.js';
 import { StateView } from '../../components/ui/StateView.js';
 import { SkeletonTile } from '../../components/ui/Skeleton.js';
 import { seedPhotoUrl } from '../../lib/seed-photos.js';
@@ -21,6 +22,7 @@ const SEED_LIKED = Array.from({ length: 12 }, (_, i) => ({
 }));
 
 export default function CollectionsPage() {
+  const eyebrow = useEyebrow('07 — Collections');
   const queryClient = useQueryClient();
   const [localFavs, setLocalFavs] = useState<Set<string>>(
     () => new Set(SEED_LIKED.map((p) => p.id)),
@@ -54,7 +56,7 @@ export default function CollectionsPage() {
         {/* Header */}
         <div className="flex items-end justify-between mb-[30px] flex-wrap gap-3">
           <div>
-            <Eyebrow className="mb-3">07 — Collections</Eyebrow>
+            <Eyebrow className="mb-3">{eyebrow}</Eyebrow>
             <h1 className="font-serif text-display-m font-[500] text-ink tracking-[-0.02em]">
               Saved &amp; organized
             </h1>

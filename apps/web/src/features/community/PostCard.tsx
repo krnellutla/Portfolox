@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import type { FeedPost } from '@blueflutes/shared';
 
 function relativeTime(iso: string): string {
@@ -62,10 +63,13 @@ export function PostCard({ post, photoUrl, avatarSrc, liked, onLike }: PostCardP
           <span>{liked ? '♥' : '♡'}</span>
           <span>{post.counts.likes}</span>
         </button>
-        <button className="flex items-center gap-1.5 text-[13px] text-ink-3 hover:text-ink transition-colors">
+        <Link
+          to={`/community/posts/${post.id}`}
+          className="flex items-center gap-1.5 text-[13px] text-ink-3 hover:text-ink transition-colors"
+        >
           <span>◻</span>
           <span>{post.counts.comments}</span>
-        </button>
+        </Link>
         <button className="text-[13px] text-ink-3 hover:text-ink transition-colors ml-auto">
           Share
         </button>

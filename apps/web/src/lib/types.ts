@@ -54,7 +54,7 @@ export interface Photo {
 }
 
 export type GalleryVisibility = 'public' | 'unlisted' | 'private';
-export type GalleryLayout = 'grid' | 'masonry' | 'feature';
+export type GalleryLayout = 'grid' | 'masonry' | 'editorial';
 
 export interface Gallery {
   id: ID;

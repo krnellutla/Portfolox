@@ -27,6 +27,7 @@ const AnalyticsPage = lazy(() => import('./features/studio/AnalyticsPage.js'));
 const LightboxPage = lazy(() => import('./features/lightbox/LightboxPage.js'));
 const ChatPage = lazy(() => import('./features/chat/ChatPage.js'));
 const GalleryBuilderPage = lazy(() => import('./features/studio/GalleryBuilderPage.js'));
+const PostDetailPage = lazy(() => import('./features/community/PostDetailPage.js'));
 const OrdersPage = lazy(() => import('./features/studio/OrdersPage.js'));
 
 function RouteFallback() {
@@ -53,6 +54,7 @@ function App() {
             <Route path="/studio/dashboard" element={<StudioDashboard />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/community" element={<CommunityPage />} />
+            <Route path="/community/posts/:id" element={<PostDetailPage />} />
             <Route path="/client/:shareToken" element={<ClientGalleryPage />} />
             <Route path="/studio/upload" element={<UploadPage />} />
             <Route path="/studio/analytics" element={<AnalyticsPage />} />
