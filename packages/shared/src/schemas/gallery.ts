@@ -26,6 +26,10 @@ export const clientGallerySchema = gallerySchema.extend({
   expiresAt: z.string(),
   allowDownload: z.boolean(),
   favoritePhotoIds: z.array(z.string()),
+  viewerRole: z.enum(['client', 'owner']),
+  selectLimit: z.number().nullable(),
+  selectsSubmittedAt: z.string().nullable(),
+  expired: z.boolean(),
 });
 export type ClientGallery = z.infer<typeof clientGallerySchema>;
 
