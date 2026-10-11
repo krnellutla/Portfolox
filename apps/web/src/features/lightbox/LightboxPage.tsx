@@ -118,20 +118,26 @@ export default function LightboxPage() {
       </div>
 
       {/* Body */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto lg:overflow-hidden">
         {/* Center — image */}
-        <div className="flex-1 flex items-center justify-center p-6 overflow-hidden">
+        <div className="flex-1 flex flex-col items-center justify-center p-6 overflow-hidden">
           <div
             className="max-w-[760px] w-full rounded-[12px] overflow-hidden"
             style={{ aspectRatio: '3/2', boxShadow: '0 24px 80px rgba(0,0,0,0.7)' }}
           >
             <img src={heroSrc} alt={photo.title} className="w-full h-full object-cover" />
           </div>
+          {/* Thumbnail strip */}
+          <div className="overflow-x-auto w-full mt-4 flex gap-2 lg:justify-center">
+            {[0,1,2,3,4].map((i) => (
+              <img key={i} src={seedPhotoUrl(i, 120)} alt="" className="w-16 h-12 rounded-[6px] shrink-0 object-cover opacity-60 hover:opacity-100 cursor-pointer transition-opacity" />
+            ))}
+          </div>
         </div>
 
         {/* Right meta panel */}
         <aside
-          className="w-[344px] shrink-0 border-l border-white/10 flex flex-col overflow-y-auto"
+          className="lg:w-[344px] shrink-0 border-t lg:border-t-0 lg:border-l border-white/10 flex flex-col overflow-y-auto"
           style={{ background: '#161410' }}
         >
           <div className="p-6 border-b border-white/10">
@@ -144,15 +150,15 @@ export default function LightboxPage() {
           {/* EXIF */}
           <div className="p-6 border-b border-white/10">
             {[
-              { label: 'Exposure', value: `${photo.exif.aperture} · ${photo.exif.shutter} · ISO ${photo.exif.iso}` },
-              { label: 'Focal length', value: photo.exif.focalLength },
-              ...(photo.exif.camera ? [{ label: 'Camera', value: photo.exif.camera }] : []),
-              ...(photo.edition ? [{ label: 'Edition', value: `${photo.edition.number} / ${photo.edition.of}` }] : []),
-              ...(photo.releasedAt ? [{ label: 'Released', value: photo.releasedAt }] : []),
+              { label: 'EXPOSURE', value: `ƒ${photo.exif.aperture} · 1/${photo.exif.shutter}` },
+              { label: 'ISO / FOCAL', value: `${photo.exif.iso} · ${photo.exif.focalLength}mm` },
+              ...(photo.exif.camera ? [{ label: 'CAMERA', value: photo.exif.camera }] : []),
+              ...(photo.edition ? [{ label: 'EDITION', value: `${photo.edition.number} / ${photo.edition.of}` }] : []),
+              ...(photo.releasedAt ? [{ label: 'RELEASED', value: photo.releasedAt }] : []),
             ].map(({ label, value }) => (
-              <div key={label} className="flex items-baseline justify-between py-[9px] border-b border-white/[0.07] last:border-0">
+              <div key={label} className="grid grid-cols-[96px_1fr] items-baseline py-[9px] border-b border-white/[0.07] last:border-0">
                 <span className="font-mono text-[10.5px] text-paper/40 uppercase tracking-label">{label}</span>
-                <span className="text-[13px] text-paper/80">{value}</span>
+                <span className="text-[13px] text-paper/80 text-right">{value}</span>
               </div>
             ))}
           </div>
@@ -176,7 +182,7 @@ export default function LightboxPage() {
                 </div>
               )}
               <button
-                className="block w-full py-[11px] text-center bg-paper text-ink rounded-[9px] font-semibold text-[13.5px] hover:bg-paper/90 transition-colors"
+                className="block w-full py-[11px] text-center bg-paper text-ink rounded-[9px] font-semibold text-[13.5px] hover:bg-paper/90 transition-colors whitespace-nowrap"
                 onClick={() => navigate('/pricing')}
               >
                 Choose size & checkout
@@ -189,12 +195,12 @@ export default function LightboxPage() {
             <button
               onClick={() => likeMutation.mutate()}
               disabled={likeMutation.isPending}
-              className={`flex items-center gap-1.5 text-[13px] font-semibold transition-colors ${photo.likedByMe ? 'text-[#e07070]' : 'text-paper/50 hover:text-paper'}`}
+              className={`flex items-center gap-1.5 text-[13px] font-semibold transition-colors whitespace-nowrap ${photo.likedByMe ? 'text-[#e07070]' : 'text-paper/50 hover:text-paper'}`}
             >
               <span>{photo.likedByMe ? '♥' : '♡'}</span>
               <span>{photo.counts.likes}</span>
             </button>
-            <button className="text-[13px] text-paper/50 hover:text-paper transition-colors">
+            <button className="text-[13px] text-paper/50 hover:text-paper transition-colors whitespace-nowrap">
               Share
             </button>
           </div>

@@ -87,11 +87,11 @@ export default function UploadPage() {
       <TopNav />
 
       <div
-        className="max-w-shell mx-auto px-4 md:px-8 pt-8 pb-32 md:pb-24 flex flex-col md:grid md:gap-8"
+        className="max-w-shell mx-auto px-4 md:px-6 lg:px-8 pt-8 pb-32 md:pb-24 flex flex-col lg:grid lg:gap-8"
         style={{ gridTemplateColumns: '236px 1fr' }}
       >
         {/* Left rail — albums */}
-        <aside className="hidden md:block sticky top-[72px] self-start">
+        <aside className="hidden lg:block sticky top-[72px] self-start">
           <Eyebrow className="mb-4">13 — Upload & manage</Eyebrow>
           <div className="flex items-center justify-between mb-2.5">
             <p className="font-mono text-[10.5px] uppercase tracking-label text-muted">Albums</p>
@@ -125,6 +125,17 @@ export default function UploadPage() {
 
         {/* Right — dropzone + queue + manage */}
         <div className="flex flex-col gap-5">
+          {/* Mobile/tablet album selector */}
+          <select
+            className="w-full rounded-[9px] border border-field px-3 py-2 text-sm text-ink bg-surface lg:hidden"
+            value={activeAlbum?.id ?? ''}
+            onChange={(e) => setActiveAlbumId(e.target.value)}
+          >
+            {(galleries ?? []).map((g) => (
+              <option key={g.id} value={g.id}>{g.title}</option>
+            ))}
+          </select>
+
           {/* Dropzone */}
           <div
             className={`border-2 border-dashed rounded-card p-10 flex flex-col items-center justify-center gap-4 transition-colors ${
@@ -145,7 +156,7 @@ export default function UploadPage() {
             </div>
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="px-6 py-[11px] bg-ink text-paper rounded-[9px] font-semibold text-[14px] hover:bg-ink-2 transition-colors"
+              className="px-6 py-[11px] bg-ink text-paper rounded-[9px] font-semibold text-[14px] hover:bg-ink-2 transition-colors whitespace-nowrap"
             >
               Browse files
             </button>
@@ -197,7 +208,34 @@ export default function UploadPage() {
             <div className="px-5 pt-5 pb-3.5 border-b border-line">
               <p className="font-serif text-[20px] font-[500] text-ink">Manage frames</p>
             </div>
-            <table className="w-full">
+
+            {/* Card list — mobile/tablet only */}
+            <div className="md:hidden flex flex-col divide-y divide-line">
+              {frames.map((frame, i) => (
+                <div key={frame.id} className="flex gap-3 p-4">
+                  <img
+                    src={seedThumbUrl(frame.thumbIndex)}
+                    alt={frame.title}
+                    className="w-12 h-12 rounded-[6px] shrink-0 object-cover"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-semibold text-ink">{frame.title}</p>
+                    <p className="font-mono text-[10px] text-muted">{frame.code}</p>
+                    <span className={`inline-flex items-center px-2 py-0.5 mt-1 rounded-[6px] font-mono text-[10px] ${
+                      frame.status === 'published' ? 'bg-positive/10 text-positive' : 'bg-canvas text-muted'
+                    }`}>
+                      {frame.status === 'published' ? 'Published' : 'Draft'}
+                    </span>
+                    <div className="flex items-center gap-2 mt-2">
+                      <button className="px-3 py-1 text-[12px] font-semibold bg-surface border border-line rounded-[7px] text-ink whitespace-nowrap">Edit</button>
+                      <button className="px-3 py-1 text-[12px] font-semibold bg-surface border border-line rounded-[7px] text-muted whitespace-nowrap">···</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <table className="w-full hidden md:table">
               <thead>
                 <tr className="border-b border-line">
                   <th className="px-5 py-2.5 text-left font-mono text-[10px] uppercase tracking-label text-muted">Frame</th>
