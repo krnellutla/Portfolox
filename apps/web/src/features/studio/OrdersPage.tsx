@@ -189,8 +189,8 @@ function OrderDrawer({ orderId, onClose }: OrderDrawerProps) {
                   <p>{order.shippingAddress.line1}</p>
                   {order.shippingAddress.line2 && <p>{order.shippingAddress.line2}</p>}
                   <p>
-                    {order.shippingAddress.city}, {order.shippingAddress.state}{' '}
-                    {order.shippingAddress.zip}
+                    {order.shippingAddress.city}, {order.shippingAddress.region}{' '}
+                    {order.shippingAddress.postcode}
                   </p>
                   <p>{order.shippingAddress.country}</p>
                 </div>
@@ -218,21 +218,21 @@ function OrderDrawer({ orderId, onClose }: OrderDrawerProps) {
               <div className="bg-surface border border-line rounded-[14px] p-4 flex flex-col gap-2">
                 <div className="flex items-center justify-between text-[13px]">
                   <span className="text-ink-3">Sale price</span>
-                  <span className="text-ink font-mono">{fmt(order.payout.subtotal)}</span>
+                  <span className="text-ink font-mono">{fmt(order.payout?.printCost != null ? order.subtotal : 0)}</span>
                 </div>
                 <div className="flex items-center justify-between text-[13px]">
                   <span className="text-ink-3">− Print cost</span>
-                  <span className="text-ink font-mono">−{fmt(order.payout.printCost)}</span>
+                  <span className="text-ink font-mono">−{fmt(order.payout?.printCost ?? 0)}</span>
                 </div>
                 <div className="flex items-center justify-between text-[13px]">
-                  <span className="text-ink-3">− Commission ({order.payout.commissionPct}%)</span>
-                  <span className="text-ink font-mono">−{fmt(order.payout.commission)}</span>
+                  <span className="text-ink-3">− Commission</span>
+                  <span className="text-ink font-mono">−{fmt(order.payout?.commission ?? 0)}</span>
                 </div>
                 <div className="h-px bg-line my-1" />
                 <div className="flex items-center justify-between">
                   <span className="font-serif text-[15px] text-ink font-[500]">Your payout</span>
                   <span className="font-serif text-[22px] text-positive font-[500]">
-                    {fmt(order.payout.amount)}
+                    {fmt(order.payout?.amount ?? 0)}
                   </span>
                 </div>
               </div>
@@ -374,7 +374,7 @@ export default function OrdersPage() {
                     </p>
                   </td>
                   <td className="py-3 pr-4">
-                    <span className="text-ink">@{order.buyerHandle}</span>
+                    <span className="text-ink">@{order.buyer.handle ?? order.buyer.name}</span>
                   </td>
                   <td className="py-3 pr-4">
                     <div className="flex flex-col gap-1">
@@ -405,7 +405,7 @@ export default function OrdersPage() {
                     <span className="text-ink">{fmt(order.subtotal)}</span>
                   </td>
                   <td className="py-3 pr-4">
-                    <span className="text-positive font-medium">{fmt(order.payout.amount)}</span>
+                    <span className="text-positive font-medium">{fmt(order.payout?.amount ?? 0)}</span>
                   </td>
                   <td className="py-3">
                     <StatusPill status={order.status} />

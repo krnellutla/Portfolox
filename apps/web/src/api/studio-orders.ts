@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { orderV2Schema } from '@blueflutes/shared';
+import { OrderV2Schema as orderV2Schema } from '@blueflutes/shared';
 import { apiFetch } from './client.js';
 
 export function getMyOrders(status?: string) {

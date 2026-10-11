@@ -88,6 +88,11 @@ export const OrderV2Schema = z.object({
   timeline: z.array(OrderEventSchema),
   trackingUrl: z.string().url().optional(),
   createdAt: z.string().datetime(),
+  payout: z.object({
+    printCost: z.number().int().nonnegative(),
+    commission: z.number().int().nonnegative(),
+    amount: z.number().int().nonnegative(),
+  }).optional(),
 });
 export type OrderV2 = z.infer<typeof OrderV2Schema>;
 
