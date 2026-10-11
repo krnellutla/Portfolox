@@ -4,9 +4,10 @@ export const PLANS: Plan[] = [
   {
     tier: 'solo',
     name: 'Solo',
-    priceMonthly: 6,
+    priceMonthly: 600,
     tagline: 'For getting started',
-    commissionPct: 0,
+    commissionPct: 12,
+    trialDays: 14,
     features: [
       'Unlimited photo storage',
       '1 portfolio site',
@@ -19,9 +20,10 @@ export const PLANS: Plan[] = [
   {
     tier: 'studio',
     name: 'Studio',
-    priceMonthly: 14,
+    priceMonthly: 1400,
     tagline: 'Most popular',
     commissionPct: 8,
+    trialDays: 14,
     features: [
       'Everything in Solo',
       'Custom domain',
@@ -34,9 +36,10 @@ export const PLANS: Plan[] = [
   {
     tier: 'atelier',
     name: 'Atelier',
-    priceMonthly: 29,
+    priceMonthly: 2900,
     tagline: 'For full-time pros',
     commissionPct: 4,
+    trialDays: 14,
     features: [
       'Everything in Studio',
       'Lowest commission — 4%',
