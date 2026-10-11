@@ -44,4 +44,6 @@ export const qk = {
   me: () => ['me'] as const,
   theme: () => ['theme'] as const,
   mySettings: () => ['me', 'settings'] as const,
+  myOrders: (status?: string) => ['me', 'orders', status ?? 'all'] as const,
+  myOrder: (id: string) => ['me', 'orders', id] as const,
 };

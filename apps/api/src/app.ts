@@ -26,6 +26,7 @@ import { clientGalleryRouter } from './routes/client-gallery.js';
 import { meRouter } from './routes/me.js';
 import { galleriesRouter } from './routes/galleries.js';
 import { analyticsRouter } from './routes/analytics.js';
+import { studioOrdersRouter } from './routes/studio-orders.js';
 import { tenantSettingsPublicRouter, tenantSettingsRouter } from './routes/tenant-settings.js';
 import { createInProcessEnqueue } from './services/media/queue.js';
 import type { Enqueue } from './services/media/queue.js';
@@ -82,6 +83,7 @@ export function createApp(
   app.use(tenantSettingsRouter);
   app.use(galleriesRouter);
   app.use(analyticsRouter);
+  app.use(studioOrdersRouter);
 
   app.use((_req, _res, next) => {
     next(AppError.notFound('Route not found'));
