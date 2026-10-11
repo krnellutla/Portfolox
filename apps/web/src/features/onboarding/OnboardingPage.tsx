@@ -16,8 +16,6 @@ const SPECIALTIES: Specialty[] = ['Landscape', 'Portrait', 'Street', 'Wedding', 
 export default function OnboardingPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [plan, setPlan] = useState<PlanTier>('studio');
   const [displayName, setDisplayName] = useState('');
   const [handle, setHandle] = useState('');
@@ -83,7 +81,7 @@ export default function OnboardingPage() {
               Free for 14 days. No card required.
             </p>
 
-            <div className="flex flex-col gap-[11px] mb-[18px]">
+            <div className="flex flex-col gap-[11px]">
               {(['Google', 'GitHub'] as const).map((provider) => (
                 <a
                   key={provider}
@@ -94,37 +92,6 @@ export default function OnboardingPage() {
                 </a>
               ))}
             </div>
-
-            <div className="flex items-center gap-3 my-[18px] text-muted text-[12px]">
-              <span className="flex-1 h-px bg-line" />
-              OR
-              <span className="flex-1 h-px bg-line" />
-            </div>
-
-            <label className="block text-[12.5px] font-semibold text-ink-3 mb-1.5">Email</label>
-            <Input
-              type="email"
-              placeholder="you@studio.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mb-3.5 text-[14.5px]"
-            />
-
-            <label className="block text-[12.5px] font-semibold text-ink-3 mb-1.5">Password</label>
-            <Input
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mb-6 text-[14.5px]"
-            />
-
-            <button
-              onClick={() => setStep(1)}
-              className="w-full py-[14px] bg-ink text-paper rounded-[10px] font-semibold text-[15px] hover:bg-ink-2 transition-colors duration-150"
-            >
-              Create account →
-            </button>
           </>
         )}
 
