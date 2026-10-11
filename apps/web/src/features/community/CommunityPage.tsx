@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { CommunitySpace, FeedPost } from '@blueflutes/shared';
 import { TopNav } from '../../components/nav/TopNav.js';
 import { Eyebrow } from '../../components/ui/Eyebrow.js';
+import { useEyebrow } from '../../lib/eyebrow.js';
 import { StateView } from '../../components/ui/StateView.js';
 import { SkeletonRow } from '../../components/ui/Skeleton.js';
 import { getSpaces, getPosts, createPost, likePost, unlikePost } from '../../api/community.js';
@@ -14,6 +15,7 @@ import { PostCard } from './PostCard.js';
 const TRENDING_TAGS = ['#iceland', '#fineart', '#print-edition', '#critique', '#35mm', '#landscape'];
 
 export default function CommunityPage() {
+  const eyebrow = useEyebrow('05 — Community');
   const queryClient = useQueryClient();
   const [activeSpace, setActiveSpace] = useState<CommunitySpace>('show-your-work');
   const [composer, setComposer] = useState('');
@@ -121,7 +123,7 @@ export default function CommunityPage() {
       >
         {/* Left rail */}
         <aside className="hidden md:block sticky top-[72px] self-start">
-          <Eyebrow className="mb-5">05 — Community</Eyebrow>
+          <Eyebrow className="mb-5">{eyebrow}</Eyebrow>
 
           <button
             onClick={() => { const el = document.querySelector('textarea'); el?.focus(); }}
@@ -186,7 +188,6 @@ export default function CommunityPage() {
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-line-2">
               <div className="flex gap-2">
                 <button className="font-mono text-[11px] text-ink-3 hover:text-ink transition-colors">Photo</button>
-                <button className="font-mono text-[11px] text-ink-3 hover:text-ink transition-colors">Poll</button>
               </div>
               <button
                 onClick={submitPost}

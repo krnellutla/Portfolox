@@ -1,17 +1,15 @@
 /**
- * Determines whether the current page is being served from a tenant's own
- * host (a subdomain of blueflutes.com or a custom domain) vs. the platform
- * host (blueflutes.com itself, or localhost for dev).
+ * Detects whether the app is running on a tenant's custom domain
+ * (as opposed to the main blueflutes.com app shell).
  *
- * This is purely for shell/navigation rendering decisions — it is not a
- * security boundary. Tenant isolation is enforced server-side via the
- * tenant_domains lookup + Row-Level Security.
+ * Tenant hosts are anything that isn't localhost, 127.0.0.1, or *.blueflutes.com.
  */
-export function useTenantShell() {
-  const hostname = window.location.hostname;
-  const isTenantHost =
-    hostname !== 'blueflutes.com' &&
-    hostname !== 'localhost' &&
-    hostname !== '127.0.0.1';
-  return { isTenantHost };
+export function useTenantShell(): { isTenantHost: boolean } {
+  const { hostname } = window.location;
+  const isAppHost =
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname.endsWith('.blueflutes.com') ||
+    hostname === 'blueflutes.com';
+  return { isTenantHost: !isAppHost };
 }

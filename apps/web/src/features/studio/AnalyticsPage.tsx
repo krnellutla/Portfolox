@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { TopNav } from '../../components/nav/TopNav.js';
 import { Eyebrow } from '../../components/ui/Eyebrow.js';
+import { useEyebrow } from '../../lib/eyebrow.js';
 import { StatCard } from '../../components/ui/StatCard.js';
 import { StateView } from '../../components/ui/StateView.js';
 import { SkeletonTile, SkeletonRow } from '../../components/ui/Skeleton.js';
@@ -49,6 +50,7 @@ function KpiLabel({ label }: { label: string }) {
 }
 
 export default function AnalyticsPage() {
+  const eyebrow = useEyebrow('12 — Analytics');
   const [range, setRange] = useState<Range>('30d');
 
   const { data: summary, isLoading: summaryLoading } = useQuery({
@@ -112,7 +114,7 @@ export default function AnalyticsPage() {
         {/* Header */}
         <div className="flex items-end justify-between mb-7 flex-wrap gap-4">
           <div>
-            <Eyebrow className="mb-3">12 — Analytics</Eyebrow>
+            <Eyebrow className="mb-3">{eyebrow}</Eyebrow>
             <h1 className="font-serif text-display-m font-[500] text-ink tracking-[-0.02em]">Analytics</h1>
           </div>
           <div className="flex p-[3px] bg-surface border border-line rounded-[10px]">

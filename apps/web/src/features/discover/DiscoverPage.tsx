@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { TopNav } from '../../components/nav/TopNav.js';
 import { PhotoTile } from '../../components/photo/PhotoTile.js';
 import { Eyebrow } from '../../components/ui/Eyebrow.js';
+import { useEyebrow } from '../../lib/eyebrow.js';
 import { Input } from '../../components/ui/Input.js';
 import { StateView } from '../../components/ui/StateView.js';
 import { FeaturedCard } from './FeaturedCard.js';
@@ -17,6 +18,7 @@ const CATEGORIES = [
 ];
 
 export default function DiscoverPage() {
+  const eyebrow = useEyebrow('01 — Discover');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [query, setQuery] = useState('');
@@ -56,7 +58,7 @@ export default function DiscoverPage() {
       <div className="max-w-shell mx-auto px-4 md:px-8 pb-32 md:pb-24">
         {/* Hero */}
         <div className="pt-16 pb-[46px] border-b border-line">
-          <Eyebrow className="mb-[22px]">01 — Discover</Eyebrow>
+          <Eyebrow className="mb-[22px]">{eyebrow}</Eyebrow>
           <h1 className="font-serif text-display-xl font-[500] text-ink leading-[1.03] tracking-[-0.02em] max-w-[15ch] mb-[22px]">
             Where photographers keep their best work.
           </h1>

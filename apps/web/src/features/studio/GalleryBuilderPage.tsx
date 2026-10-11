@@ -22,6 +22,7 @@ import { Link } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { TopNav } from '../../components/nav/TopNav.js';
 import { Eyebrow } from '../../components/ui/Eyebrow.js';
+import { useEyebrow } from '../../lib/eyebrow.js';
 import { Input } from '../../components/ui/Input.js';
 import { Toggle } from '../../components/ui/Toggle.js';
 import { StateView } from '../../components/ui/StateView.js';
@@ -36,7 +37,7 @@ interface Frame {
   src: string;
 }
 
-type GalleryLayout = 'grid' | 'feature' | 'full';
+type GalleryLayout = 'grid' | 'editorial' | 'full';
 
 function SortableFrame({ frame, index }: { frame: Frame; index: number }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: frame.id });
@@ -84,6 +85,7 @@ const PLACEHOLDER_FRAMES: Frame[] = Array.from({ length: 12 }, (_, i) => ({
 }));
 
 export default function GalleryBuilderPage() {
+  const eyebrow = useEyebrow('14 — Gallery Builder');
   const { data: galleries, isLoading } = useQuery({
     queryKey: qk.myGalleries(),
     queryFn: getMyGalleries,
@@ -167,7 +169,7 @@ export default function GalleryBuilderPage() {
 
   const LAYOUT_OPTIONS: { id: GalleryLayout; icon: string }[] = [
     { id: 'grid', icon: '⊞' },
-    { id: 'feature', icon: '⊟' },
+    { id: 'editorial', icon: '⊟' },
     { id: 'full', icon: '⊡' },
   ];
 
@@ -179,7 +181,7 @@ export default function GalleryBuilderPage() {
         {/* Header */}
         <div className="flex items-end justify-between mb-7 flex-wrap gap-4">
           <div>
-            <Eyebrow className="mb-2">14 — Gallery Builder</Eyebrow>
+            <Eyebrow className="mb-2">{eyebrow}</Eyebrow>
             <h1 className="font-serif text-[36px] font-[500] text-ink tracking-[-0.02em]">
               {title || 'Untitled gallery'}
             </h1>
