@@ -136,7 +136,12 @@ export default function DashboardPage() {
 
           {/* Recent sales */}
           <div className="bg-surface border border-line rounded-card p-6">
-            <h2 className="font-serif text-[22px] font-[500] text-ink mb-[18px]">Recent sales</h2>
+            <div className="flex items-baseline justify-between mb-[18px]">
+              <h2 className="font-serif text-[22px] font-[500] text-ink">Recent sales</h2>
+              <a href="/studio/orders" className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted hover:text-ink transition-colors">
+                VIEW ALL →
+              </a>
+            </div>
             {salesLoading ? (
               <div className="flex flex-col">
                 {Array.from({ length: 4 }).map((_, i) => (
