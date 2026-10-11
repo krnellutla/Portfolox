@@ -39,6 +39,11 @@ export const qk = {
   },
   plans: () => ['plans'] as const,
   printOptions: () => ['print-options'] as const,
+  photoPrintOptions: (photoId: string) => ['print-options', photoId] as const,
+  cart: () => ['cart'] as const,
+  shippingMethods: (country?: string, postcode?: string) =>
+    ['shipping-methods', country ?? '', postcode ?? ''] as const,
+  order: (id: string) => ['order', id] as const,
   clientGallery: (shareToken: string) => ['client-gallery', shareToken] as const,
   collections: () => ['collections'] as const,
   me: () => ['me'] as const,

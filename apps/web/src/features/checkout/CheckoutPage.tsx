@@ -42,7 +42,7 @@ export default function CheckoutPage() {
   });
 
   const { data: shippingMethods = [] } = useQuery({
-    queryKey: qk.shippingMethods({ country }),
+    queryKey: qk.shippingMethods(country),
     queryFn: () => getShippingMethods({ country }),
   });
 
