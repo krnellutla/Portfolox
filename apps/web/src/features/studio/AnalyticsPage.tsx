@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { TopNav } from '../../components/nav/TopNav.js';
 import { Eyebrow } from '../../components/ui/Eyebrow.js';
 import { StatCard } from '../../components/ui/StatCard.js';
 import { StateView } from '../../components/ui/StateView.js';
+import { SkeletonTile, SkeletonRow } from '../../components/ui/Skeleton.js';
 import { getSummary, getPhotoPerformance, getFunnel, getBuyers } from '../../api/analytics.js';
 import { qk } from '../../lib/query-client.js';
 import { seedThumbUrl, seedAvatarUrl } from '../../lib/seed-photos.js';
@@ -78,7 +80,11 @@ export default function AnalyticsPage() {
 
         {/* KPI cards */}
         {summaryLoading ? (
-          <StateView variant="loading" title="Loading stats…" />
+          <div className="grid grid-cols-4 gap-4 mb-6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <SkeletonTile key={i} className="h-[100px]" />
+            ))}
+          </div>
         ) : (
           <div className="grid grid-cols-4 gap-4 mb-6">
             {kpis.map((k) => (
@@ -103,7 +109,11 @@ export default function AnalyticsPage() {
               <p className="font-serif text-[20px] font-[500] text-ink">Top performing frames</p>
             </div>
             {framesLoading ? (
-              <div className="p-5"><StateView variant="loading" title="Loading…" /></div>
+              <div className="p-5 flex flex-col">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <SkeletonRow key={i} />
+                ))}
+              </div>
             ) : (
               <table className="w-full">
                 <thead>
@@ -149,7 +159,23 @@ export default function AnalyticsPage() {
                     </tr>
                   ))}
                   {!framesLoading && !topFrames?.length && (
-                    <tr><td colSpan={6} className="px-5 py-4 font-mono text-[11px] text-muted">No data yet.</td></tr>
+                    <tr>
+                      <td colSpan={6}>
+                        <StateView
+                          variant="empty"
+                          title="No data for this range"
+                          description="Sales and views will appear once your work is live."
+                          action={
+                            <Link
+                              to="/studio/upload"
+                              className="px-5 py-[10px] bg-ink text-paper rounded-[9px] font-semibold text-[14px] hover:bg-ink-2 transition-colors"
+                            >
+                              Upload photos
+                            </Link>
+                          }
+                        />
+                      </td>
+                    </tr>
                   )}
                 </tbody>
               </table>
@@ -162,7 +188,11 @@ export default function AnalyticsPage() {
             <div className="bg-surface border border-line rounded-card p-5">
               <p className="font-serif text-[20px] font-[500] text-ink mb-5">Conversion funnel</p>
               {funnelLoading ? (
-                <StateView variant="loading" title="Loading…" />
+                <div className="flex flex-col gap-3">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <SkeletonTile key={i} className="h-[26px] rounded-[6px]" />
+                  ))}
+                </div>
               ) : (
                 <div className="flex flex-col gap-3">
                   {(funnel ?? []).map((stage, i) => (
@@ -189,7 +219,11 @@ export default function AnalyticsPage() {
             <div className="bg-surface border border-line rounded-card p-5">
               <p className="font-serif text-[20px] font-[500] text-ink mb-4">Top buyers</p>
               {buyersLoading ? (
-                <StateView variant="loading" title="Loading…" />
+                <div className="flex flex-col">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <SkeletonRow key={i} />
+                  ))}
+                </div>
               ) : (
                 <div className="flex flex-col gap-3">
                   {(buyers ?? []).map((b, i) => (
@@ -207,7 +241,11 @@ export default function AnalyticsPage() {
                     </div>
                   ))}
                   {!buyersLoading && !buyers?.length && (
-                    <p className="font-mono text-[11px] text-muted">No buyers yet.</p>
+                    <StateView
+                      variant="empty"
+                      title="No data for this range"
+                      description="Sales and views will appear once your work is live."
+                    />
                   )}
                 </div>
               )}

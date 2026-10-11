@@ -79,6 +79,7 @@
 
   /* Screen-enter motion */
   --animate-pfxFade: pfxFade 0.4s ease both;
+  --animate-pfxPulse: pfxPulse 1.2s ease-in-out infinite;
 
   @keyframes pfxFade {
     from {
@@ -90,4 +91,9 @@
       transform: none;
     }
   }
+}
+
+@keyframes pfxPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }

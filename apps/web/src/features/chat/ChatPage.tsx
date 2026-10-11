@@ -4,6 +4,7 @@ import type { Message } from '@blueflutes/shared';
 import { TopNav } from '../../components/nav/TopNav.js';
 import { Eyebrow } from '../../components/ui/Eyebrow.js';
 import { StateView } from '../../components/ui/StateView.js';
+import { SkeletonRow } from '../../components/ui/Skeleton.js';
 import { listConversations, getMessages, sendMessage } from '../../api/conversations.js';
 import { connectWs, disconnectWs } from '../../api/ws.js';
 import { qk } from '../../lib/query-client.js';
@@ -110,7 +111,28 @@ export default function ChatPage() {
               />
             </div>
             <div className="flex-1 overflow-y-auto">
-              {convsLoading && <StateView variant="loading" title="Loading…" />}
+              {convsLoading && (
+                <div className="px-4">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <SkeletonRow key={i} />
+                  ))}
+                </div>
+              )}
+              {!convsLoading && filteredConvs.length === 0 && (
+                <StateView
+                  variant="empty"
+                  title="No conversations yet"
+                  description="Message a photographer from their portfolio."
+                  action={
+                    <a
+                      href="/discover"
+                      className="px-5 py-[10px] bg-ink text-paper rounded-[9px] font-semibold text-[14px] hover:bg-ink-2 transition-colors"
+                    >
+                      Discover photographers
+                    </a>
+                  }
+                />
+              )}
               {filteredConvs.map((conv, i) => {
                 const other = conv.participants[0];
                 const isActive = conv.id === activeConvId;

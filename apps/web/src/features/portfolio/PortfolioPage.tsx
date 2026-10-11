@@ -8,6 +8,7 @@ import { Chip } from '../../components/ui/Chip.js';
 import { PhotoGrid } from '../../components/photo/PhotoGrid.js';
 import { PhotoTile } from '../../components/photo/PhotoTile.js';
 import { StateView } from '../../components/ui/StateView.js';
+import { SkeletonTile } from '../../components/ui/Skeleton.js';
 import { getProfile, getGalleries, getPhotos, follow, unfollow } from '../../api/photographers.js';
 import { qk } from '../../lib/query-client.js';
 import { seedPhotoUrl, seedAvatarUrl } from '../../lib/seed-photos.js';
@@ -149,8 +150,30 @@ export default function PortfolioPage() {
         </div>
 
         {/* Photo grid */}
-        {photosLoading && <StateView variant="loading" title="Loading photos…" />}
-        {!photosLoading && (
+        {photosLoading && (
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <SkeletonTile key={i} className="aspect-square" />
+            ))}
+          </div>
+        )}
+        {!photosLoading && photos.length === 0 && (
+          <StateView
+            variant="empty"
+            title="Nothing published yet"
+            description="Follow to hear when new work goes up."
+            action={
+              <button
+                onClick={() => followMutation.mutate({ id: photographer.id, isFollowing: isFollowed })}
+                disabled={followMutation.isPending || isFollowed}
+                className="px-5 py-[10px] bg-ink text-paper rounded-[9px] font-semibold text-[14px] hover:bg-ink-2 disabled:opacity-60 transition-colors"
+              >
+                {isFollowed ? 'Following' : 'Follow'}
+              </button>
+            }
+          />
+        )}
+        {!photosLoading && photos.length > 0 && (
           <PhotoGrid cols={2} gap="sm" className="md:[grid-template-columns:repeat(5,minmax(0,1fr))]">
             {photos.map((photo, i) => (
               <PhotoTile

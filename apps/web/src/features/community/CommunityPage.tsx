@@ -4,6 +4,7 @@ import type { CommunitySpace, FeedPost } from '@blueflutes/shared';
 import { TopNav } from '../../components/nav/TopNav.js';
 import { Eyebrow } from '../../components/ui/Eyebrow.js';
 import { StateView } from '../../components/ui/StateView.js';
+import { SkeletonRow } from '../../components/ui/Skeleton.js';
 import { getSpaces, getPosts, createPost, likePost, unlikePost } from '../../api/community.js';
 import { connectWs, disconnectWs } from '../../api/ws.js';
 import { qk } from '../../lib/query-client.js';
@@ -173,12 +174,43 @@ export default function CommunityPage() {
             </div>
           </div>
 
-          {isLoading && <StateView variant="loading" title="Loading posts…" />}
-          {error && <StateView variant="error" title="Couldn't load feed" />}
+          {isLoading && (
+            <div className="flex flex-col">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <SkeletonRow key={i} />
+              ))}
+            </div>
+          )}
+          {error && (
+            <StateView
+              variant="error"
+              title="Couldn't load feed"
+              description="We hit a snag loading this space. Try again in a moment."
+              eyebrow="FEED ERROR"
+              action={
+                <button
+                  onClick={() => void 0}
+                  className="px-5 py-[10px] border border-field rounded-[9px] font-mono text-[12px] text-ink hover:border-ink transition-colors"
+                >
+                  Try again
+                </button>
+              }
+            />
+          )}
           {feed && feed.items.length === 0 && (
-            <p className="text-center py-16 font-mono text-[13px] text-muted">
-              No posts in this space yet.
-            </p>
+            <StateView
+              variant="empty"
+              title="Quiet in here"
+              description="Be the first to post in this space."
+              action={
+                <button
+                  onClick={() => { const el = document.querySelector('textarea'); el?.focus(); }}
+                  className="px-5 py-[10px] bg-ink text-paper rounded-[9px] font-semibold text-[14px] hover:bg-ink-2 transition-colors"
+                >
+                  New post
+                </button>
+              }
+            />
           )}
           {feed?.items.map((post, i) => (
             <PostCard

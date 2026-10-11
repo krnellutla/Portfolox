@@ -29,4 +29,26 @@ describe('StateView', () => {
     expect(screen.getByText('Nothing here yet')).toBeDefined();
     expect(screen.getByRole('button', { name: 'Refresh' })).toBeDefined();
   });
+
+  it('renders an eyebrow above the title for empty/error variants', () => {
+    render(<StateView variant="error" title="Failed" eyebrow="ERR_404" />);
+
+    expect(screen.getByText('ERR_404')).toBeDefined();
+    expect(screen.getByText('Failed')).toBeDefined();
+  });
+
+  it('applies text-negative to error title', () => {
+    render(<StateView variant="error" title="Something went wrong" />);
+
+    const heading = screen.getByRole('heading', { level: 2 });
+    expect(heading.className).toContain('text-negative');
+  });
+
+  it('applies text-ink to empty title', () => {
+    render(<StateView variant="empty" title="Nothing here" />);
+
+    const heading = screen.getByRole('heading', { level: 2 });
+    expect(heading.className).toContain('text-ink');
+    expect(heading.className).not.toContain('text-negative');
+  });
 });

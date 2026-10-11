@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { TopNav } from '../../components/nav/TopNav.js';
 import { Eyebrow } from '../../components/ui/Eyebrow.js';
 import { StateView } from '../../components/ui/StateView.js';
+import { SkeletonRow } from '../../components/ui/Skeleton.js';
 import { getMyGalleries } from '../../api/me.js';
 import { qk } from '../../lib/query-client.js';
 import { seedThumbUrl } from '../../lib/seed-photos.js';
@@ -98,7 +99,11 @@ export default function UploadPage() {
             <button className="font-mono text-[11px] text-ink-3 hover:text-ink transition-colors">＋</button>
           </div>
           {galleriesLoading ? (
-            <StateView variant="loading" title="Loading albums…" />
+            <div className="flex flex-col">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <SkeletonRow key={i} />
+              ))}
+            </div>
           ) : (
             <div className="flex flex-col gap-1">
               {(galleries ?? []).map((gallery) => (
@@ -158,6 +163,15 @@ export default function UploadPage() {
               onChange={(e) => enqueue(e.target.files)}
             />
           </div>
+
+          {/* Upload queue empty state */}
+          {queue.length === 0 && (
+            <StateView
+              variant="empty"
+              title="Nothing uploading"
+              description="Drop files above to start."
+            />
+          )}
 
           {/* Upload queue */}
           {queue.length > 0 && (
