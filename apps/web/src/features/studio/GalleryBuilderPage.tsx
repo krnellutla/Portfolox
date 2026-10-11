@@ -175,7 +175,7 @@ export default function GalleryBuilderPage() {
     <div className="min-h-screen bg-paper animate-pfxFade">
       <TopNav />
 
-      <div className="max-w-shell mx-auto px-4 md:px-8 pt-8 pb-32 md:pb-24">
+      <div className="max-w-shell mx-auto px-4 md:px-6 lg:px-8 pt-8 pb-32 md:pb-24">
         {/* Header */}
         <div className="flex items-end justify-between mb-7 flex-wrap gap-4">
           <div>
@@ -200,14 +200,14 @@ export default function GalleryBuilderPage() {
             )}
             <Link
               to={`/portfolio/${selectedGallery?.photographerId ?? ''}`}
-              className="px-4 py-[10px] bg-surface border border-field rounded-[9px] font-semibold text-[14px] text-ink hover:border-ink transition-colors"
+              className="px-4 py-[10px] bg-surface border border-field rounded-[9px] font-semibold text-[14px] text-ink hover:border-ink transition-colors whitespace-nowrap"
             >
               Preview
             </Link>
             <button
               onClick={handlePublish}
               disabled={updateMutation.isPending}
-              className="px-5 py-[11px] bg-ink text-paper rounded-[9px] font-semibold text-[14px] hover:bg-ink-2 transition-colors disabled:opacity-60"
+              className="px-5 py-[11px] bg-ink text-paper rounded-[9px] font-semibold text-[14px] hover:bg-ink-2 transition-colors disabled:opacity-60 whitespace-nowrap"
             >
               {updateMutation.isPending ? 'Saving…' : 'Publish'}
             </button>
@@ -218,7 +218,7 @@ export default function GalleryBuilderPage() {
 
         {/* 2-col layout */}
         {!isLoading && (
-          <div className="grid gap-6" style={{ gridTemplateColumns: '1fr 300px' }}>
+          <div className="flex flex-col lg:grid lg:gap-6" style={{ gridTemplateColumns: '1fr 320px' }}>
             {/* Sortable grid */}
             <DndContext
               sensors={sensors}
@@ -227,7 +227,7 @@ export default function GalleryBuilderPage() {
               onDragEnd={handleDragEnd}
             >
               <SortableContext items={frames.map((f) => f.id)} strategy={rectSortingStrategy}>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {frames.map((frame, i) => (
                     <SortableFrame key={frame.id} frame={frame} index={i} />
                   ))}
@@ -239,7 +239,7 @@ export default function GalleryBuilderPage() {
             </DndContext>
 
             {/* Settings panel */}
-            <aside className="sticky top-[72px] self-start">
+            <aside className="mt-6 lg:mt-0 lg:sticky lg:top-[72px] lg:self-start">
               <div className="bg-surface border border-line rounded-card p-5 flex flex-col gap-5">
                 <div>
                   <label className="block font-mono text-[10.5px] uppercase tracking-label text-muted mb-2">Title</label>
