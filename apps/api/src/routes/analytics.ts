@@ -22,16 +22,18 @@ const PHOTO_ROWS = [
   { title: 'Winter Lake',       views: 4880, sales:  2, revenue:   5152, conversionPct: 0.04 },
 ];
 
-// Distinct Unsplash photo IDs for thumbnails
-const THUMB_IDS = [
-  'photo-1506905925346-21bda4d32df4',
-  'photo-1470770903676-69b98201ea1c',
-  'photo-1433838552652-f9aedb3a07b5',
-  'photo-1448375240586-882707db888b',
-  'photo-1505765050516-f72dcac9c60e',
-  'photo-1504701954957-2010ec3bcec1',
-  'photo-1519681393784-d120267933ba',
-  'photo-1418065460487-3e41a6c84dc5',
+// Pexels photo IDs for thumbnails (free to use under the Pexels License)
+const px = (id: string) =>
+  `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=400`;
+const THUMB_URLS = [
+  px('1070378'),   // Misty Mountain Valley  → Northbound
+  px('13344256'),  // Lavender Field Sunset  → Golden Hour
+  px('26311729'),  // Northern Lake          → Blue Ridge Dawn
+  px('38271767'),  // Pine Forest Fog        → Midnight Forest
+  px('1769106'),   // Golden Coastline       → Coastal Fog
+  px('29202983'),  // Stormy Ocean Cliffs    → Storm Over Plains
+  px('1101201'),   // Autumn Forest Path     → Autumn Valley
+  px('6640401'),   // Snow-capped Peaks      → Winter Lake
 ];
 
 analyticsRouter.get('/me/analytics/summary', asyncHandler(async (req, res) => {
@@ -77,7 +79,7 @@ analyticsRouter.get('/me/analytics/photos', asyncHandler(async (req, res) => {
       photoId: `stub-photo-${i + 1}`,
       title: r.title,
       code: `PFX-${String(i + 1).padStart(6, '0')}`,
-      thumbUrl: `https://images.unsplash.com/${THUMB_IDS[i]}?w=200`,
+      thumbUrl: THUMB_URLS[i] ?? THUMB_URLS[0]!,
       views: r.views,
       sales: r.sales,
       revenue: r.revenue,

@@ -35,7 +35,7 @@ function makeStubOrders(tenantId: string): OrderV2[] {
       tax: 0,
       total: 19700,
       currency: 'USD',
-      items: [{ id: 'item-001', photoId: 'photo-001', printOptionId: 'po-16x20', title: 'Golden Hour, Yosemite', thumbUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200', size: '16×20"', kind: 'Archival matte', qty: 1, unitPrice: 18500, lineTotal: 18500 }],
+      items: [{ id: 'item-001', photoId: 'photo-001', printOptionId: 'po-16x20', title: 'Golden Hour, Yosemite', thumbUrl: 'https://images.pexels.com/photos/1070378/pexels-photo-1070378.jpeg?auto=compress&cs=tinysrgb&w=200', size: '16×20"', kind: 'Archival matte', qty: 1, unitPrice: 18500, lineTotal: 18500 }],
       timeline: [
         { status: 'paid' as OrderStatus, at: d(12) },
         { status: 'in_production' as OrderStatus, at: d(10) },
@@ -59,7 +59,7 @@ function makeStubOrders(tenantId: string): OrderV2[] {
       tax: 0,
       total: 11000,
       currency: 'USD',
-      items: [{ id: 'item-002', photoId: 'photo-002', printOptionId: 'po-8x10', title: 'Blue Ridge at Dawn', thumbUrl: 'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=200', size: '8×10"', kind: 'Archival matte', qty: 2, unitPrice: 4900, lineTotal: 9800 }],
+      items: [{ id: 'item-002', photoId: 'photo-002', printOptionId: 'po-8x10', title: 'Blue Ridge at Dawn', thumbUrl: 'https://images.pexels.com/photos/26311729/pexels-photo-26311729.jpeg?auto=compress&cs=tinysrgb&w=200', size: '8×10"', kind: 'Archival matte', qty: 2, unitPrice: 4900, lineTotal: 9800 }],
       timeline: [
         { status: 'paid' as OrderStatus, at: d(5) },
         { status: 'in_production' as OrderStatus, at: d(4) },
@@ -82,7 +82,7 @@ function makeStubOrders(tenantId: string): OrderV2[] {
       tax: 0,
       total: 25200,
       currency: 'USD',
-      items: [{ id: 'item-003', photoId: 'photo-003', printOptionId: 'po-24x36', title: 'Midnight Forest', thumbUrl: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=200', size: '24×36"', kind: 'Archival matte', qty: 1, unitPrice: 24000, lineTotal: 24000 }],
+      items: [{ id: 'item-003', photoId: 'photo-003', printOptionId: 'po-24x36', title: 'Midnight Forest', thumbUrl: 'https://images.pexels.com/photos/38271767/pexels-photo-38271767.jpeg?auto=compress&cs=tinysrgb&w=200', size: '24×36"', kind: 'Archival matte', qty: 1, unitPrice: 24000, lineTotal: 24000 }],
       timeline: [
         { status: 'paid' as OrderStatus, at: d(2) },
         { status: 'in_production' as OrderStatus, at: d(1) },
@@ -103,7 +103,7 @@ function makeStubOrders(tenantId: string): OrderV2[] {
       tax: 0,
       total: 6700,
       currency: 'USD',
-      items: [{ id: 'item-004', photoId: 'photo-004', printOptionId: 'po-5x7', title: 'Coastal Fog', thumbUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=200', size: '5×7"', kind: 'Archival matte', qty: 1, unitPrice: 5500, lineTotal: 5500 }],
+      items: [{ id: 'item-004', photoId: 'photo-004', printOptionId: 'po-5x7', title: 'Coastal Fog', thumbUrl: 'https://images.pexels.com/photos/1769106/pexels-photo-1769106.jpeg?auto=compress&cs=tinysrgb&w=200', size: '5×7"', kind: 'Archival matte', qty: 1, unitPrice: 5500, lineTotal: 5500 }],
       timeline: [{ status: 'paid' as OrderStatus, at: d(0) }],
       shippingAddress: { name: 'Dave Patel', line1: '321 Elm St', city: 'Seattle', region: 'WA', postcode: '98101', country: 'US' },
       shippingMethod: stubShipping,
@@ -121,7 +121,7 @@ function makeStubOrders(tenantId: string): OrderV2[] {
       tax: 0,
       total: 13200,
       currency: 'USD',
-      items: [{ id: 'item-005', photoId: 'photo-005', printOptionId: 'po-12x16', title: 'Storm Over Plains', thumbUrl: 'https://images.unsplash.com/photo-1504608524841-42584120d693?w=200', size: '12×16"', kind: 'Archival matte', qty: 1, unitPrice: 12000, lineTotal: 12000 }],
+      items: [{ id: 'item-005', photoId: 'photo-005', printOptionId: 'po-12x16', title: 'Storm Over Plains', thumbUrl: 'https://images.pexels.com/photos/29202983/pexels-photo-29202983.jpeg?auto=compress&cs=tinysrgb&w=200', size: '12×16"', kind: 'Archival matte', qty: 1, unitPrice: 12000, lineTotal: 12000 }],
       timeline: [
         { status: 'paid' as OrderStatus, at: d(20) },
         { status: 'in_production' as OrderStatus, at: d(18) },
