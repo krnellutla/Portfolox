@@ -174,8 +174,12 @@ export default function PortfolioViewer() {
   // While loading — show the full landing page immediately (skeleton feel)
   // Error state — still show the landing page, content just won't update
   // Ready with real content — show real NodeGrid below the hero
-  const hasRealContent = state.status === 'ready' && state.tree.length > 0;
-  const showPlaceholder = state.status !== 'ready' || state.tree.length === 0;
+  // Only show real content when there are non-empty gallery/folder nodes
+  function hasContent(nodes: NodeTreeItem[]): boolean {
+    return nodes.some((n) => n.type === 'gallery' || (n.type === 'folder' && hasContent(n.children)));
+  }
+  const hasRealContent = state.status === 'ready' && hasContent(state.tree);
+  const showPlaceholder = !hasRealContent;
 
   return (
     <div className="min-h-screen bg-white text-gray-900">
