@@ -99,6 +99,11 @@
   50% { opacity: 0.6; }
 }
 
+/* Global font baseline — tokens are defined in @theme above */
+body {
+  font-family: var(--font-sans);
+}
+
 /* Prevent iOS long-press save and native drag on protected gallery images */
 .photo-protected {
   -webkit-touch-callout: none;

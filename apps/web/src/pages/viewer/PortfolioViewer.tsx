@@ -71,7 +71,7 @@ function HeroSection() {
         <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-white/60">
           Photography
         </p>
-        <h1 className="text-5xl font-light tracking-tight sm:text-6xl lg:text-8xl">
+        <h1 className="font-sans text-5xl font-light tracking-tight sm:text-6xl lg:text-8xl">
           Krishna Nellutla
         </h1>
         <p className="mt-5 max-w-sm text-base text-white/70">
@@ -93,11 +93,11 @@ function HeroSection() {
 
 function GallerySection({ title, eyebrow, photos }: { title: string; eyebrow: string; photos: Photo[] }) {
   return (
-    <section className="py-20">
+    <section className="pt-10 pb-6">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mb-10 border-b border-gray-100 pb-6">
-          <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-gray-400">{eyebrow}</p>
-          <h2 className="text-2xl font-light tracking-tight text-gray-900">{title}</h2>
+        <div className="mb-5 border-b border-gray-200 pb-4">
+          <p className="mb-1 font-mono text-xs font-semibold uppercase tracking-widest text-gray-500">{eyebrow}</p>
+          <h2 className="font-sans text-2xl font-light tracking-tight text-gray-900">{title}</h2>
         </div>
         <div className="flex flex-wrap" style={{ gap: '4px' }}>
           {photos.map((photo, i) => (
@@ -133,8 +133,8 @@ function AboutSection() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-2 md:items-center">
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-gray-400">About</p>
-            <h2 className="text-3xl font-light tracking-tight text-gray-900">
+            <p className="mb-2 font-mono text-xs font-semibold uppercase tracking-widest text-gray-500">About</p>
+            <h2 className="font-sans text-3xl font-light tracking-tight text-gray-900">
               Capturing light, people & cities
             </h2>
             <p className="mt-5 text-gray-500 leading-relaxed">
@@ -215,19 +215,19 @@ export default function PortfolioViewer() {
           title="Singapore & beyond"
           photos={CITY_LANDSCAPES}
         />
-        <div className="border-t border-gray-50" />
+        <div className="border-t border-gray-200" />
         <GallerySection
           eyebrow="Black & White"
           title="California, 2024"
           photos={BW}
         />
-        <div className="border-t border-gray-50" />
+        <div className="border-t border-gray-200" />
         <GallerySection
           eyebrow="Portraits"
           title="People"
           photos={PORTRAITS}
         />
-        <div className="border-t border-gray-50" />
+        <div className="border-t border-gray-200" />
         <GallerySection
           eyebrow="Events & Family"
           title="Moments"
