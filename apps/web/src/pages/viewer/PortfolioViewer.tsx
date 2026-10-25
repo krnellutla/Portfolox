@@ -53,6 +53,108 @@ const FAMILY: Photo[] = [
   { src: '/portfolio/family/vibhu-00856.jpg',                         alt: 'Portrait session' },
 ];
 
+// ─── Lightbox ──────────────────────────────────────────────────────────────
+
+interface LightboxState {
+  photos: Photo[];
+  index: number;
+}
+
+function Lightbox({
+  photos,
+  index,
+  onClose,
+  onPrev,
+  onNext,
+}: {
+  photos: Photo[];
+  index: number;
+  onClose: () => void;
+  onPrev: () => void;
+  onNext: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowLeft') onPrev();
+      if (e.key === 'ArrowRight') onNext();
+    };
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [onClose, onPrev, onNext]);
+
+  const photo = photos[index]!;
+  const hasPrev = index > 0;
+  const hasNext = index < photos.length - 1;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/92"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Photo lightbox"
+    >
+      <img
+        src={photo.src}
+        alt={photo.alt}
+        className="max-h-[90vh] max-w-[90vw] object-contain"
+        onClick={(e) => e.stopPropagation()}
+        draggable={false}
+        onContextMenu={(e) => e.preventDefault()}
+      />
+
+      {/* Close */}
+      <button
+        onClick={onClose}
+        className="absolute right-4 top-4 rounded-full p-1 text-white/60 transition-colors hover:text-white"
+        aria-label="Close lightbox"
+      >
+        <svg className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      {/* Prev */}
+      {hasPrev && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onPrev(); }}
+          className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full p-1 text-white/60 transition-colors hover:text-white"
+          aria-label="Previous photo"
+        >
+          <svg className="h-9 w-9" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+        </button>
+      )}
+
+      {/* Next */}
+      {hasNext && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onNext(); }}
+          className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full p-1 text-white/60 transition-colors hover:text-white"
+          aria-label="Next photo"
+        >
+          <svg className="h-9 w-9" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
+        </button>
+      )}
+
+      {/* Counter */}
+      {photos.length > 1 && (
+        <p className="absolute bottom-4 left-1/2 -translate-x-1/2 font-mono text-xs text-white/40">
+          {index + 1} / {photos.length}
+        </p>
+      )}
+    </div>
+  );
+}
+
 // ─── Components ────────────────────────────────────────────────────────────
 
 function HeroSection() {
@@ -91,7 +193,17 @@ function HeroSection() {
   );
 }
 
-function GallerySection({ title, eyebrow, photos }: { title: string; eyebrow: string; photos: Photo[] }) {
+function GallerySection({
+  title,
+  eyebrow,
+  photos,
+  onPhotoClick,
+}: {
+  title: string;
+  eyebrow: string;
+  photos: Photo[];
+  onPhotoClick: (index: number) => void;
+}) {
   return (
     <section className="pt-10 pb-6">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -101,14 +213,17 @@ function GallerySection({ title, eyebrow, photos }: { title: string; eyebrow: st
         </div>
         <div className="flex flex-wrap" style={{ gap: '4px' }}>
           {photos.map((photo, i) => (
-            <div
+            <button
               key={i}
-              className="group overflow-hidden rounded-sm"
+              type="button"
+              className="group overflow-hidden rounded-sm cursor-zoom-in"
               style={{
                 height: '220px',
                 flexGrow: 1,
                 flexBasis: photo.orientation === 'portrait' ? '150px' : '280px',
               }}
+              onClick={() => onPhotoClick(i)}
+              aria-label={`View ${photo.alt}`}
             >
               <img
                 src={photo.src}
@@ -118,7 +233,7 @@ function GallerySection({ title, eyebrow, photos }: { title: string; eyebrow: st
                 onContextMenu={(e) => e.preventDefault()}
                 className="photo-protected w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
               />
-            </div>
+            </button>
           ))}
           <div style={{ flexGrow: 10, flexBasis: '280px', height: '220px' }} aria-hidden />
         </div>
@@ -188,6 +303,7 @@ function hasContent(nodes: NodeTreeItem[]): boolean {
 
 export default function PortfolioViewer() {
   const [realNodes, setRealNodes] = useState<NodeTreeItem[] | null>(null);
+  const [lightbox, setLightbox] = useState<LightboxState | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -202,6 +318,14 @@ export default function PortfolioViewer() {
   const showRealContent = realNodes !== null && hasContent(realNodes);
   void showRealContent; // reserved for phase 2
 
+  const openLightbox = (photos: Photo[], index: number) =>
+    setLightbox({ photos, index });
+  const closeLightbox = () => setLightbox(null);
+  const prevPhoto = () =>
+    setLightbox((s) => s && s.index > 0 ? { ...s, index: s.index - 1 } : s);
+  const nextPhoto = () =>
+    setLightbox((s) => s && s.index < s.photos.length - 1 ? { ...s, index: s.index + 1 } : s);
+
   return (
     <div className="min-h-screen bg-white text-gray-900">
       <HeroSection />
@@ -211,29 +335,43 @@ export default function PortfolioViewer() {
           eyebrow="City & Landscape"
           title="Singapore & beyond"
           photos={CITY_LANDSCAPES}
+          onPhotoClick={(i) => openLightbox(CITY_LANDSCAPES, i)}
         />
         <div className="border-t border-gray-200" />
         <GallerySection
           eyebrow="Black & White"
           title="California, 2024"
           photos={BW}
+          onPhotoClick={(i) => openLightbox(BW, i)}
         />
         <div className="border-t border-gray-200" />
         <GallerySection
           eyebrow="Portraits"
           title="People"
           photos={PORTRAITS}
+          onPhotoClick={(i) => openLightbox(PORTRAITS, i)}
         />
         <div className="border-t border-gray-200" />
         <GallerySection
           eyebrow="Events & Family"
           title="Moments"
           photos={FAMILY}
+          onPhotoClick={(i) => openLightbox(FAMILY, i)}
         />
       </div>
 
       <AboutSection />
       <Footer />
+
+      {lightbox && (
+        <Lightbox
+          photos={lightbox.photos}
+          index={lightbox.index}
+          onClose={closeLightbox}
+          onPrev={prevPhoto}
+          onNext={nextPhoto}
+        />
+      )}
     </div>
   );
 }
