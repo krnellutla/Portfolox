@@ -21,7 +21,7 @@ export function NodeGrid({ nodes }: { nodes: NodeTreeItem[] }) {
           <circle cx="8.5" cy="8.5" r="1.5" />
           <path d="M21 15l-5-5L5 21" />
         </svg>
-        <p className="text-base font-medium text-gray-400">No galleries yet</p>
+        <p className="text-base font-medium text-gray-500">No galleries yet</p>
       </div>
     );
   }
@@ -43,7 +43,7 @@ export function NodeGrid({ nodes }: { nodes: NodeTreeItem[] }) {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-gray-400">This folder is empty.</p>
+            <p className="text-sm text-gray-500">This folder is empty.</p>
           )}
         </section>
       ))}

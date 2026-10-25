@@ -47,7 +47,7 @@ function PasswordGate({
             />
           </svg>
           <h1 className="text-xl font-light text-gray-900">Private Gallery</h1>
-          <p className="mt-1 text-sm text-gray-400">Enter the password to view</p>
+          <p className="mt-1 text-sm text-gray-500">Enter the password to view</p>
         </div>
 
         <input
@@ -84,7 +84,7 @@ function GalleryGrid({ photoOrder, title }: { photoOrder: string[]; title: strin
     <div className="min-h-screen bg-white">
       <header className="px-6 pt-10 pb-6">
         <h1 className="text-2xl font-light text-gray-900">{title}</h1>
-        <p className="mt-1 text-sm text-gray-400">{photoOrder.length} photos</p>
+        <p className="mt-1 text-sm text-gray-500">{photoOrder.length} photos</p>
       </header>
 
       <div className="px-4 pb-10">
@@ -135,7 +135,7 @@ export default function ClientGallery() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <span className="text-sm text-gray-400">Loading…</span>
+        <span className="text-sm text-gray-500">Loading…</span>
       </div>
     );
   }
@@ -156,7 +156,7 @@ export default function ClientGallery() {
   if (error) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center px-4">
-        <p className="text-sm text-gray-400">Gallery not found.</p>
+        <p className="text-sm text-gray-500">Gallery not found.</p>
       </div>
     );
   }
