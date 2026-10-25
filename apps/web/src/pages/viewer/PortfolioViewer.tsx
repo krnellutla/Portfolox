@@ -1,108 +1,111 @@
 import { useEffect, useState } from 'react';
 import { listNodes } from '../../api/nodes.js';
-import { ApiError } from '../../api/client.js';
 import { buildNodeTree, type NodeTreeItem } from '../../lib/build-tree.js';
-import { NodeGrid } from './NodeGrid.js';
 
-type ViewState =
-  | { status: 'loading' }
-  | { status: 'error'; message: string }
-  | { status: 'ready'; tree: NodeTreeItem[] };
+// ─── Photo data ────────────────────────────────────────────────────────────
 
-// High-quality Pexels photos used as placeholders when the portfolio has no content.
-// Each entry: { id, alt, photographer, aspect } — aspect controls grid spanning.
-const PLACEHOLDER_PHOTOS = [
-  { id: 1366919, alt: 'Woman standing on mountain top', photographer: 'Nina Uhlikova', aspect: 'tall' },
-  { id: 2662116, alt: 'City skyline at dusk', photographer: 'Picography', aspect: 'wide' },
-  { id: 3408744, alt: 'Misty forest at sunrise', photographer: 'Pixabay', aspect: 'normal' },
-  { id: 1563356, alt: 'Portrait with natural light', photographer: 'Burst', aspect: 'normal' },
-  { id: 1761279, alt: 'Ocean waves at sunset', photographer: 'Enric Cruz López', aspect: 'wide' },
-  { id: 3225517, alt: 'Closeup of spring flowers', photographer: 'Pixabay', aspect: 'normal' },
-  { id: 1105666, alt: 'Modern architecture detail', photographer: 'Expect Best', aspect: 'normal' },
-  { id: 2253879, alt: 'Desert landscape golden hour', photographer: 'Pixabay', aspect: 'normal' },
-  { id: 1040881, alt: 'Urban street photography', photographer: 'Snapwire', aspect: 'tall' },
-] as const;
-
-function pexelsUrl(id: number, w = 800): string {
-  return `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=${w}`;
+interface Photo {
+  src: string;
+  alt: string;
+  orientation?: 'portrait' | 'landscape';
 }
+
+const CITY_LANDSCAPES: Photo[] = [
+  { src: '/portfolio/city-landscapes/k7k_0825_6_7_tonemapped.jpg', alt: 'Singapore Marina Bay at blue hour — LV building and city skyline' },
+  { src: '/portfolio/city-landscapes/gbtb-public.jpg',             alt: 'Gardens by the Bay — Supertree Grove at night' },
+  { src: '/portfolio/city-landscapes/k7k_2465.jpg',                alt: 'City landscape' },
+  { src: '/portfolio/city-landscapes/k7k_2739.jpg',                alt: 'City landscape' },
+  { src: '/portfolio/city-landscapes/k7k_2754.jpg',                alt: 'City landscape' },
+  { src: '/portfolio/city-landscapes/k7k_3862.jpg',                alt: 'City landscape' },
+  { src: '/portfolio/city-landscapes/k7k_4196.jpg',                alt: 'City landscape' },
+  { src: '/portfolio/city-landscapes/k7k_4338.jpg',                alt: 'City landscape' },
+  { src: '/portfolio/city-landscapes/k7k_5362_pp.jpg',             alt: 'City landscape' },
+  { src: '/portfolio/city-landscapes/k7k_8087-wo-cpy.jpg',         alt: 'City landscape' },
+  { src: '/portfolio/city-landscapes/_dsc7558.jpg',                alt: 'City landscape' },
+  { src: '/portfolio/city-landscapes/fireworksii.2018__280.jpg',   alt: 'Fireworks 2018' },
+];
+
+const BW: Photo[] = [
+  { src: '/portfolio/bw/catrip.oct_161024_21.jpg', alt: 'San Francisco tram — black and white street' },
+  { src: '/portfolio/bw/catrip.oct_161024_40.jpg', alt: 'California trip — black and white' },
+  { src: '/portfolio/bw/catrip.oct_161024_41.jpg', alt: 'California trip — black and white' },
+  { src: '/portfolio/bw/catrip.oct_161024_47.jpg', alt: 'California trip — black and white' },
+  { src: '/portfolio/bw/catrip.oct_161024_61.jpg', alt: 'California trip — black and white' },
+  { src: '/portfolio/bw/catrip.oct_161024_62.jpg', alt: 'California trip — black and white' },
+  { src: '/portfolio/bw/img_2011.jpg',              alt: 'Black and white' },
+  { src: '/portfolio/bw/img_2012.jpg',              alt: 'Black and white' },
+];
+
+const PORTRAITS: Photo[] = [
+  { src: '/portfolio/portraits/k7k_5584.jpg',                alt: 'Child at the beach — candid portrait', orientation: 'portrait' },
+  { src: '/portfolio/portraits/deepavali-05874-04112021.jpg', alt: 'Deepavali portrait', orientation: 'portrait' },
+  { src: '/portfolio/portraits/deepavali-05876-04112021.jpg', alt: 'Deepavali portrait', orientation: 'portrait' },
+];
+
+const FAMILY: Photo[] = [
+  { src: '/portfolio/family/maheshmansafamilyshoot-24062023-017.jpg', alt: 'Family portrait session' },
+  { src: '/portfolio/family/maheshmansafamilyshoot-24062023-050.jpg', alt: 'Family portrait session' },
+  { src: '/portfolio/family/maheshmansafamilyshoot-24062023-066.jpg', alt: 'Family portrait session' },
+  { src: '/portfolio/family/maheshmansafamilyshoot-24062023-143.jpg', alt: 'Family portrait session' },
+  { src: '/portfolio/family/sravanthi13oct_photoshoot-05030.jpg',     alt: 'Photoshoot' },
+  { src: '/portfolio/family/sravanthi13oct_photoshoot-05040.jpg',     alt: 'Photoshoot' },
+  { src: '/portfolio/family/vibhu-00851.jpg',                         alt: 'Portrait session' },
+  { src: '/portfolio/family/vibhu-00856.jpg',                         alt: 'Portrait session' },
+];
+
+// ─── Components ────────────────────────────────────────────────────────────
 
 function HeroSection() {
   return (
-    <div className="relative h-[70vh] min-h-[480px] w-full overflow-hidden">
+    <div className="relative h-[90vh] min-h-[560px] w-full overflow-hidden">
       <img
-        src={pexelsUrl(PLACEHOLDER_PHOTOS[0]!.id, 1600)}
-        alt={PLACEHOLDER_PHOTOS[0]!.alt}
-        className="h-full w-full object-cover"
+        src={CITY_LANDSCAPES[0]!.src}
+        alt={CITY_LANDSCAPES[0]!.alt}
+        className="h-full w-full object-cover object-center"
+        fetchPriority="high"
       />
-      {/* Dark gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/30 to-black/60" />
-
-      {/* Content */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center text-white">
-        <p className="mb-3 text-sm font-medium uppercase tracking-[0.2em] text-white/70">
-          Visual Portfolio
+      <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/20 to-black/70" />
+      <div className="absolute inset-0 flex flex-col items-center justify-end px-4 pb-20 text-center text-white">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-white/60">
+          Photography
         </p>
-        <h1 className="text-5xl font-light tracking-tight sm:text-6xl lg:text-7xl">
-          Captured Moments
+        <h1 className="text-5xl font-light tracking-tight sm:text-6xl lg:text-8xl">
+          Krishna Nellutla
         </h1>
-        <p className="mt-4 max-w-md text-base text-white/80">
-          A curated collection of photography exploring light, texture, and the beauty of everyday life.
+        <p className="mt-5 max-w-sm text-base text-white/70">
+          City landscapes · Portraits · Black & white
         </p>
         <a
           href="#work"
-          className="mt-8 inline-flex items-center gap-2 rounded-full border border-white/50 bg-white/10 px-6 py-2.5 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+          className="mt-8 inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/10 px-6 py-2.5 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/20"
         >
-          View the work
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
+          View work
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
           </svg>
         </a>
       </div>
-
-      {/* Photo credit */}
-      <p className="absolute bottom-3 right-4 text-xs text-white/40">
-        Photo: {PLACEHOLDER_PHOTOS[0]!.photographer} / Pexels
-      </p>
     </div>
   );
 }
 
-function PlaceholderGallery() {
+function GallerySection({ title, eyebrow, photos }: { title: string; eyebrow: string; photos: Photo[] }) {
   return (
-    <section id="work" className="bg-white py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        {/* Section header */}
-        <div className="mb-12 flex items-end justify-between border-b border-gray-100 pb-6">
-          <div>
-            <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-indigo-500">Featured Work</p>
-            <h2 className="text-2xl font-light tracking-tight text-gray-900">Selected photography</h2>
-          </div>
-          <p className="text-sm text-gray-400">Placeholder images · Pexels</p>
+    <section className="py-20">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-10 border-b border-gray-100 pb-6">
+          <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-gray-400">{eyebrow}</p>
+          <h2 className="text-2xl font-light tracking-tight text-gray-900">{title}</h2>
         </div>
-
-        {/* Masonry-style grid */}
         <div className="columns-1 gap-4 sm:columns-2 lg:columns-3">
-          {PLACEHOLDER_PHOTOS.slice(1).map((photo) => (
-            <div
-              key={photo.id}
-              className="group mb-4 overflow-hidden rounded-xl break-inside-avoid shadow-sm transition-shadow duration-300 hover:shadow-md"
-            >
-              <div className="relative overflow-hidden">
-                <img
-                  src={pexelsUrl(photo.id)}
-                  alt={photo.alt}
-                  loading="lazy"
-                  className="w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                />
-                {/* Hover overlay */}
-                <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                  <div className="p-4">
-                    <p className="text-sm font-medium text-white">{photo.alt}</p>
-                    <p className="text-xs text-white/60">{photo.photographer} / Pexels</p>
-                  </div>
-                </div>
-              </div>
+          {photos.map((photo, i) => (
+            <div key={i} className="group mb-4 overflow-hidden rounded-lg break-inside-avoid">
+              <img
+                src={photo.src}
+                alt={photo.alt}
+                loading="lazy"
+                className="w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+              />
             </div>
           ))}
         </div>
@@ -111,27 +114,35 @@ function PlaceholderGallery() {
   );
 }
 
-function AboutStrip() {
+function AboutSection() {
   return (
-    <section className="border-t border-gray-100 bg-gray-50 py-16">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+    <section className="border-t border-gray-100 bg-gray-50 py-20" id="about">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-2 md:items-center">
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-indigo-500">About</p>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-gray-400">About</p>
             <h2 className="text-3xl font-light tracking-tight text-gray-900">
-              Passionate about the art of the image
+              Capturing light, people & cities
             </h2>
+            <p className="mt-5 text-gray-500 leading-relaxed">
+              I'm Krishna Nellutla — a photographer based in Singapore, drawn to the interplay of
+              city light and human moments. From the blue-hour glow of Marina Bay to candid portraits
+              and black & white street scenes, I look for stories in the spaces between.
+            </p>
             <p className="mt-4 text-gray-500 leading-relaxed">
-              Based everywhere, shooting everything. This portfolio showcases editorial, landscape, and documentary work collected over years of travel and practice.
+              Available for portrait sessions, events, and commissioned work.
             </p>
-            <p className="mt-4 text-sm text-gray-400">
-              All placeholder content — add your own galleries from the dashboard.
-            </p>
+            <a
+              href="mailto:krishna.nellutla@gmail.com"
+              className="mt-6 inline-block text-sm font-medium text-gray-900 underline underline-offset-4 hover:text-gray-600"
+            >
+              Get in touch →
+            </a>
           </div>
           <div className="overflow-hidden rounded-2xl shadow-sm">
             <img
-              src={pexelsUrl(1040881, 600)}
-              alt="Street photography"
+              src="/portfolio/profilepic.jpg"
+              alt="Krishna Nellutla"
               className="w-full object-cover"
               loading="lazy"
             />
@@ -145,69 +156,71 @@ function AboutStrip() {
 function Footer() {
   return (
     <footer className="border-t border-gray-100 bg-white py-8">
-      <div className="mx-auto max-w-6xl px-4 text-center text-sm text-gray-400 sm:px-6 lg:px-8">
-        <p>Built with Blueflutes · <a href="/login" className="underline underline-offset-2 hover:text-gray-600">Manage portfolio</a></p>
+      <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+        <p className="text-sm text-gray-400">
+          © {new Date().getFullYear()} Krishna Nellutla ·{' '}
+          <a href="/login" className="underline underline-offset-2 hover:text-gray-600">
+            Admin
+          </a>
+        </p>
       </div>
     </footer>
   );
 }
 
+// ─── Main ──────────────────────────────────────────────────────────────────
+
+function hasContent(nodes: NodeTreeItem[]): boolean {
+  return nodes.some((n) => n.type === 'gallery' || (n.type === 'folder' && hasContent(n.children)));
+}
+
 export default function PortfolioViewer() {
-  const [state, setState] = useState<ViewState>({ status: 'loading' });
+  const [realNodes, setRealNodes] = useState<NodeTreeItem[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-
     listNodes()
-      .then((nodes) => {
-        if (!cancelled) setState({ status: 'ready', tree: buildNodeTree(nodes) });
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        const message = err instanceof ApiError ? err.message : 'Failed to load portfolio.';
-        setState({ status: 'error', message });
-      });
-
+      .then((nodes) => { if (!cancelled) setRealNodes(buildNodeTree(nodes)); })
+      .catch(() => { if (!cancelled) setRealNodes([]); });
     return () => { cancelled = true; };
   }, []);
 
-  // While loading — show the full landing page immediately (skeleton feel)
-  // Error state — still show the landing page, content just won't update
-  // Ready with real content — show real NodeGrid below the hero
-  // Only show real content when there are non-empty gallery/folder nodes
-  function hasContent(nodes: NodeTreeItem[]): boolean {
-    return nodes.some((n) => n.type === 'gallery' || (n.type === 'folder' && hasContent(n.children)));
-  }
-  const hasRealContent = state.status === 'ready' && hasContent(state.tree);
-  const showPlaceholder = !hasRealContent;
+  // For now always show the personal portfolio. Once real gallery content
+  // exists (galleries with media), we'll surface the NodeGrid below the hero.
+  const showRealContent = realNodes !== null && hasContent(realNodes);
+  void showRealContent; // reserved for phase 2
 
   return (
     <div className="min-h-screen bg-white text-gray-900">
       <HeroSection />
 
-      {hasRealContent ? (
-        <section id="work" className="bg-white py-20">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-            <div className="mb-12 border-b border-gray-100 pb-6">
-              <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-indigo-500">Galleries</p>
-              <h2 className="text-2xl font-light tracking-tight text-gray-900">Your work</h2>
-            </div>
-            <NodeGrid nodes={state.tree} />
-          </div>
-        </section>
-      ) : showPlaceholder ? (
-        <PlaceholderGallery />
-      ) : null}
+      <div id="work">
+        <GallerySection
+          eyebrow="City & Landscape"
+          title="Singapore & beyond"
+          photos={CITY_LANDSCAPES}
+        />
+        <div className="border-t border-gray-50" />
+        <GallerySection
+          eyebrow="Black & White"
+          title="California, 2024"
+          photos={BW}
+        />
+        <div className="border-t border-gray-50" />
+        <GallerySection
+          eyebrow="Portraits"
+          title="People"
+          photos={PORTRAITS}
+        />
+        <div className="border-t border-gray-50" />
+        <GallerySection
+          eyebrow="Events & Family"
+          title="Moments"
+          photos={FAMILY}
+        />
+      </div>
 
-      {state.status === 'error' && (
-        <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6 lg:px-8">
-          <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
-            {state.message}
-          </p>
-        </div>
-      )}
-
-      <AboutStrip />
+      <AboutSection />
       <Footer />
     </div>
   );
