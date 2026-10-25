@@ -19,4 +19,5 @@ export * from './schemas/analytics.js';
 export * from './schemas/search.js';
 export * from './schemas/collection.js';
 export * from './schemas/commerce.js';
+export * from './schemas/google-photos.js';
 export * from './types.js';

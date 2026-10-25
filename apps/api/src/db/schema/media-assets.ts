@@ -23,6 +23,11 @@ export const mediaAssets = pgTable(
     width: integer('width'),
     height: integer('height'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    googleMediaItemId: text('google_media_item_id'),
+    googleBaseUrl: text('google_base_url'),
+    thumbnailUrl: text('thumbnail_url'),
+    cachedUrl: text('cached_url'),
+    cachedUntil: timestamp('cached_until', { withTimezone: true }),
   },
   (table) => [
     index('media_assets_tenant_node_position_idx').on(

@@ -7,11 +7,12 @@ import { asyncHandler } from '../lib/async-handler.js';
 import { clearRefreshTokenCookie, getRefreshTokenCookie, setRefreshTokenCookie } from '../lib/cookies.js';
 import { getDesktopRefreshTokenHeader } from '../lib/desktop-auth.js';
 import { signAccessToken } from '../lib/jwt.js';
-import { createAuthorizationRequest, exchangeAuthorizationCode } from '../lib/oauth-providers.js';
+import { createAuthorizationRequest, exchangeAuthorizationCode, GOOGLE_SCOPES_JOINED } from '../lib/oauth-providers.js';
 import { fetchOAuthProfile } from '../lib/oauth-profile.js';
 import { clearOAuthStateCookie, readOAuthStateCookie, setOAuthStateCookie } from '../lib/oauth-state.js';
 import { createRefreshTokenFamily, revokeRefreshToken, rotateRefreshToken } from '../lib/refresh-tokens.js';
 import { findUserById, upsertUserByEmail } from '../services/users.js';
+import { upsertGoogleOauthTokens } from '../services/google-photos.js';
 
 export const authRouter: Router = Router();
 
@@ -71,6 +72,20 @@ authRouter.get(
         avatarUrl: profile.avatarUrl,
       }),
     );
+
+    // Store Google OAuth tokens for Google Photos access
+    if (provider === 'google') {
+      await withTenant((client) =>
+        upsertGoogleOauthTokens(client, {
+          tenantId,
+          userId: user.id,
+          accessToken: tokens.accessToken(),
+          refreshToken: tokens.hasRefreshToken() ? tokens.refreshToken() : null,
+          expiresAt: tokens.accessTokenExpiresAt(),
+          scopes: tokens.hasScopes() ? tokens.scopes().join(' ') : GOOGLE_SCOPES_JOINED,
+        }),
+      );
+    }
 
     const issued = await withTenant((client) =>
       createRefreshTokenFamily(client, {

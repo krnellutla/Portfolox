@@ -4,9 +4,11 @@ import { env } from '../config/env.js';
 import { AppError } from './app-error.js';
 
 const OAUTH_SCOPES: Record<AuthProvider, string[]> = {
-  google: ['openid', 'email', 'profile'],
+  google: ['openid', 'email', 'profile', 'https://www.googleapis.com/auth/photoslibrary.readonly'],
   github: ['read:user', 'user:email'],
 };
+
+export const GOOGLE_SCOPES_JOINED = OAUTH_SCOPES.google.join(' ');
 
 function redirectURI(provider: AuthProvider): string {
   return `${env.OAUTH_REDIRECT_BASE_URL}/auth/${provider}/callback`;
@@ -43,6 +45,9 @@ export function createAuthorizationRequest(provider: AuthProvider): Authorizatio
   if (provider === 'google') {
     const codeVerifier = generateCodeVerifier();
     const url = getGoogleProvider().createAuthorizationURL(state, codeVerifier, OAUTH_SCOPES.google);
+    // Request offline access so Google returns a refresh token
+    url.searchParams.set('access_type', 'offline');
+    url.searchParams.set('prompt', 'consent');
     return { url, state, codeVerifier };
   }
 

@@ -25,6 +25,7 @@ export const nodes = pgTable(
     position: integer('position').notNull().default(0),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    googleAlbumId: text('google_album_id'),
   },
   (table) => [
     index('nodes_tenant_parent_idx').on(table.tenantId, table.parentId),

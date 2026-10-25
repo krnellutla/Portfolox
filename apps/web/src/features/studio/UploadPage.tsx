@@ -1,11 +1,12 @@
 import { useRef, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { TopNav } from '../../components/nav/TopNav.js';
 import { Eyebrow } from '../../components/ui/Eyebrow.js';
 import { useEyebrow } from '../../lib/eyebrow.js';
 import { StateView } from '../../components/ui/StateView.js';
 import { SkeletonRow } from '../../components/ui/Skeleton.js';
 import { getMyGalleries } from '../../api/me.js';
+import { getGooglePhotosStatus, listGoogleAlbums, syncGoogleAlbum } from '../../api/google-photos.js';
 import { qk } from '../../lib/query-client.js';
 import { seedThumbUrl } from '../../lib/seed-photos.js';
 
@@ -49,7 +50,35 @@ export default function UploadPage() {
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [frames] = useState<Frame[]>(INIT_FRAMES);
   const [draggingOver, setDraggingOver] = useState(false);
+  const [syncingAlbumId, setSyncingAlbumId] = useState<string | null>(null);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
+
+  const { data: gPhotosStatus } = useQuery({
+    queryKey: ['google-photos', 'status'],
+    queryFn: getGooglePhotosStatus,
+  });
+
+  const { data: gAlbums, isLoading: gAlbumsLoading, error: gAlbumsError } = useQuery({
+    queryKey: ['google-photos', 'albums'],
+    queryFn: listGoogleAlbums,
+    enabled: gPhotosStatus?.connected === true,
+  });
+
+  async function handleSyncAlbum(albumId: string) {
+    setSyncingAlbumId(albumId);
+    setSyncMessage(null);
+    try {
+      const result = await syncGoogleAlbum(albumId);
+      setSyncMessage(`Synced ${result.synced} photos to "${result.albumTitle}"`);
+      void queryClient.invalidateQueries({ queryKey: qk.myGalleries() });
+    } catch {
+      setSyncMessage('Sync failed — please try again');
+    } finally {
+      setSyncingAlbumId(null);
+    }
+  }
 
   const { data: galleries, isLoading: galleriesLoading } = useQuery({
     queryKey: qk.myGalleries(),
@@ -293,6 +322,76 @@ export default function UploadPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+          {/* Google Photos import panel */}
+          <div className="bg-surface border border-line rounded-card overflow-hidden">
+            <div className="px-5 pt-5 pb-3.5 border-b border-line flex items-center gap-2">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="shrink-0">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" fill="#4285F4"/>
+                <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5z" fill="white"/>
+              </svg>
+              <p className="font-serif text-[20px] font-[500] text-ink">Import from Google Photos</p>
+            </div>
+
+            <div className="p-5">
+              {!gPhotosStatus?.connected ? (
+                <div className="flex flex-col items-start gap-3">
+                  <p className="text-[13.5px] text-ink-3">Connect your Google account to import albums directly into your studio.</p>
+                  <a
+                    href={`/api/auth/google?next=/studio/upload`}
+                    className="px-5 py-[10px] bg-ink text-paper rounded-[9px] font-semibold text-[13.5px] hover:bg-ink-2 transition-colors"
+                  >
+                    Connect Google Photos
+                  </a>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {syncMessage && (
+                    <div className="px-4 py-2.5 rounded-[8px] bg-positive/10 text-positive font-mono text-[11.5px]">
+                      {syncMessage}
+                    </div>
+                  )}
+                  {gAlbumsLoading ? (
+                    <div className="flex flex-col gap-2">
+                      {Array.from({ length: 3 }).map((_, i) => <SkeletonRow key={i} />)}
+                    </div>
+                  ) : gAlbumsError ? (
+                    <StateView variant="error" title="Could not load albums" description="Try reconnecting Google Photos." />
+                  ) : !gAlbums?.length ? (
+                    <StateView variant="empty" title="No albums found" description="Create an album in Google Photos first." />
+                  ) : (
+                    <div className="flex flex-col divide-y divide-line-2">
+                      {gAlbums.map((album) => (
+                        <div key={album.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                          {album.coverPhotoBaseUrl ? (
+                            <img
+                              src={`${album.coverPhotoBaseUrl}=w80-h80-c`}
+                              alt={album.title}
+                              className="w-10 h-10 rounded-[6px] shrink-0 object-cover"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-[6px] bg-canvas shrink-0" />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[13.5px] font-semibold text-ink truncate">{album.title}</p>
+                            {album.mediaItemsCount && (
+                              <p className="font-mono text-[10px] text-muted">{album.mediaItemsCount} photos</p>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => void handleSyncAlbum(album.id)}
+                            disabled={syncingAlbumId === album.id}
+                            className="shrink-0 px-4 py-[8px] rounded-[8px] bg-ink text-paper font-semibold text-[12.5px] hover:bg-ink-2 disabled:opacity-50 disabled:cursor-wait transition-colors"
+                          >
+                            {syncingAlbumId === album.id ? 'Syncing…' : 'Sync'}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
