@@ -13,3 +13,7 @@ coverage/
 # Design handoff assets (local only)
 design_ux/
 *.zip
+
+# Local only
+PortfolioSite/
+.claude/worktrees/
