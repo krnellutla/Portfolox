@@ -3,6 +3,7 @@ import {
   uuid,
   text,
   integer,
+  boolean,
   timestamp,
   index,
   uniqueIndex,
@@ -26,6 +27,9 @@ export const nodes = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
     googleAlbumId: text('google_album_id'),
+    shareToken: uuid('share_token').defaultRandom().unique(),
+    passwordHash: text('password_hash'),
+    isPasswordProtected: boolean('is_password_protected').notNull().default(false),
   },
   (table) => [
     index('nodes_tenant_parent_idx').on(table.tenantId, table.parentId),

@@ -24,6 +24,7 @@ const ChatPage = lazy(() => import('./features/chat/ChatPage.js'));
 const GalleryBuilderPage = lazy(() => import('./features/studio/GalleryBuilderPage.js'));
 const PostDetailPage = lazy(() => import('./features/community/PostDetailPage.js'));
 const OrdersPage = lazy(() => import('./features/studio/OrdersPage.js'));
+const ClientGallery = lazy(() => import('./pages/viewer/ClientGallery.js'));
 
 function RouteFallback() {
   return <StateView variant="loading" title="Loading…" fullScreen />;
@@ -57,6 +58,7 @@ function App() {
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/studio/builder" element={<GalleryBuilderPage />} />
             <Route path="/studio/orders" element={<OrdersPage />} />
+            <Route path="/gallery/:shareToken" element={<ClientGallery />} />
 
             <Route path="/dashboard" element={<Navigate to="/studio/dashboard" replace />} />
             <Route path="/dashboard/*" element={<Navigate to="/studio/dashboard" replace />} />

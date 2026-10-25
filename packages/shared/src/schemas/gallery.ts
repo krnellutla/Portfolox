@@ -17,6 +17,8 @@ export const gallerySchema = z.object({
   printsForSale: z.boolean(),
   photoOrder: z.array(z.string()),
   counts: z.object({ frames: z.number(), views: z.number() }),
+  shareToken: z.string().nullable().optional(),
+  isPasswordProtected: z.boolean().optional(),
 });
 export type Gallery = z.infer<typeof gallerySchema>;
 
@@ -38,3 +40,15 @@ export const createGallerySchema = z.object({ title: z.string().min(1) });
 export const updateGallerySchema = gallerySchema
   .pick({ title: true, description: true, visibility: true, layout: true, printsForSale: true })
   .partial();
+
+// Password protection
+export const galleryProtectSchema = z.object({
+  password: z.string().min(6).nullable(),
+});
+export type GalleryProtect = z.infer<typeof galleryProtectSchema>;
+
+export const galleryProtectResultSchema = z.object({
+  shareToken: z.string(),
+  isPasswordProtected: z.boolean(),
+});
+export type GalleryProtectResult = z.infer<typeof galleryProtectResultSchema>;

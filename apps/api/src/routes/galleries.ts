@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { randomUUID } from 'crypto';
 import { asyncHandler } from '../lib/async-handler.js';
 import { AppError } from '../lib/app-error.js';
+import { hashPassword } from './client-gallery.js';
 
 export const galleriesRouter: Router = Router();
 
@@ -18,6 +19,8 @@ function nodeToGallery(r: Record<string, unknown>, tenantId: string) {
     printsForSale: false,
     photoOrder: [],
     counts: { frames: 0, views: 0 },
+    shareToken: (r.share_token as string | null) ?? null,
+    isPasswordProtected: (r.is_password_protected as boolean | null) ?? false,
   };
 }
 
@@ -25,7 +28,7 @@ galleriesRouter.get('/me/galleries', asyncHandler(async (req, res) => {
   if (!req.user || !req.withTenant) throw AppError.unauthorized('Not authenticated');
 
   const rows = await req.withTenant((client) =>
-    client.query(`SELECT id, name FROM nodes WHERE type = 'gallery' ORDER BY position`),
+    client.query(`SELECT id, name, share_token, is_password_protected FROM nodes WHERE type = 'gallery' ORDER BY position`),
   );
   res.json({ data: rows.rows.map((r) => nodeToGallery(r as Record<string, unknown>, req.user!.tenantId)), error: null });
 }));
@@ -72,6 +75,43 @@ galleriesRouter.patch('/me/galleries/:id', asyncHandler(async (req, res) => {
 
 galleriesRouter.put('/me/galleries/:id/order', asyncHandler(async (_req, res) => {
   res.json({ data: { ok: true }, error: null });
+}));
+
+// POST /me/galleries/:id/protect — set or clear gallery password
+const protectGallerySchema = z.object({ password: z.string().min(6).nullable() });
+
+galleriesRouter.post('/me/galleries/:id/protect', asyncHandler(async (req, res) => {
+  if (!req.user || !req.withTenant) throw AppError.unauthorized('Not authenticated');
+  const { id } = req.params;
+  const { password } = protectGallerySchema.parse(req.body);
+
+  if (password !== null) {
+    const hashed = await hashPassword(password);
+    await req.withTenant((client) =>
+      client.query(
+        `UPDATE nodes SET password_hash = $1, is_password_protected = true WHERE id = $2 AND type = 'gallery'`,
+        [hashed, id],
+      ),
+    );
+  } else {
+    await req.withTenant((client) =>
+      client.query(
+        `UPDATE nodes SET password_hash = NULL, is_password_protected = false WHERE id = $1 AND type = 'gallery'`,
+        [id],
+      ),
+    );
+  }
+
+  const row = await req.withTenant((client) =>
+    client.query(`SELECT share_token, is_password_protected FROM nodes WHERE id = $1`, [id]),
+  );
+  if (!row.rows[0]) throw AppError.notFound('Gallery not found');
+  const r = row.rows[0] as { share_token: string; is_password_protected: boolean };
+
+  res.json({
+    data: { shareToken: r.share_token, isPasswordProtected: r.is_password_protected },
+    error: null,
+  });
 }));
 
 galleriesRouter.patch('/me/photos/:id', asyncHandler(async (req, res) => {

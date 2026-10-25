@@ -27,6 +27,7 @@ import { Input } from '../../components/ui/Input.js';
 import { Toggle } from '../../components/ui/Toggle.js';
 import { StateView } from '../../components/ui/StateView.js';
 import { getMyGalleries, reorderGallery, updateGallery } from '../../api/me.js';
+import { protectGallery, galleryShareUrl } from '../../api/client-gallery.js';
 import { qk, queryClient } from '../../lib/query-client.js';
 import { seedPhotoUrl } from '../../lib/seed-photos.js';
 import type { Gallery } from '@blueflutes/shared';
@@ -103,6 +104,11 @@ export default function GalleryBuilderPage() {
   const [frames, setFrames] = useState<Frame[]>(PLACEHOLDER_FRAMES);
   const [activeId, setActiveId] = useState<string | null>(null);
 
+  // Share & Privacy state
+  const [passwordProtect, setPasswordProtect] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [copied, setCopied] = useState(false);
+
   useEffect(() => {
     if (selectedGallery) {
       setTitle(selectedGallery.title);
@@ -110,6 +116,9 @@ export default function GalleryBuilderPage() {
       setVisibility(selectedGallery.visibility === 'public');
       setPrintsForSale(selectedGallery.printsForSale);
       setLayout(selectedGallery.layout as GalleryLayout);
+      // Sync password protection state from server
+      setPasswordProtect(selectedGallery.isPasswordProtected ?? false);
+      setPasswordInput('');
     }
   }, [selectedGallery?.id]);
 
@@ -126,6 +135,15 @@ export default function GalleryBuilderPage() {
       updateGallery(selectedGallery!.id, patch),
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: qk.myGalleries() });
+    },
+  });
+
+  const protectMutation = useMutation({
+    mutationFn: ({ id, password }: { id: string; password: string | null }) =>
+      protectGallery(id, password),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: qk.myGalleries() });
+      setPasswordInput('');
     },
   });
 
@@ -287,6 +305,78 @@ export default function GalleryBuilderPage() {
                     ))}
                   </div>
                   <p className="font-mono text-[10px] text-muted mt-1.5 capitalize">{layout}</p>
+                </div>
+
+                {/* Share & Privacy */}
+                <div className="pt-4 border-t border-line">
+                  <p className="font-mono text-[10.5px] uppercase tracking-label text-muted mb-3">Share & Privacy</p>
+
+                  {/* Share link */}
+                  {selectedGallery?.shareToken && (
+                    <div className="mb-3">
+                      <label className="block font-mono text-[10px] text-muted mb-1.5">Share link</label>
+                      <div className="flex gap-1.5">
+                        <input
+                          readOnly
+                          value={galleryShareUrl(selectedGallery.shareToken)}
+                          className="flex-1 min-w-0 px-2.5 py-2 bg-canvas border border-field rounded-[8px] font-mono text-[10px] text-ink-3 outline-none truncate"
+                        />
+                        <button
+                          onClick={() => {
+                            void navigator.clipboard.writeText(galleryShareUrl(selectedGallery.shareToken!)).then(() => {
+                              setCopied(true);
+                              setTimeout(() => setCopied(false), 1500);
+                            });
+                          }}
+                          className="px-2.5 py-2 bg-surface border border-field rounded-[8px] font-mono text-[10px] text-ink hover:border-ink transition-colors whitespace-nowrap"
+                        >
+                          {copied ? 'Copied!' : 'Copy'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Password protection toggle */}
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <p className="text-[13.5px] font-semibold text-ink">Password protect</p>
+                      <p className="font-mono text-[10px] text-muted mt-0.5">
+                        {passwordProtect ? 'On' : 'Off'}
+                      </p>
+                    </div>
+                    <Toggle
+                      checked={passwordProtect}
+                      onChange={(v) => {
+                        setPasswordProtect(v);
+                        if (!v && selectedGallery) {
+                          protectMutation.mutate({ id: selectedGallery.id, password: null });
+                        }
+                      }}
+                    />
+                  </div>
+
+                  {passwordProtect && (
+                    <div className="flex gap-1.5 mt-1">
+                      <input
+                        type="password"
+                        placeholder="New password (min 6)"
+                        value={passwordInput}
+                        onChange={(e) => setPasswordInput(e.target.value)}
+                        className="flex-1 min-w-0 px-3 py-2 bg-canvas border border-field rounded-[8px] text-[13px] text-ink outline-none focus:border-ink transition-colors"
+                      />
+                      <button
+                        onClick={() => {
+                          if (selectedGallery && passwordInput.length >= 6) {
+                            protectMutation.mutate({ id: selectedGallery.id, password: passwordInput });
+                          }
+                        }}
+                        disabled={passwordInput.length < 6 || protectMutation.isPending}
+                        className="px-3 py-2 bg-ink text-paper rounded-[8px] font-semibold text-[13px] hover:bg-ink-2 disabled:opacity-40 transition-colors whitespace-nowrap"
+                      >
+                        {protectMutation.isPending ? '…' : 'Save'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </aside>
