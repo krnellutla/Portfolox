@@ -61,8 +61,10 @@ function HeroSection() {
       <img
         src={CITY_LANDSCAPES[0]!.src}
         alt={CITY_LANDSCAPES[0]!.alt}
-        className="h-full w-full object-cover object-center"
+        className="photo-protected h-full w-full object-cover object-center"
         fetchPriority="high"
+        draggable={false}
+        onContextMenu={(e) => e.preventDefault()}
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/20 to-black/70" />
       <div className="absolute inset-0 flex flex-col items-center justify-end px-4 pb-20 text-center text-white">
@@ -112,7 +114,9 @@ function GallerySection({ title, eyebrow, photos }: { title: string; eyebrow: st
                 src={photo.src}
                 alt={photo.alt}
                 loading="lazy"
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                draggable={false}
+                onContextMenu={(e) => e.preventDefault()}
+                className="photo-protected w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
               />
             </div>
           ))}
@@ -152,8 +156,10 @@ function AboutSection() {
             <img
               src="/portfolio/profilepic.jpg"
               alt="Krishna Nellutla"
-              className="w-full object-cover"
+              className="photo-protected w-full object-cover"
               loading="lazy"
+              draggable={false}
+              onContextMenu={(e) => e.preventDefault()}
             />
           </div>
         </div>

@@ -97,8 +97,10 @@ function GalleryGrid({ photoOrder, title }: { photoOrder: string[]; title: strin
               <img
                 src={seedPhotoUrl(i)}
                 alt=""
-                className="w-full h-full object-cover"
+                className="photo-protected w-full h-full object-cover"
                 loading="lazy"
+                draggable={false}
+                onContextMenu={(e) => e.preventDefault()}
               />
             </div>
           ))}

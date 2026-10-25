@@ -36,7 +36,23 @@ export function PhotoTile({
       onClick={onClick}
     >
       {src ? (
-        <img src={src} alt={alt} className="absolute inset-0 h-full w-full object-cover" />
+        <>
+          <img
+            src={src}
+            alt={alt}
+            loading="lazy"
+            decoding="async"
+            draggable={false}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          {/* Transparent overlay intercepts right-click and drag without blocking click events */}
+          <span
+            className="absolute inset-0 z-[1]"
+            onContextMenu={(e) => e.preventDefault()}
+            onDragStart={(e) => e.preventDefault()}
+            aria-hidden="true"
+          />
+        </>
       ) : (
         <span
           className="absolute inset-0"

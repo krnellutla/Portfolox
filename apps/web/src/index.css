@@ -98,3 +98,10 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0.6; }
 }
+
+/* Prevent iOS long-press save and native drag on protected gallery images */
+.photo-protected {
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+  user-select: none;
+}
