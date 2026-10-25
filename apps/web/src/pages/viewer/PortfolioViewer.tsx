@@ -97,17 +97,26 @@ function GallerySection({ title, eyebrow, photos }: { title: string; eyebrow: st
           <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-gray-400">{eyebrow}</p>
           <h2 className="text-2xl font-light tracking-tight text-gray-900">{title}</h2>
         </div>
-        <div className="columns-1 gap-4 sm:columns-2 lg:columns-3">
+        <div className="flex flex-wrap" style={{ gap: '4px' }}>
           {photos.map((photo, i) => (
-            <div key={i} className="group mb-4 overflow-hidden rounded-lg break-inside-avoid">
+            <div
+              key={i}
+              className="group overflow-hidden rounded-sm"
+              style={{
+                height: '220px',
+                flexGrow: 1,
+                flexBasis: photo.orientation === 'portrait' ? '150px' : '280px',
+              }}
+            >
               <img
                 src={photo.src}
                 alt={photo.alt}
                 loading="lazy"
-                className="w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
               />
             </div>
           ))}
+          <div style={{ flexGrow: 10, flexBasis: '280px', height: '220px' }} aria-hidden />
         </div>
       </div>
     </section>
