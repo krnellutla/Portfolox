@@ -257,7 +257,7 @@ function PhotoTile({ photo, onOpen }: { photo: Photo; onOpen: () => void }) {
       aria-label={`View ${photo.caption}`}
     >
       {/* Image */}
-      <div className="overflow-hidden">
+      <div className="overflow-hidden rounded-xl">
         <img
           src={photo.src}
           alt={photo.alt}
