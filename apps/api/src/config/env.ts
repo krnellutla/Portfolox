@@ -58,6 +58,9 @@ const envSchema = z.object({
   // Redis (optional — gallery responses are cached when set)
   REDIS_URL: z.string().url().optional(),
 
+  // Queue provider: 'bullmq' requires REDIS_URL; 'inline' processes synchronously
+  QUEUE_PROVIDER: z.enum(['bullmq', 'inline']).default('inline'),
+
   // Storage (S3-compatible: AWS S3, Cloudflare R2, MinIO, Supabase Storage)
   STORAGE_PROVIDER: z.enum(['s3', 'supabase', 'fake']).default('fake'),
   STORAGE_BUCKET: z.string().min(1).optional(),
@@ -110,6 +113,14 @@ const envSchema = z.object({
         });
       }
     }
+  }
+
+  if (data.QUEUE_PROVIDER === 'bullmq' && !data.REDIS_URL) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'REDIS_URL is required when QUEUE_PROVIDER=bullmq',
+      path: ['REDIS_URL'],
+    });
   }
 });
 

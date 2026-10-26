@@ -14,6 +14,7 @@ import {
   presignResponseSchema,
 } from '@blueflutes/shared';
 import { createHash, randomUUID } from 'node:crypto';
+import { Redis } from 'ioredis';
 import { Router } from 'express';
 import { z } from 'zod';
 import { env } from '../config/env.js';
@@ -32,6 +33,24 @@ import {
 const mediaQuerySchema = z.object({
   nodeId: z.string().uuid(),
 });
+
+const mediaStatusParamsSchema = z.object({
+  id: z.string().uuid(),
+});
+
+// Lazily-created Redis client for job status lookups (reuses REDIS_URL if set)
+let _statusRedis: Redis | null = null;
+function getStatusRedis(): Redis | null {
+  if (!env.REDIS_URL) return null;
+  if (!_statusRedis) {
+    _statusRedis = new Redis(env.REDIS_URL, {
+      lazyConnect: true,
+      enableReadyCheck: false,
+      maxRetriesPerRequest: 1,
+    });
+  }
+  return _statusRedis;
+}
 
 function buildSyntheticVariants(
   storage: StorageProvider,
@@ -172,6 +191,59 @@ export function createMediaPublicRouter(storage: StorageProvider): Router {
     }),
   );
 
+  // ── GET /media/:id/status ─────────────────────────────────────────────────
+  // Public polling endpoint — checks Redis job:status key first, falls back to DB.
+  // Used by the upload widget to poll until the asset reaches 'ready' or 'failed'.
+
+  router.get(
+    '/media/:id/status',
+    validate({ params: mediaStatusParamsSchema }),
+    asyncHandler(async (req, res) => {
+      if (!req.tenant || !req.withTenant) {
+        throw AppError.notFound('Tenant not found for this host');
+      }
+
+      const { id } = req.params as { id: string };
+
+      // Fast path: check Redis job status key
+      const redis = getStatusRedis();
+      if (redis) {
+        try {
+          const cached = await redis.get(`job:status:${id}`);
+          if (cached === 'ready' || cached === 'failed') {
+            const body: ApiEnvelope<{ assetId: string; status: string }> = {
+              data: { assetId: id, status: cached },
+              error: null,
+            };
+            res.json(body);
+            return;
+          }
+        } catch {
+          // Redis unavailable — fall through to DB
+        }
+      }
+
+      // Slow path: DB lookup
+      const row = await req.withTenant(async (client) => {
+        const result = await client.query(
+          'SELECT id, status FROM media_assets WHERE id = $1',
+          [id],
+        );
+        return result.rows[0] as { id: string; status: string } | undefined;
+      });
+
+      if (!row) {
+        throw AppError.notFound('Media asset not found');
+      }
+
+      const body: ApiEnvelope<{ assetId: string; status: string }> = {
+        data: { assetId: row.id, status: row.status },
+        error: null,
+      };
+      res.json(body);
+    }),
+  );
+
   return router;
 }
 
@@ -291,7 +363,7 @@ export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): R
         return row.rows[0];
       });
 
-      await enqueue({ tenantId: req.tenant.id, assetId: id });
+      await enqueue({ tenantId: req.tenant.id, assetId: id, nodeId: asset.node_id as string });
       void invalidateGallery(req.tenant.id, asset.node_id as string);
 
       const data: MediaAsset = mediaAssetSchema.parse({
@@ -312,7 +384,7 @@ export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): R
       });
 
       const body: ApiEnvelope<MediaAsset> = { data, error: null };
-      res.json(body);
+      res.status(202).json(body);
     }),
   );
 

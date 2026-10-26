@@ -28,6 +28,9 @@ export const mediaAssets = pgTable(
     thumbnailUrl: text('thumbnail_url'),
     cachedUrl: text('cached_url'),
     cachedUntil: timestamp('cached_until', { withTimezone: true }),
+    processingError: text('processing_error'),
+    processingAt: timestamp('processing_at', { withTimezone: true }),
+    readyAt: timestamp('ready_at', { withTimezone: true }),
   },
   (table) => [
     index('media_assets_tenant_node_position_idx').on(

@@ -1,4 +1,5 @@
 import cookieParser from 'cookie-parser';
+import { env } from './config/env.js';
 import express, { type Express } from 'express';
 import type { Pool } from 'pg';
 import { pool } from './db/client.js';
@@ -29,7 +30,7 @@ import { analyticsRouter } from './routes/analytics.js';
 import { studioOrdersRouter } from './routes/studio-orders.js';
 import { googlePhotosRouter } from './routes/google-photos.js';
 import { tenantSettingsPublicRouter, tenantSettingsRouter } from './routes/tenant-settings.js';
-import { createInProcessEnqueue } from './services/media/queue.js';
+import { createBullMQEnqueue, createInProcessEnqueue } from './services/media/queue.js';
 import type { Enqueue } from './services/media/queue.js';
 import { createStorageProvider, type StorageProvider } from './services/storage/index.js';
 
@@ -39,10 +40,17 @@ import { createStorageProvider, type StorageProvider } from './services/storage/
  * discover, photographers, photos, search, plans, community, conversations,
  * client gallery) -> requireAuth guard -> protected write routes.
  */
+function createDefaultEnqueue(pool: Pool, storage: StorageProvider): Enqueue {
+  if (env.QUEUE_PROVIDER === 'bullmq' && env.REDIS_URL) {
+    return createBullMQEnqueue(env.REDIS_URL);
+  }
+  return createInProcessEnqueue({ pool, storage });
+}
+
 export function createApp(
   dbPool: Pool = pool,
   storageProvider: StorageProvider = createStorageProvider(),
-  enqueue: Enqueue = createInProcessEnqueue({ pool: dbPool, storage: storageProvider }),
+  enqueue: Enqueue = createDefaultEnqueue(dbPool, storageProvider),
 ): Express {
   const app = express();
 

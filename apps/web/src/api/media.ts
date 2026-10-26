@@ -11,6 +11,11 @@ import {
 import { z } from 'zod';
 import { apiFetch, getAccessToken } from './client.js';
 
+const assetStatusResponseSchema = z.object({
+  assetId: z.string().uuid(),
+  status: z.string(),
+});
+
 // ── Public read (viewer) ──────────────────────────────────────────────────────
 
 export function getNodeMedia(nodeId: string): Promise<MediaListResponse> {
@@ -60,16 +65,58 @@ export function confirmUpload(
 export type UploadProgressEvent = { loaded: number; total: number };
 
 /**
+ * Polls GET /media/:id/status until the asset reaches 'ready' or 'failed'.
+ * Starts at 1.5 s, backs off to 10 s max, gives up after 120 s total.
+ */
+export async function pollAssetStatus(
+  assetId: string,
+  signal?: AbortSignal,
+): Promise<'ready' | 'failed'> {
+  const INITIAL_INTERVAL = 1500;
+  const MAX_INTERVAL = 10_000;
+  const TIMEOUT_MS = 120_000;
+  const started = Date.now();
+  let interval = INITIAL_INTERVAL;
+
+  while (true) {
+    if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+    if (Date.now() - started > TIMEOUT_MS) return 'failed';
+
+    await new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(resolve, interval);
+      signal?.addEventListener('abort', () => { clearTimeout(timer); reject(new DOMException('Aborted', 'AbortError')); }, { once: true });
+    });
+
+    try {
+      const { status } = await apiFetch(
+        `/media/${assetId}/status`,
+        { method: 'GET' },
+        assetStatusResponseSchema,
+      );
+      if (status === 'ready' || status === 'failed') return status;
+    } catch {
+      // Transient error — keep polling
+    }
+
+    interval = Math.min(interval * 1.5, MAX_INTERVAL);
+  }
+}
+
+/**
  * Reads image dimensions from a File using createImageBitmap (with HTMLImageElement
- * fallback), then orchestrates presign → PUT to storage → confirm.
+ * fallback), then orchestrates presign → PUT to storage → confirm → poll ready.
  *
  * Uses XMLHttpRequest for the storage PUT so we can report upload progress.
  * apiFetch handles the presign/confirm API calls as normal (with auth + retry).
+ *
+ * When onStatusChange is provided it receives 'uploading' | 'processing' | 'ready' | 'failed'
+ * status transitions so the UI can show granular progress.
  */
 export async function uploadFile(
   nodeId: string,
   file: File,
   onProgress?: (e: UploadProgressEvent) => void,
+  onStatusChange?: (status: 'uploading' | 'processing' | 'ready' | 'failed') => void,
 ): Promise<MediaAsset> {
   const { width, height } = await getImageDimensions(file);
 
@@ -80,9 +127,22 @@ export async function uploadFile(
     byteSize: file.size,
   });
 
+  onStatusChange?.('uploading');
   await putToStorage(uploadUrl, file, onProgress);
 
-  return confirmUpload(assetId, { width, height });
+  onStatusChange?.('processing');
+  const asset = await confirmUpload(assetId, { width, height });
+
+  // If the server returned 'processing', poll until ready/failed
+  if (asset.status === 'processing') {
+    const finalStatus = await pollAssetStatus(assetId);
+    onStatusChange?.(finalStatus);
+    // Return the asset with the final status reflected
+    return { ...asset, status: finalStatus };
+  }
+
+  onStatusChange?.('ready');
+  return asset;
 }
 
 // ── Asset management ──────────────────────────────────────────────────────────
