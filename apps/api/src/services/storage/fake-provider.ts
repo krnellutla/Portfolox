@@ -40,6 +40,10 @@ export class FakeStorageProvider implements StorageProvider {
     return `${FAKE_BASE_URL}/${key}`;
   }
 
+  async getSignedReadUrl(key: string, expiresIn = 3600): Promise<string> {
+    return `${FAKE_BASE_URL}/${key}?X-Amz-Expires=${expiresIn}&X-Amz-Signature=fake`;
+  }
+
   async getObject(key: string): Promise<Buffer> {
     const stored = this.objects.get(key);
     if (!stored) {

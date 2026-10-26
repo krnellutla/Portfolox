@@ -63,6 +63,11 @@ export class S3StorageProvider implements StorageProvider {
     return `${this.publicBaseUrl}/${key}`;
   }
 
+  async getSignedReadUrl(key: string, expiresIn = 3600): Promise<string> {
+    const command = new GetObjectCommand({ Bucket: this.bucket, Key: key });
+    return getSignedUrl(this.client, command, { expiresIn });
+  }
+
   async getObject(key: string): Promise<Buffer> {
     const command = new GetObjectCommand({ Bucket: this.bucket, Key: key });
     const response = await this.client.send(command);

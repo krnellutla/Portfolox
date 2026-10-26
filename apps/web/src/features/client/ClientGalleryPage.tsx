@@ -381,12 +381,22 @@ export default function ClientGalleryPage() {
           className="fixed inset-0 z-50 bg-ink/90 flex items-center justify-center"
           onClick={() => setLightboxId(null)}
         >
-          <img
-            src={photos.find((p) => p.id === lightboxId)?.url}
-            alt=""
-            className="max-h-[90vh] max-w-[90vw] object-contain rounded-lg"
-            onClick={(e) => e.stopPropagation()}
-          />
+          <div className="relative" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={photos.find((p) => p.id === lightboxId)?.url}
+              alt=""
+              draggable={false}
+              onContextMenu={(e) => e.preventDefault()}
+              onDragStart={(e) => e.preventDefault()}
+              className="photo-protected max-h-[90vh] max-w-[90vw] object-contain rounded-lg"
+            />
+            <div
+              style={{ position: 'absolute', inset: 0 }}
+              onContextMenu={(e) => e.preventDefault()}
+              onDragStart={(e) => e.preventDefault()}
+              aria-hidden="true"
+            />
+          </div>
         </div>
       )}
     </div>

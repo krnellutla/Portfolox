@@ -26,7 +26,10 @@ export function CollectionCard({ collection, coverOffset = 0, onClick }: Collect
             key={i}
             src={src}
             alt=""
-            className="w-full h-full object-cover"
+            draggable={false}
+            onContextMenu={(e) => e.preventDefault()}
+            onDragStart={(e) => e.preventDefault()}
+            className="photo-protected w-full h-full object-cover"
           />
         ))}
       </div>

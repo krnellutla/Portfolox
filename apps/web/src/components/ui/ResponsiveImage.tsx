@@ -15,6 +15,8 @@ export function ResponsiveImage({ asset, sizes = '100vw', className, alt = '' }:
 
   const src = sorted.length > 0 ? (sorted[sorted.length - 1]?.url ?? asset.url) : asset.url;
 
+  const blockSave = (e: React.MouseEvent | React.DragEvent) => e.preventDefault();
+
   return (
     <img
       src={src}
@@ -25,7 +27,10 @@ export function ResponsiveImage({ asset, sizes = '100vw', className, alt = '' }:
       alt={alt}
       loading="lazy"
       decoding="async"
-      className={className}
+      draggable={false}
+      onContextMenu={blockSave}
+      onDragStart={blockSave}
+      className={`photo-protected${className ? ` ${className}` : ''}`}
     />
   );
 }

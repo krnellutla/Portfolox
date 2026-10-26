@@ -17,7 +17,7 @@ import { nodesRouter } from './routes/nodes.js';
 import { createNodesWriteRouter } from './routes/nodes-write.js';
 import { discoverRouter } from './routes/discover.js';
 import { photographersRouter } from './routes/photographers.js';
-import { photosRouter } from './routes/photos.js';
+import { createPhotosRouter } from './routes/photos.js';
 import { searchRouter } from './routes/search-route.js';
 import { plansRouter } from './routes/plans.js';
 import { communityRouter } from './routes/community.js';
@@ -65,7 +65,7 @@ export function createApp(
   app.use(createMediaPublicRouter());
   app.use(discoverRouter);
   app.use(photographersRouter);
-  app.use(photosRouter);
+  app.use(createPhotosRouter(storageProvider));
   app.use(searchRouter);
   app.use(plansRouter);
   app.use(communityRouter);

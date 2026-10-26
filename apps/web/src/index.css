@@ -111,3 +111,10 @@ body {
   -webkit-user-drag: none;
   user-select: none;
 }
+
+/* Hide protected images from print / Print-to-PDF */
+@media print {
+  .photo-protected {
+    visibility: hidden;
+  }
+}

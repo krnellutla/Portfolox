@@ -23,6 +23,9 @@ export interface StorageProvider {
 
   getPublicUrl(key: string): string;
 
+  /** Returns a short-lived signed URL for reading an object (default 1 hour). */
+  getSignedReadUrl(key: string, expiresIn?: number): Promise<string>;
+
   getObject(key: string): Promise<Buffer>;
 
   putObject(params: PutObjectParams): Promise<void>;

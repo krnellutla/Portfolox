@@ -3,16 +3,15 @@ import { z } from 'zod';
 import { randomUUID } from 'crypto';
 import { asyncHandler } from '../lib/async-handler.js';
 import { AppError } from '../lib/app-error.js';
+import type { StorageProvider } from '../services/storage/provider.js';
 
-export const photosRouter: Router = Router();
-
-function assetToPhoto(r: Record<string, unknown>) {
+function assetToPhoto(r: Record<string, unknown>, signedUrl: string) {
   return {
     id: r.id as string,
     code: `PFX-${(r.id as string).slice(0, 6).toUpperCase()}`,
     title: (r.original_filename as string).replace(/\.[^.]+$/, ''),
-    url: r.url as string,
-    thumbUrl: r.url as string,
+    url: signedUrl,
+    thumbUrl: signedUrl,
     width: (r.width as number) ?? 1200,
     height: (r.height as number) ?? 800,
     exif: { aperture: 'f/2.8', shutter: '1/250', iso: '400', focalLength: '50mm' },
@@ -25,62 +24,74 @@ function assetToPhoto(r: Record<string, unknown>) {
   };
 }
 
-photosRouter.get(
-  '/photos/:id',
-  asyncHandler(async (req, res) => {
-    if (!req.withTenant) throw AppError.notFound('Tenant not found');
-    const { id } = req.params;
-
-    const rows = await req.withTenant((client) =>
-      client.query(
-        `SELECT id, node_id, url, original_filename, width, height, tenant_id
-         FROM media_assets WHERE id = $1`,
-        [id],
-      ),
-    );
-    if (!rows.rows[0]) throw AppError.notFound('Photo not found');
-
-    res.json({ data: assetToPhoto(rows.rows[0] as Record<string, unknown>), error: null });
-  }),
-);
-
-photosRouter.post('/photos/:id/like', asyncHandler(async (_req, res) => {
-  res.json({ data: { liked: true, count: 1 }, error: null });
-}));
-
-photosRouter.delete('/photos/:id/like', asyncHandler(async (_req, res) => {
-  res.json({ data: { liked: false, count: 0 }, error: null });
-}));
-
-photosRouter.post('/photos/:id/favorite', asyncHandler(async (_req, res) => {
-  res.json({ data: { favorited: true }, error: null });
-}));
-
-photosRouter.delete('/photos/:id/favorite', asyncHandler(async (_req, res) => {
-  res.json({ data: { favorited: false }, error: null });
-}));
-
-photosRouter.get('/photos/:id/comments', asyncHandler(async (_req, res) => {
-  res.json({ data: [], error: null });
-}));
-
 const postCommentSchema = z.object({ body: z.string().min(1) });
-photosRouter.post(
-  '/photos/:id/comments',
-  asyncHandler(async (req, res) => {
-    const { id } = req.params;
-    const { body } = postCommentSchema.parse(req.body);
-    res.status(201).json({
-      data: {
-        id: randomUUID(),
-        parentType: 'photo',
-        parentId: id,
-        author: { id: req.user?.id ?? 'anon', displayName: 'You', avatarUrl: null },
-        body,
-        createdAt: new Date().toISOString(),
-        likes: 0,
-      },
-      error: null,
-    });
-  }),
-);
+
+export function createPhotosRouter(storage: StorageProvider): Router {
+  const router = Router();
+
+  router.get(
+    '/photos/:id',
+    asyncHandler(async (req, res) => {
+      if (!req.withTenant) throw AppError.notFound('Tenant not found');
+      const { id } = req.params;
+
+      const rows = await req.withTenant((client) =>
+        client.query(
+          `SELECT id, node_id, object_key, url, original_filename, width, height, tenant_id
+           FROM media_assets WHERE id = $1`,
+          [id],
+        ),
+      );
+      if (!rows.rows[0]) throw AppError.notFound('Photo not found');
+
+      const row = rows.rows[0] as Record<string, unknown>;
+      const signedUrl = row.object_key
+        ? await storage.getSignedReadUrl(row.object_key as string)
+        : (row.url as string);
+
+      res.json({ data: assetToPhoto(row, signedUrl), error: null });
+    }),
+  );
+
+  router.post('/photos/:id/like', asyncHandler(async (_req, res) => {
+    res.json({ data: { liked: true, count: 1 }, error: null });
+  }));
+
+  router.delete('/photos/:id/like', asyncHandler(async (_req, res) => {
+    res.json({ data: { liked: false, count: 0 }, error: null });
+  }));
+
+  router.post('/photos/:id/favorite', asyncHandler(async (_req, res) => {
+    res.json({ data: { favorited: true }, error: null });
+  }));
+
+  router.delete('/photos/:id/favorite', asyncHandler(async (_req, res) => {
+    res.json({ data: { favorited: false }, error: null });
+  }));
+
+  router.get('/photos/:id/comments', asyncHandler(async (_req, res) => {
+    res.json({ data: [], error: null });
+  }));
+
+  router.post(
+    '/photos/:id/comments',
+    asyncHandler(async (req, res) => {
+      const { id } = req.params;
+      const { body } = postCommentSchema.parse(req.body);
+      res.status(201).json({
+        data: {
+          id: randomUUID(),
+          parentType: 'photo',
+          parentId: id,
+          author: { id: req.user?.id ?? 'anon', displayName: 'You', avatarUrl: null },
+          body,
+          createdAt: new Date().toISOString(),
+          likes: 0,
+        },
+        error: null,
+      });
+    }),
+  );
+
+  return router;
+}

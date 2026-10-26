@@ -122,15 +122,36 @@ export default function LightboxPage() {
         {/* Center — image */}
         <div className="flex-1 flex flex-col items-center justify-center p-6 overflow-hidden">
           <div
-            className="max-w-[760px] w-full rounded-[12px] overflow-hidden"
+            className="relative max-w-[760px] w-full rounded-[12px] overflow-hidden"
             style={{ aspectRatio: '3/2', boxShadow: '0 24px 80px rgba(0,0,0,0.7)' }}
           >
-            <img src={heroSrc} alt={photo.title} className="w-full h-full object-cover" />
+            <img
+              src={heroSrc}
+              alt={photo.title}
+              draggable={false}
+              onContextMenu={(e) => e.preventDefault()}
+              onDragStart={(e) => e.preventDefault()}
+              className="photo-protected w-full h-full object-cover"
+            />
+            <div
+              style={{ position: 'absolute', inset: 0 }}
+              onContextMenu={(e) => e.preventDefault()}
+              onDragStart={(e) => e.preventDefault()}
+              aria-hidden="true"
+            />
           </div>
           {/* Thumbnail strip */}
           <div className="overflow-x-auto w-full mt-4 flex gap-2 lg:justify-center">
             {[0,1,2,3,4].map((i) => (
-              <img key={i} src={seedPhotoUrl(i, 120)} alt="" className="w-16 h-12 rounded-[6px] shrink-0 object-cover opacity-60 hover:opacity-100 cursor-pointer transition-opacity" />
+              <img
+                key={i}
+                src={seedPhotoUrl(i, 120)}
+                alt=""
+                draggable={false}
+                onContextMenu={(e) => e.preventDefault()}
+                onDragStart={(e) => e.preventDefault()}
+                className="photo-protected w-16 h-12 rounded-[6px] shrink-0 object-cover opacity-60 hover:opacity-100 cursor-pointer transition-opacity"
+              />
             ))}
           </div>
         </div>

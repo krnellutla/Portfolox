@@ -77,7 +77,14 @@ export default function PortfolioPage() {
 
       {/* Cover band */}
       <div className="relative h-[300px] overflow-hidden">
-        <img src={coverSrc} alt="Cover" className="absolute inset-0 w-full h-full object-cover" />
+        <img
+          src={coverSrc}
+          alt="Cover"
+          draggable={false}
+          onContextMenu={(e) => e.preventDefault()}
+          onDragStart={(e) => e.preventDefault()}
+          className="photo-protected absolute inset-0 w-full h-full object-cover"
+        />
         <div
           className="absolute inset-0"
           style={{ background: 'linear-gradient(180deg,rgba(0,0,0,0.05),rgba(244,243,240,0) 40%,#f4f3f0 100%)' }}
