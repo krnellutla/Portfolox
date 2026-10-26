@@ -108,7 +108,6 @@ function Lightbox({
         onContextMenu={(e) => e.preventDefault()}
       />
 
-      {/* Close */}
       <button
         onClick={onClose}
         className="absolute right-4 top-4 rounded-full p-1 text-white/60 transition-colors hover:text-white"
@@ -119,7 +118,6 @@ function Lightbox({
         </svg>
       </button>
 
-      {/* Prev */}
       {hasPrev && (
         <button
           onClick={(e) => { e.stopPropagation(); onPrev(); }}
@@ -132,7 +130,6 @@ function Lightbox({
         </button>
       )}
 
-      {/* Next */}
       {hasNext && (
         <button
           onClick={(e) => { e.stopPropagation(); onNext(); }}
@@ -145,7 +142,6 @@ function Lightbox({
         </button>
       )}
 
-      {/* Counter */}
       {photos.length > 1 && (
         <p className="absolute bottom-4 left-1/2 -translate-x-1/2 font-mono text-xs text-white/40">
           {index + 1} / {photos.length}
@@ -155,11 +151,57 @@ function Lightbox({
   );
 }
 
-// ─── Components ────────────────────────────────────────────────────────────
+// ─── Nav ───────────────────────────────────────────────────────────────────
+
+function Nav() {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  return (
+    <nav
+      className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
+        scrolled ? 'bg-[#f4f3f0]/90 backdrop-blur-sm border-b border-[#e0ded8]' : ''
+      }`}
+    >
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
+        <span className="font-sans text-sm font-medium tracking-wide text-gray-900">
+          Krishna Nellutla
+        </span>
+        <div className="flex items-center gap-8">
+          <a
+            href="#work"
+            className="font-mono text-xs uppercase tracking-widest text-gray-500 transition-colors hover:text-gray-900"
+          >
+            Work
+          </a>
+          <a
+            href="#about"
+            className="font-mono text-xs uppercase tracking-widest text-gray-500 transition-colors hover:text-gray-900"
+          >
+            About
+          </a>
+          <a
+            href="mailto:krishna.nellutla@gmail.com"
+            className="font-mono text-xs uppercase tracking-widest text-gray-500 transition-colors hover:text-gray-900"
+          >
+            Contact
+          </a>
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+// ─── Hero ──────────────────────────────────────────────────────────────────
 
 function HeroSection() {
   return (
-    <div className="relative h-[90vh] min-h-[560px] w-full overflow-hidden">
+    <div className="relative h-screen min-h-[600px] w-full overflow-hidden">
       <img
         src={CITY_LANDSCAPES[0]!.src}
         alt={CITY_LANDSCAPES[0]!.alt}
@@ -168,59 +210,101 @@ function HeroSection() {
         draggable={false}
         onContextMenu={(e) => e.preventDefault()}
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/20 to-black/70" />
-      <div className="absolute inset-0 flex flex-col items-center justify-end px-4 pb-20 text-center text-white">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-white/60">
-          Photography
-        </p>
-        <h1 className="font-sans text-5xl font-light tracking-tight sm:text-6xl lg:text-8xl">
-          Krishna Nellutla
-        </h1>
-        <p className="mt-5 max-w-sm text-base text-white/70">
-          City landscapes · Portraits · Black & white
-        </p>
-        <a
-          href="#work"
-          className="mt-8 inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/10 px-6 py-2.5 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/20"
-        >
-          View work
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-          </svg>
-        </a>
+      {/* Subtle dark gradient only at bottom */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+
+      {/* Bottom-left editorial text block */}
+      <div className="absolute bottom-0 left-0 right-0 px-6 pb-12 lg:px-12 lg:pb-16">
+        <div className="mx-auto max-w-7xl">
+          <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.3em] text-white/50">
+            Photography
+          </p>
+          <h1 className="font-sans text-5xl font-light leading-none tracking-tight text-white sm:text-6xl lg:text-7xl xl:text-8xl">
+            Krishna<br />Nellutla
+          </h1>
+          <p className="mt-4 max-w-xs text-sm text-white/60 leading-relaxed">
+            City landscapes · Portraits<br />Black &amp; white
+          </p>
+          <a
+            href="#work"
+            className="mt-8 inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-white/60 transition-colors hover:text-white"
+            aria-label="Scroll to work"
+          >
+            View work
+            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
+            </svg>
+          </a>
+        </div>
       </div>
     </div>
   );
 }
 
+// ─── Intro statement ───────────────────────────────────────────────────────
+
+function IntroSection() {
+  return (
+    <section className="bg-[#f4f3f0] px-6 py-16 lg:px-12 lg:py-24">
+      <div className="mx-auto max-w-7xl">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-[1fr_2fr] md:items-start">
+          <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-gray-500 md:pt-1">
+            About the work
+          </p>
+          <p className="max-w-2xl font-sans text-2xl font-light leading-snug tracking-tight text-gray-900 sm:text-3xl">
+            I photograph the spaces between — city light and shadow, candid moments, the quiet geometry of daily life.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Gallery section ───────────────────────────────────────────────────────
+
 function GallerySection({
-  title,
+  index,
   eyebrow,
+  title,
   photos,
   onPhotoClick,
 }: {
-  title: string;
+  index: number;
   eyebrow: string;
+  title: string;
   photos: Photo[];
-  onPhotoClick: (index: number) => void;
+  onPhotoClick: (i: number) => void;
 }) {
+  const num = String(index).padStart(2, '0');
+
   return (
-    <section className="pt-10 pb-6">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mb-5 border-b border-gray-200 pb-4">
-          <p className="mb-1 font-mono text-xs font-semibold uppercase tracking-widest text-gray-500">{eyebrow}</p>
-          <h2 className="font-sans text-2xl font-light tracking-tight text-gray-900">{title}</h2>
+    <section className="bg-[#f4f3f0] px-6 pb-16 lg:px-12 lg:pb-20">
+      <div className="mx-auto max-w-7xl">
+        {/* Section header */}
+        <div className="mb-6 flex items-end justify-between border-t border-[#d6d4ce] pt-6">
+          <div className="flex items-baseline gap-4">
+            <span className="font-mono text-[10px] text-gray-400">{num}</span>
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-gray-500">{eyebrow}</p>
+              <h2 className="font-sans text-xl font-light tracking-tight text-gray-900 sm:text-2xl">
+                {title}
+              </h2>
+            </div>
+          </div>
+          <span className="font-mono text-[10px] text-gray-400">{photos.length} photos</span>
         </div>
-        <div className="flex flex-wrap" style={{ gap: '4px' }}>
+
+        {/* Photo grid */}
+        <div className="flex flex-wrap" style={{ gap: '3px' }}>
           {photos.map((photo, i) => (
             <button
               key={i}
               type="button"
-              className="group overflow-hidden rounded-sm cursor-zoom-in"
+              className="group overflow-hidden cursor-zoom-in"
               style={{
                 height: '220px',
                 flexGrow: 1,
-                flexBasis: photo.orientation === 'portrait' ? '150px' : '280px',
+                flexBasis: photo.orientation === 'portrait' ? '145px' : '270px',
               }}
               onClick={() => onPhotoClick(i)}
               aria-label={`View ${photo.alt}`}
@@ -231,43 +315,27 @@ function GallerySection({
                 loading="lazy"
                 draggable={false}
                 onContextMenu={(e) => e.preventDefault()}
-                className="photo-protected w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                className="photo-protected w-full h-full object-cover transition-all duration-500 group-hover:scale-[1.03] group-hover:brightness-95"
               />
             </button>
           ))}
-          <div style={{ flexGrow: 10, flexBasis: '280px', height: '220px' }} aria-hidden />
+          <div style={{ flexGrow: 10, flexBasis: '270px', height: '220px' }} aria-hidden />
         </div>
       </div>
     </section>
   );
 }
 
+// ─── About ─────────────────────────────────────────────────────────────────
+
 function AboutSection() {
   return (
-    <section className="border-t border-gray-100 bg-gray-50 py-20" id="about">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="bg-[#edecea] px-6 py-16 lg:px-12 lg:py-24" id="about">
+      <div className="mx-auto max-w-7xl">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-2 md:items-center">
-          <div>
-            <p className="mb-2 font-mono text-xs font-semibold uppercase tracking-widest text-gray-500">About</p>
-            <h2 className="font-sans text-3xl font-light tracking-tight text-gray-900">
-              Capturing light, people & cities
-            </h2>
-            <p className="mt-5 text-gray-500 leading-relaxed">
-              I'm Krishna Nellutla — a photographer based in Singapore, drawn to the interplay of
-              city light and human moments. From the blue-hour glow of Marina Bay to candid portraits
-              and black & white street scenes, I look for stories in the spaces between.
-            </p>
-            <p className="mt-4 text-gray-500 leading-relaxed">
-              Available for portrait sessions, events, and commissioned work.
-            </p>
-            <a
-              href="mailto:krishna.nellutla@gmail.com"
-              className="mt-6 inline-block text-sm font-medium text-gray-900 underline underline-offset-4 hover:text-gray-600"
-            >
-              Get in touch →
-            </a>
-          </div>
-          <div className="overflow-hidden rounded-2xl shadow-sm">
+
+          {/* Photo */}
+          <div className="overflow-hidden">
             <img
               src="/portfolio/profilepic.jpg"
               alt="Krishna Nellutla"
@@ -277,18 +345,72 @@ function AboutSection() {
               onContextMenu={(e) => e.preventDefault()}
             />
           </div>
+
+          {/* Text */}
+          <div>
+            <p className="mb-4 font-mono text-[10px] uppercase tracking-[0.3em] text-gray-500">
+              About
+            </p>
+            <h2 className="font-sans text-3xl font-light leading-snug tracking-tight text-gray-900 sm:text-4xl">
+              Capturing light,<br />people &amp; cities
+            </h2>
+            <p className="mt-6 text-sm leading-relaxed text-gray-600">
+              I'm Krishna Nellutla — a photographer based in Singapore, drawn to the interplay of
+              city light and human moments. From the blue-hour glow of Marina Bay to candid portraits
+              and black &amp; white street scenes, I look for stories in the spaces between.
+            </p>
+            <p className="mt-3 text-sm leading-relaxed text-gray-600">
+              Available for portrait sessions, events, and commissioned work.
+            </p>
+          </div>
+
         </div>
       </div>
     </section>
   );
 }
 
+// ─── Contact CTA ───────────────────────────────────────────────────────────
+
+function ContactSection() {
+  return (
+    <section className="bg-[#f4f3f0] px-6 py-20 lg:px-12 lg:py-28">
+      <div className="mx-auto max-w-7xl">
+        <div className="border-t border-[#d6d4ce] pt-12">
+          <p className="mb-4 font-mono text-[10px] uppercase tracking-[0.3em] text-gray-500">
+            Get in touch
+          </p>
+          <a
+            href="mailto:krishna.nellutla@gmail.com"
+            className="group inline-block font-sans text-3xl font-light tracking-tight text-gray-900 transition-opacity hover:opacity-60 sm:text-4xl lg:text-5xl"
+          >
+            krishna.nellutla
+            <br />
+            @gmail.com
+            <svg
+              className="ml-3 inline-block h-6 w-6 translate-y-[-2px] transition-transform group-hover:translate-x-1"
+              fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24" aria-hidden="true"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Footer ────────────────────────────────────────────────────────────────
+
 function Footer() {
   return (
-    <footer className="border-t border-gray-100 bg-white py-8">
-      <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-        <p className="text-sm text-gray-500">
+    <footer className="border-t border-[#d6d4ce] bg-[#f4f3f0] px-6 py-6 lg:px-8">
+      <div className="mx-auto flex max-w-7xl items-center justify-between">
+        <p className="font-mono text-[10px] text-gray-400">
           © {new Date().getFullYear()} Krishna Nellutla
+        </p>
+        <p className="font-mono text-[10px] uppercase tracking-widest text-gray-400">
+          Singapore
         </p>
       </div>
     </footer>
@@ -313,10 +435,8 @@ export default function PortfolioViewer() {
     return () => { cancelled = true; };
   }, []);
 
-  // For now always show the personal portfolio. Once real gallery content
-  // exists (galleries with media), we'll surface the NodeGrid below the hero.
   const showRealContent = realNodes !== null && hasContent(realNodes);
-  void showRealContent; // reserved for phase 2
+  void showRealContent;
 
   const openLightbox = (photos: Photo[], index: number) =>
     setLightbox({ photos, index });
@@ -327,40 +447,46 @@ export default function PortfolioViewer() {
     setLightbox((s) => s && s.index < s.photos.length - 1 ? { ...s, index: s.index + 1 } : s);
 
   return (
-    <div className="min-h-screen bg-white text-gray-900">
-      <HeroSection />
+    <div className="min-h-screen bg-[#f4f3f0] text-gray-900">
+      <Nav />
+      <main>
+        <HeroSection />
+        <IntroSection />
 
-      <div id="work">
-        <GallerySection
-          eyebrow="City & Landscape"
-          title="Singapore & beyond"
-          photos={CITY_LANDSCAPES}
-          onPhotoClick={(i) => openLightbox(CITY_LANDSCAPES, i)}
-        />
-        <div className="border-t border-gray-200" />
-        <GallerySection
-          eyebrow="Black & White"
-          title="California, 2024"
-          photos={BW}
-          onPhotoClick={(i) => openLightbox(BW, i)}
-        />
-        <div className="border-t border-gray-200" />
-        <GallerySection
-          eyebrow="Portraits"
-          title="People"
-          photos={PORTRAITS}
-          onPhotoClick={(i) => openLightbox(PORTRAITS, i)}
-        />
-        <div className="border-t border-gray-200" />
-        <GallerySection
-          eyebrow="Events & Family"
-          title="Moments"
-          photos={FAMILY}
-          onPhotoClick={(i) => openLightbox(FAMILY, i)}
-        />
-      </div>
+        <div id="work">
+          <GallerySection
+            index={1}
+            eyebrow="City & Landscape"
+            title="Singapore & beyond"
+            photos={CITY_LANDSCAPES}
+            onPhotoClick={(i) => openLightbox(CITY_LANDSCAPES, i)}
+          />
+          <GallerySection
+            index={2}
+            eyebrow="Black & White"
+            title="California, 2024"
+            photos={BW}
+            onPhotoClick={(i) => openLightbox(BW, i)}
+          />
+          <GallerySection
+            index={3}
+            eyebrow="Portraits"
+            title="People"
+            photos={PORTRAITS}
+            onPhotoClick={(i) => openLightbox(PORTRAITS, i)}
+          />
+          <GallerySection
+            index={4}
+            eyebrow="Events & Family"
+            title="Moments"
+            photos={FAMILY}
+            onPhotoClick={(i) => openLightbox(FAMILY, i)}
+          />
+        </div>
 
-      <AboutSection />
+        <AboutSection />
+        <ContactSection />
+      </main>
       <Footer />
 
       {lightbox && (
