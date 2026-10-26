@@ -55,6 +55,9 @@ const envSchema = z.object({
       message: 'DESKTOP_AUTH_REDIRECT_URL must use the blueflutes: scheme',
     }),
 
+  // Redis (optional — gallery responses are cached when set)
+  REDIS_URL: z.string().url().optional(),
+
   // Storage (S3-compatible: AWS S3, Cloudflare R2, MinIO)
   STORAGE_PROVIDER: z.enum(['s3', 'fake']).default('fake'),
   STORAGE_BUCKET: z.string().min(1).optional(),

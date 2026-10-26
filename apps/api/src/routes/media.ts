@@ -22,6 +22,11 @@ import { asyncHandler } from '../lib/async-handler.js';
 import { validate } from '../lib/validate.js';
 import type { Enqueue } from '../services/media/queue.js';
 import type { StorageProvider } from '../services/storage/index.js';
+import {
+  getCachedGallery,
+  invalidateGallery,
+  setCachedGallery,
+} from '../services/cache/gallery-cache.js';
 
 const mediaQuerySchema = z.object({
   nodeId: z.string().uuid(),
@@ -47,6 +52,16 @@ export function createMediaPublicRouter(): Router {
       }
 
       const { nodeId } = req.query as { nodeId: string };
+
+      const cached = await getCachedGallery(req.tenant.id, nodeId);
+      if (cached !== null) {
+        const body: ApiEnvelope<MediaListResponse> = {
+          data: cached as MediaListResponse,
+          error: null,
+        };
+        res.json(body);
+        return;
+      }
 
       const assets = await req.withTenant(async (client) => {
         const assetRows = await client.query(
@@ -107,6 +122,7 @@ export function createMediaPublicRouter(): Router {
       });
 
       const data: MediaListResponse = mediaListResponseSchema.parse(assets);
+      void setCachedGallery(req.tenant.id, nodeId, data);
       const body: ApiEnvelope<MediaListResponse> = { data, error: null };
       res.json(body);
     }),
@@ -231,6 +247,7 @@ export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): R
       });
 
       await enqueue({ tenantId: req.tenant.id, assetId: id });
+      void invalidateGallery(req.tenant.id, asset.node_id as string);
 
       const data: MediaAsset = mediaAssetSchema.parse({
         id: asset.id,
@@ -350,7 +367,7 @@ export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): R
 
       const { id } = req.params as { id: string };
 
-      const objectKeysToDelete = await req.withTenant(async (client) => {
+      const { objectKeysToDelete, nodeId: deletedNodeId } = await req.withTenant(async (client) => {
         // Read node_id first so we can acquire the per-gallery advisory lock
         const assetRow = await client.query(
           'SELECT node_id, object_key FROM media_assets WHERE id = $1',
@@ -395,8 +412,10 @@ export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): R
           [node_id, position],
         );
 
-        return [object_key, ...variantKeys];
+        return { objectKeysToDelete: [object_key, ...variantKeys], nodeId: node_id };
       });
+
+      void invalidateGallery(req.tenant!.id, deletedNodeId);
 
       // Best-effort storage cleanup after the DB transaction commits
       for (const key of objectKeysToDelete) {
@@ -493,6 +512,8 @@ export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): R
         );
         return updated.rows[0];
       });
+
+      void invalidateGallery(req.tenant!.id, asset.node_id as string);
 
       const data: MediaAsset = mediaAssetSchema.parse({
         id: asset.id,
