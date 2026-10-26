@@ -39,6 +39,7 @@
   --color-chip-dusk: #7c4dcc;
 
   /* Fonts */
+  --font-display: 'Cormorant Garamond', Georgia, serif;
   --font-serif: 'Newsreader', Georgia, serif;
   --font-sans: 'Hanken Grotesk', system-ui, sans-serif;
   --font-mono: 'Space Mono', ui-monospace, monospace;
