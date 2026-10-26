@@ -388,14 +388,14 @@ function ContactSection() {
           Get in touch
         </p>
         <a
-          href="mailto:krishna.nellutla@gmail.com"
+          href="mailto:contactme@knellutla.com"
           className="group inline-flex items-start gap-4 text-white/70 transition-opacity hover:opacity-60"
         >
           <span
             className="font-display font-light italic leading-tight"
             style={{ fontSize: 'clamp(26px, 4vw, 52px)', letterSpacing: '-0.01em' }}
           >
-            krishna.nellutla<br />@gmail.com
+            contactme<br />@knellutla.com
           </span>
           <svg className="mt-2 h-5 w-5 flex-shrink-0 opacity-50 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
             fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
