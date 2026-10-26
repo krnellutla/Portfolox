@@ -29,4 +29,12 @@ export interface StorageProvider {
   getObject(key: string): Promise<Buffer>;
 
   putObject(params: PutObjectParams): Promise<void>;
+
+  /**
+   * Returns an on-demand CDN transform URL for resizing an image to the given width.
+   * Optional — only providers that support server-side transforms implement this.
+   * When present, the media processor skips Sharp and the API generates synthetic
+   * variants from VARIANT_SPECS rather than reading stored rows.
+   */
+  getTransformUrl?(key: string, width: number, quality?: number): string;
 }

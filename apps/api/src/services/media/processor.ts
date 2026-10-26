@@ -36,6 +36,20 @@ export async function processAsset(deps: ProcessDeps, job: ProcessJob): Promise<
       };
     });
 
+    void nodeId;
+
+    // When the storage provider supports on-demand transforms, skip Sharp entirely.
+    // Variants are generated synthetically at read time from the original object.
+    if (storage.getTransformUrl) {
+      await withTenant(pool, tenantId, async (client) => {
+        await client.query(
+          "UPDATE media_assets SET status = 'ready' WHERE id = $1",
+          [assetId],
+        );
+      });
+      return;
+    }
+
     const originalBuffer = await storage.getObject(objectKey);
 
     // Determine actual dimensions from the buffer (width from DB may be 0 if not confirmed)

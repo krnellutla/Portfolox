@@ -62,7 +62,7 @@ export function createApp(
 
   // Public read routes — no Bearer token required
   app.use(nodesRouter);
-  app.use(createMediaPublicRouter());
+  app.use(createMediaPublicRouter(storageProvider));
   app.use(discoverRouter);
   app.use(photographersRouter);
   app.use(createPhotosRouter(storageProvider));

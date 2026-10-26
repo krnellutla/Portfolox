@@ -58,14 +58,18 @@ const envSchema = z.object({
   // Redis (optional — gallery responses are cached when set)
   REDIS_URL: z.string().url().optional(),
 
-  // Storage (S3-compatible: AWS S3, Cloudflare R2, MinIO)
-  STORAGE_PROVIDER: z.enum(['s3', 'fake']).default('fake'),
+  // Storage (S3-compatible: AWS S3, Cloudflare R2, MinIO, Supabase Storage)
+  STORAGE_PROVIDER: z.enum(['s3', 'supabase', 'fake']).default('fake'),
   STORAGE_BUCKET: z.string().min(1).optional(),
   STORAGE_REGION: z.string().min(1).optional(),
   STORAGE_ENDPOINT: z.string().url().optional(),
   STORAGE_ACCESS_KEY_ID: z.string().min(1).optional(),
   STORAGE_SECRET_ACCESS_KEY: z.string().min(1).optional(),
   STORAGE_PUBLIC_BASE_URL: z.string().url().optional(),
+
+  // Supabase-specific (required when STORAGE_PROVIDER=supabase)
+  SUPABASE_URL: z.string().url().optional(),
+
   MEDIA_MAX_UPLOAD_BYTES: z.coerce.number().int().positive().default(50 * 1024 * 1024),
   MEDIA_PRESIGN_TTL_SECONDS: z.coerce.number().int().positive().default(300),
 }).superRefine((data, ctx) => {
@@ -83,6 +87,25 @@ const envSchema = z.object({
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: `${key} is required when STORAGE_PROVIDER=s3`,
+          path: [key],
+        });
+      }
+    }
+  }
+
+  if (data.STORAGE_PROVIDER === 'supabase') {
+    const required = [
+      ['SUPABASE_URL', data.SUPABASE_URL],
+      ['STORAGE_BUCKET', data.STORAGE_BUCKET],
+      ['STORAGE_ACCESS_KEY_ID', data.STORAGE_ACCESS_KEY_ID],
+      ['STORAGE_SECRET_ACCESS_KEY', data.STORAGE_SECRET_ACCESS_KEY],
+    ] as const;
+
+    for (const [key, value] of required) {
+      if (!value) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `${key} is required when STORAGE_PROVIDER=supabase`,
           path: [key],
         });
       }

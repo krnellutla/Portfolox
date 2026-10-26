@@ -13,7 +13,7 @@ import {
   presignRequestSchema,
   presignResponseSchema,
 } from '@blueflutes/shared';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { Router } from 'express';
 import { z } from 'zod';
 import { env } from '../config/env.js';
@@ -21,6 +21,7 @@ import { AppError } from '../lib/app-error.js';
 import { asyncHandler } from '../lib/async-handler.js';
 import { validate } from '../lib/validate.js';
 import type { Enqueue } from '../services/media/queue.js';
+import { VARIANT_SPECS } from '../services/media/variant-specs.js';
 import type { StorageProvider } from '../services/storage/index.js';
 import {
   getCachedGallery,
@@ -32,6 +33,45 @@ const mediaQuerySchema = z.object({
   nodeId: z.string().uuid(),
 });
 
+function buildSyntheticVariants(
+  storage: StorageProvider,
+  asset: {
+    id: string;
+    tenant_id: string;
+    object_key: string;
+    width: number;
+    height: number;
+    byte_size: number;
+    created_at: Date;
+  },
+) {
+  return VARIANT_SPECS.map((spec) => {
+    const hash = createHash('md5').update(`${asset.id}:${spec.name}`).digest('hex');
+    const syntheticId = `${hash.slice(0, 8)}-${hash.slice(8, 12)}-${hash.slice(12, 16)}-${hash.slice(16, 20)}-${hash.slice(20, 32)}`;
+    const scaledWidth = asset.width > 0 ? Math.min(spec.width, asset.width) : spec.width;
+    const scaledHeight =
+      asset.width > 0 && asset.height > 0
+        ? Math.max(1, Math.round(scaledWidth * (asset.height / asset.width)))
+        : scaledWidth;
+    const estByteSize =
+      asset.width > 0
+        ? Math.max(1, Math.round(asset.byte_size * (scaledWidth / asset.width) ** 2))
+        : 1;
+    return {
+      id: syntheticId,
+      tenantId: asset.tenant_id,
+      assetId: asset.id,
+      variant: spec.name,
+      objectKey: asset.object_key,
+      url: storage.getTransformUrl!(asset.object_key, spec.width, 80),
+      width: scaledWidth,
+      height: scaledHeight,
+      byteSize: estByteSize,
+      createdAt: asset.created_at,
+    };
+  });
+}
+
 const MIME_TO_EXT: Record<string, string> = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
@@ -40,8 +80,9 @@ const MIME_TO_EXT: Record<string, string> = {
   'image/gif': 'gif',
 };
 
-export function createMediaPublicRouter(): Router {
+export function createMediaPublicRouter(storage: StorageProvider): Router {
   const router = Router();
+  const useTransform = typeof storage.getTransformUrl === 'function';
 
   router.get(
     '/media',
@@ -75,20 +116,32 @@ export function createMediaPublicRouter(): Router {
 
         if (assetRows.rowCount === 0) return [];
 
-        const assetIds = assetRows.rows.map((r) => r.id as string);
-        const variantRows = await client.query(
-          `SELECT id, tenant_id, asset_id, variant, object_key, url, width, height, byte_size, created_at
-           FROM media_variants
-           WHERE asset_id = ANY($1)
-           ORDER BY asset_id, width`,
-          [assetIds],
-        );
-
-        const variantsByAsset = new Map<string, typeof variantRows.rows>();
-        for (const v of variantRows.rows) {
-          const list = variantsByAsset.get(v.asset_id as string) ?? [];
-          list.push(v);
-          variantsByAsset.set(v.asset_id as string, list);
+        let variantsByAsset = new Map<string, unknown[]>();
+        if (!useTransform) {
+          const assetIds = assetRows.rows.map((r) => r.id as string);
+          const variantRows = await client.query(
+            `SELECT id, tenant_id, asset_id, variant, object_key, url, width, height, byte_size, created_at
+             FROM media_variants
+             WHERE asset_id = ANY($1)
+             ORDER BY asset_id, width`,
+            [assetIds],
+          );
+          for (const v of variantRows.rows) {
+            const list = variantsByAsset.get(v.asset_id as string) ?? [];
+            list.push({
+              id: v.id,
+              tenantId: v.tenant_id,
+              assetId: v.asset_id,
+              variant: v.variant,
+              objectKey: v.object_key,
+              url: v.url,
+              width: v.width,
+              height: v.height,
+              byteSize: v.byte_size,
+              createdAt: v.created_at,
+            });
+            variantsByAsset.set(v.asset_id as string, list);
+          }
         }
 
         return assetRows.rows.map((a) => ({
@@ -106,18 +159,9 @@ export function createMediaPublicRouter(): Router {
           width: a.width,
           height: a.height,
           createdAt: a.created_at,
-          variants: (variantsByAsset.get(a.id as string) ?? []).map((v) => ({
-            id: v.id,
-            tenantId: v.tenant_id,
-            assetId: v.asset_id,
-            variant: v.variant,
-            objectKey: v.object_key,
-            url: v.url,
-            width: v.width,
-            height: v.height,
-            byteSize: v.byte_size,
-            createdAt: v.created_at,
-          })),
+          variants: useTransform
+            ? buildSyntheticVariants(storage, a)
+            : (variantsByAsset.get(a.id as string) ?? []),
         }));
       });
 
@@ -133,6 +177,7 @@ export function createMediaPublicRouter(): Router {
 
 export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): Router {
   const router = Router();
+  const useTransform = typeof storage.getTransformUrl === 'function';
 
   router.post(
     '/media/presign',
@@ -301,20 +346,32 @@ export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): R
 
         if (assetRows.rowCount === 0) return [];
 
-        const assetIds = assetRows.rows.map((r) => r.id as string);
-        const variantRows = await client.query(
-          `SELECT id, tenant_id, asset_id, variant, object_key, url, width, height, byte_size, created_at
-           FROM media_variants
-           WHERE asset_id = ANY($1)
-           ORDER BY asset_id, width`,
-          [assetIds],
-        );
-
-        const variantsByAsset = new Map<string, typeof variantRows.rows>();
-        for (const v of variantRows.rows) {
-          const list = variantsByAsset.get(v.asset_id as string) ?? [];
-          list.push(v);
-          variantsByAsset.set(v.asset_id as string, list);
+        let variantsByAsset = new Map<string, unknown[]>();
+        if (!useTransform) {
+          const assetIds = assetRows.rows.map((r) => r.id as string);
+          const variantRows = await client.query(
+            `SELECT id, tenant_id, asset_id, variant, object_key, url, width, height, byte_size, created_at
+             FROM media_variants
+             WHERE asset_id = ANY($1)
+             ORDER BY asset_id, width`,
+            [assetIds],
+          );
+          for (const v of variantRows.rows) {
+            const list = variantsByAsset.get(v.asset_id as string) ?? [];
+            list.push({
+              id: v.id,
+              tenantId: v.tenant_id,
+              assetId: v.asset_id,
+              variant: v.variant,
+              objectKey: v.object_key,
+              url: v.url,
+              width: v.width,
+              height: v.height,
+              byteSize: v.byte_size,
+              createdAt: v.created_at,
+            });
+            variantsByAsset.set(v.asset_id as string, list);
+          }
         }
 
         return assetRows.rows.map((a) => ({
@@ -332,18 +389,9 @@ export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): R
           width: a.width,
           height: a.height,
           createdAt: a.created_at,
-          variants: (variantsByAsset.get(a.id as string) ?? []).map((v) => ({
-            id: v.id,
-            tenantId: v.tenant_id,
-            assetId: v.asset_id,
-            variant: v.variant,
-            objectKey: v.object_key,
-            url: v.url,
-            width: v.width,
-            height: v.height,
-            byteSize: v.byte_size,
-            createdAt: v.created_at,
-          })),
+          variants: useTransform
+            ? buildSyntheticVariants(storage, a)
+            : (variantsByAsset.get(a.id as string) ?? []),
         }));
       });
 

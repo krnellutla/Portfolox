@@ -56,6 +56,10 @@ export class FakeStorageProvider implements StorageProvider {
     this.objects.set(params.key, { body: params.body, contentType: params.contentType });
   }
 
+  getTransformUrl(key: string, width: number, quality = 80): string {
+    return `${FAKE_BASE_URL}/${key}?width=${width}&quality=${quality}&format=webp`;
+  }
+
   seed(key: string, body: Buffer, contentType: string): void {
     this.objects.set(key, { body, contentType });
   }
