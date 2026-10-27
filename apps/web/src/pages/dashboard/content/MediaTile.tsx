@@ -72,34 +72,52 @@ export function AssetTile({ asset, onDelete }: AssetTileProps) {
 }
 
 export function UploadTile({ item }: UploadTileProps) {
-  const statusLabel =
-    item.status === 'uploading'
-      ? `${item.progress}%`
-      : item.status === 'processing'
-        ? 'Processing…'
-        : item.status === 'failed'
-          ? 'Failed'
-          : 'Queued';
-
   return (
     <div className="relative flex aspect-square flex-col items-center justify-center rounded-lg border border-slate-600 bg-slate-800/60 p-2">
       <p className="max-w-full truncate text-xs text-slate-400">{item.filename}</p>
-      <p
-        className={`mt-1 text-xs font-medium ${
-          item.status === 'failed' ? 'text-red-400' : 'text-slate-300'
-        }`}
-      >
-        {statusLabel}
-      </p>
+
       {item.status === 'uploading' && (
-        <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-slate-700">
-          <div
-            className="h-full rounded-full bg-blue-500 transition-all"
-            style={{ width: `${item.progress}%` }}
-          />
+        <>
+          <p className="mt-1 text-xs font-medium text-slate-300">{item.progress}%</p>
+          <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-slate-700">
+            <div
+              className="h-full rounded-full bg-blue-500 transition-all"
+              style={{ width: `${item.progress}%` }}
+            />
+          </div>
+        </>
+      )}
+
+      {item.status === 'processing' && (
+        <div className="mt-2 flex flex-col items-center gap-1">
+          <svg
+            className="h-5 w-5 animate-spin text-blue-400"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <p className="text-xs font-medium text-slate-300">Processing…</p>
         </div>
       )}
-      {item.error && <p className="mt-1 text-xs text-red-400">{item.error}</p>}
+
+      {item.status === 'ready' && (
+        <p className="mt-1 text-xs font-medium text-green-400">Ready</p>
+      )}
+
+      {item.status === 'failed' && (
+        <>
+          <p className="mt-1 text-xs font-medium text-red-400">Failed</p>
+          {item.error && <p className="mt-0.5 text-xs text-red-400">{item.error}</p>}
+        </>
+      )}
+
+      {item.status === 'queued' && (
+        <p className="mt-1 text-xs font-medium text-slate-400">Queued</p>
+      )}
     </div>
   );
 }

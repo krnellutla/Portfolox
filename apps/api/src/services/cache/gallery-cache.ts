@@ -30,7 +30,26 @@ export async function getCachedGallery(
   if (!r) return null;
   try {
     const val = await r.get(cacheKey(tenantId, nodeId));
-    return val ? (JSON.parse(val) as unknown) : null;
+    if (val) {
+      r.incr('cache:hits').catch(() => {});
+      return JSON.parse(val) as unknown;
+    }
+    r.incr('cache:misses').catch(() => {});
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export async function getCacheStats(): Promise<{ hits: number; misses: number } | null> {
+  const r = getRedis();
+  if (!r) return null;
+  try {
+    const [hitsStr, missesStr] = await r.mget('cache:hits', 'cache:misses');
+    return {
+      hits: parseInt(hitsStr ?? '0', 10) || 0,
+      misses: parseInt(missesStr ?? '0', 10) || 0,
+    };
   } catch {
     return null;
   }
