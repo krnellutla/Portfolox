@@ -11,6 +11,23 @@ import {
 import { z } from 'zod';
 import { apiFetch, getAccessToken } from './client.js';
 
+const assetStatusResponseSchema = z.object({
+  id: z.string(),
+  status: z.string(),
+  variants: z.array(z.object({
+    id: z.string(),
+    tenantId: z.string(),
+    assetId: z.string(),
+    variant: z.string(),
+    objectKey: z.string(),
+    url: z.string(),
+    width: z.number(),
+    height: z.number(),
+    byteSize: z.number(),
+    createdAt: z.string(),
+  })),
+});
+
 // ── Public read (viewer) ──────────────────────────────────────────────────────
 
 export function getNodeMedia(nodeId: string): Promise<MediaListResponse> {
@@ -58,18 +75,43 @@ export function confirmUpload(
 }
 
 export type UploadProgressEvent = { loaded: number; total: number };
+export type UploadStatus = 'uploading' | 'processing' | 'ready' | 'failed';
 
-/**
- * Reads image dimensions from a File using createImageBitmap (with HTMLImageElement
- * fallback), then orchestrates presign → PUT to storage → confirm.
- *
- * Uses XMLHttpRequest for the storage PUT so we can report upload progress.
- * apiFetch handles the presign/confirm API calls as normal (with auth + retry).
- */
+const POLL_INTERVAL_MS = 2_000;
+const POLL_MAX_ROUNDS = 30; // 60 seconds total
+
+async function pollAssetStatus(
+  assetId: string,
+  onStatusChange?: (status: UploadStatus) => void,
+): Promise<void> {
+  for (let i = 0; i < POLL_MAX_ROUNDS; i++) {
+    await new Promise<void>((r) => setTimeout(r, POLL_INTERVAL_MS));
+    try {
+      const res = await apiFetch(
+        `/media/${assetId}/status`,
+        { method: 'GET' },
+        assetStatusResponseSchema,
+      );
+      if (res.status === 'ready') {
+        onStatusChange?.('ready');
+        return;
+      }
+      if (res.status === 'failed') {
+        onStatusChange?.('failed');
+        return;
+      }
+    } catch {
+      // transient error — keep polling
+    }
+  }
+  // timed out without terminal status — leave as processing
+}
+
 export async function uploadFile(
   nodeId: string,
   file: File,
   onProgress?: (e: UploadProgressEvent) => void,
+  onStatusChange?: (status: UploadStatus) => void,
 ): Promise<MediaAsset> {
   const { width, height } = await getImageDimensions(file);
 
@@ -80,9 +122,15 @@ export async function uploadFile(
     byteSize: file.size,
   });
 
+  onStatusChange?.('uploading');
   await putToStorage(uploadUrl, file, onProgress);
 
-  return confirmUpload(assetId, { width, height });
+  onStatusChange?.('processing');
+  const asset = await confirmUpload(assetId, { width, height });
+
+  await pollAssetStatus(assetId, onStatusChange);
+
+  return asset;
 }
 
 // ── Asset management ──────────────────────────────────────────────────────────

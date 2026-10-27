@@ -6,6 +6,7 @@ import {
   moveMedia,
   uploadFile,
   type UploadProgressEvent,
+  type UploadStatus,
 } from '../api/media.js';
 
 // ─── upload queue ─────────────────────────────────────────────────────────────
@@ -108,7 +109,7 @@ export const useMediaStore = create<MediaStoreState>((set, get) => ({
       };
 
       // Wire uploadFile status transitions directly into upload item
-      const onStatusChange = (status: 'uploading' | 'processing' | 'ready' | 'failed') => {
+      const onStatusChange = (status: UploadStatus) => {
         patchNode(set, nodeId, (prev) => ({
           uploads: prev.uploads.map((u) =>
             u.id === item.id ? { ...u, status } : u,

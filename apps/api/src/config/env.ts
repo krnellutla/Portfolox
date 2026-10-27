@@ -57,6 +57,7 @@ const envSchema = z.object({
 
   // Redis (optional — gallery responses are cached when set)
   REDIS_URL: z.string().url().optional(),
+  QUEUE_PROVIDER: z.enum(['bullmq', 'inline']).default('inline'),
 
   // Storage (S3-compatible: AWS S3, Cloudflare R2, MinIO)
   STORAGE_PROVIDER: z.enum(['s3', 'fake']).default('fake'),
