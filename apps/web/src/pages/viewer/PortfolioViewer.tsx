@@ -259,9 +259,9 @@ function Nav() {
       scrolled ? 'bg-[#0c0b08]/95 backdrop-blur-sm border-b border-white/[0.06]' : ''
     }`}>
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 lg:px-10">
-        <span className="font-sans text-sm font-light tracking-wide text-white/80">
+        <a href="/" className="font-sans text-sm font-light tracking-wide text-white/80 hover:text-white transition-colors">
           Krishna Nellutla
-        </span>
+        </a>
         <div className="flex items-center gap-8">
           {(['Work', 'About', 'Contact'] as const).map((label) => (
             <a key={label} href={`#${label.toLowerCase()}`}
@@ -269,6 +269,12 @@ function Nav() {
               {label}
             </a>
           ))}
+          <a
+            href="/login"
+            className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/20 transition-colors hover:text-white/50"
+          >
+            Admin
+          </a>
         </div>
       </div>
     </nav>
