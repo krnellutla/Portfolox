@@ -34,6 +34,7 @@ export function AssetTile({ asset, onDelete }: AssetTileProps) {
       <ResponsiveImage
         asset={asset}
         className="h-full w-full object-cover"
+        sizes="(max-width: 640px) 33vw, 20vw"
         alt=""
       />
 
