@@ -3,6 +3,14 @@
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "pnpm --filter @blueflutes/shared build && pnpm --filter @blueflutes/web build",
   "outputDirectory": "apps/web/dist",
+  "sourceFilesOutsideRootDirectory": true,
+  "functions": {
+    "api/[...path].ts": {
+      "memory": 1024,
+      "maxDuration": 30,
+      "includeFiles": "node_modules/@img/**"
+    }
+  },
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ],
