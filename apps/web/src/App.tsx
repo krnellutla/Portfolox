@@ -1,5 +1,6 @@
 import { Suspense, lazy } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { RequireAuth } from './auth/RequireAuth.js';
 import { SessionProvider } from './auth/SessionProvider.js';
 import { ThemeProvider } from './components/ThemeProvider.js';
 import { MobileTabBar } from './components/nav/MobileTabBar.js';
@@ -49,17 +50,20 @@ function App() {
             <Route path="/client-login" element={<ClientLogin />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
 
-            <Route path="/studio/dashboard" element={<StudioDashboard />} />
+            <Route element={<RequireAuth />}>
+              <Route path="/studio/dashboard" element={<StudioDashboard />} />
+              <Route path="/studio/upload" element={<UploadPage />} />
+              <Route path="/studio/analytics" element={<AnalyticsPage />} />
+              <Route path="/studio/builder" element={<GalleryBuilderPage />} />
+              <Route path="/studio/orders" element={<OrdersPage />} />
+              <Route path="/lightbox" element={<LightboxPage />} />
+              <Route path="/chat" element={<ChatPage />} />
+            </Route>
+
             <Route path="/search" element={<SearchPage />} />
             <Route path="/community" element={<CommunityPage />} />
             <Route path="/community/posts/:id" element={<PostDetailPage />} />
             <Route path="/client/:shareToken" element={<ClientGalleryPage />} />
-            <Route path="/studio/upload" element={<UploadPage />} />
-            <Route path="/studio/analytics" element={<AnalyticsPage />} />
-            <Route path="/lightbox" element={<LightboxPage />} />
-            <Route path="/chat" element={<ChatPage />} />
-            <Route path="/studio/builder" element={<GalleryBuilderPage />} />
-            <Route path="/studio/orders" element={<OrdersPage />} />
             <Route path="/gallery/:shareToken" element={<ClientGallery />} />
 
             <Route path="/dashboard" element={<Navigate to="/studio/dashboard" replace />} />

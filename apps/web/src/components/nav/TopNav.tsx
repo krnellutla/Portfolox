@@ -1,5 +1,7 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { ShoppingBag } from 'lucide-react';
+import { logout } from '../../api/auth.js';
+import { useAuthStore } from '../../stores/auth-store.js';
 
 const STUDIO_NAV_LINKS = [
   { to: '/studio/dashboard', label: 'Dashboard' },
@@ -10,7 +12,15 @@ const STUDIO_NAV_LINKS = [
 
 export function TopNav() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const clear = useAuthStore((state) => state.clear);
   const isStudio = location.pathname.startsWith('/studio');
+
+  async function handleLogout() {
+    await logout().catch(() => {});
+    clear();
+    navigate('/login', { replace: true });
+  }
 
   return (
     <header className="sticky top-0 z-50 bg-paper border-b border-line">
@@ -45,18 +55,29 @@ export function TopNav() {
         )}
 
         <div className="hidden md:flex items-center gap-2">
-          <NavLink
-            to="/client-login"
-            className="px-4 py-[7px] rounded-[9px] text-sm font-medium text-ink-3 hover:text-ink transition-colors duration-150"
-          >
-            Client Login
-          </NavLink>
-          <NavLink
-            to="/login"
-            className="px-4 py-[7px] rounded-[9px] text-sm font-semibold bg-ink text-paper hover:opacity-90 transition-opacity duration-150"
-          >
-            Sign in
-          </NavLink>
+          {isStudio ? (
+            <button
+              onClick={() => void handleLogout()}
+              className="px-4 py-[7px] rounded-[9px] text-sm font-medium text-ink-3 hover:text-ink transition-colors duration-150"
+            >
+              Sign out
+            </button>
+          ) : (
+            <>
+              <NavLink
+                to="/client-login"
+                className="px-4 py-[7px] rounded-[9px] text-sm font-medium text-ink-3 hover:text-ink transition-colors duration-150"
+              >
+                Client Login
+              </NavLink>
+              <NavLink
+                to="/login"
+                className="px-4 py-[7px] rounded-[9px] text-sm font-semibold bg-ink text-paper hover:opacity-90 transition-opacity duration-150"
+              >
+                Sign in
+              </NavLink>
+            </>
+          )}
         </div>
       </div>
     </header>
