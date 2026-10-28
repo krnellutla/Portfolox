@@ -3,7 +3,6 @@
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "pnpm --filter @blueflutes/shared build && pnpm --filter @blueflutes/web build",
   "outputDirectory": "apps/web/dist",
-  "sourceFilesOutsideRootDirectory": true,
   "functions": {
     "api/[...path].ts": {
       "memory": 1024,
