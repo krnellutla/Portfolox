@@ -657,5 +657,60 @@ export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): R
     }),
   );
 
+  // ── GET /media/:id/status ─────────────────────────────────────────────────
+  // Lightweight endpoint for the client to poll processing state.
+  // Returns id, status, and any variants already generated.
+
+  router.get(
+    '/media/:id/status',
+    validate({ params: mediaParamsSchema }),
+    asyncHandler(async (req, res) => {
+      if (!req.tenant || !req.withTenant) {
+        throw AppError.notFound('Tenant not found for this host');
+      }
+
+      const { id } = req.params as { id: string };
+
+      const result = await req.withTenant(async (client) => {
+        const assetRow = await client.query(
+          `SELECT id, status FROM media_assets WHERE id = $1`,
+          [id],
+        );
+
+        if (assetRow.rowCount === 0) {
+          throw AppError.notFound('Media asset not found');
+        }
+
+        const asset = assetRow.rows[0] as { id: string; status: string };
+
+        const variantRows = await client.query(
+          `SELECT id, tenant_id, asset_id, variant, object_key, url, width, height, byte_size, created_at
+           FROM media_variants WHERE asset_id = $1 ORDER BY width`,
+          [id],
+        );
+
+        return {
+          id: asset.id,
+          status: asset.status,
+          variants: variantRows.rows.map((v) => ({
+            id: v.id,
+            tenantId: v.tenant_id,
+            assetId: v.asset_id,
+            variant: v.variant,
+            objectKey: v.object_key,
+            url: v.url,
+            width: v.width,
+            height: v.height,
+            byteSize: v.byte_size,
+            createdAt: v.created_at,
+          })),
+        };
+      });
+
+      const body: ApiEnvelope<typeof result> = { data: result, error: null };
+      res.json(body);
+    }),
+  );
+
   return router;
 }

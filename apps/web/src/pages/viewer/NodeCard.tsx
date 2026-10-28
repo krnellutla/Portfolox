@@ -43,6 +43,21 @@ function CameraPlaceholder() {
   );
 }
 
+function prefetchVariants(media: MediaListResponse) {
+  const asset = media[0];
+  if (!asset) return;
+  asset.variants
+    .filter((v) => v.variant === 'medium' || v.variant === 'large')
+    .forEach((v) => {
+      if (document.querySelector(`link[rel="prefetch"][href="${v.url}"]`)) return;
+      const link = document.createElement('link');
+      link.rel = 'prefetch';
+      link.as = 'image';
+      link.href = v.url;
+      document.head.appendChild(link);
+    });
+}
+
 function GalleryCard({ node }: { node: NodeTreeItem }) {
   const [media, setMedia] = useState<MediaListResponse | null>(null);
 
@@ -54,15 +69,24 @@ function GalleryCard({ node }: { node: NodeTreeItem }) {
     return () => { cancelled = true; };
   }, [node.id]);
 
+  const handleMouseEnter = () => {
+    if (media && media.length > 0) prefetchVariants(media);
+  };
+
   return (
-    <article className="group overflow-hidden rounded-xl bg-white shadow-sm transition-shadow duration-200 hover:shadow-md">
+    <article
+      className="group overflow-hidden rounded-xl bg-white shadow-sm transition-shadow duration-200 hover:shadow-md"
+      onMouseEnter={handleMouseEnter}
+    >
       {media && media.length > 0 ? (
-        <ResponsiveImage
-          asset={media[0]!}
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          className="aspect-video w-full object-cover rounded-t-xl"
-          alt={node.name}
-        />
+        <div className="relative overflow-hidden aspect-video w-full rounded-t-xl">
+          <ResponsiveImage
+            asset={media[0]!}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="h-full w-full object-cover"
+            alt={node.name}
+          />
+        </div>
       ) : (
         <CameraPlaceholder />
       )}

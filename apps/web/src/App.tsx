@@ -5,6 +5,7 @@ import { ThemeProvider } from './components/ThemeProvider.js';
 import { MobileTabBar } from './components/nav/MobileTabBar.js';
 import { StateView } from './components/ui/StateView.js';
 import AuthCallback from './pages/auth/AuthCallback.js';
+import ClientLogin from './pages/client-login/ClientLogin.js';
 import Login from './pages/login/Login.js';
 
 const PortfolioViewer = lazy(() => import('./pages/viewer/PortfolioViewer.js'));
@@ -45,6 +46,7 @@ function App() {
             <Route path="/onboarding" element={<OnboardingPage />} />
             <Route path="/portfolio/:handle" element={<PortfolioPage />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/client-login" element={<ClientLogin />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
 
             <Route path="/studio/dashboard" element={<StudioDashboard />} />

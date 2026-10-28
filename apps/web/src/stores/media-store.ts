@@ -6,6 +6,7 @@ import {
   moveMedia,
   uploadFile,
   type UploadProgressEvent,
+  type UploadStatus,
 } from '../api/media.js';
 
 // ─── upload queue ─────────────────────────────────────────────────────────────
@@ -67,10 +68,6 @@ function patchNode(
   });
 }
 
-// Maximum consecutive polls before giving up on a processing asset
-const MAX_POLL_ROUNDS = 12;
-const POLL_INTERVAL_MS = 3000;
-
 export const useMediaStore = create<MediaStoreState>((set, get) => ({
   byNode: {},
 
@@ -104,31 +101,42 @@ export const useMediaStore = create<MediaStoreState>((set, get) => ({
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const file = files[i]!;
 
-      // Mark uploading
-      patchNode(set, nodeId, (prev) => ({
-        uploads: prev.uploads.map((u) => (u.id === item.id ? { ...u, status: 'uploading' } : u)),
-      }));
+      const onProgress = (e: UploadProgressEvent) => {
+        const progress = e.total > 0 ? Math.round((e.loaded / e.total) * 100) : 0;
+        patchNode(set, nodeId, (prev) => ({
+          uploads: prev.uploads.map((u) => (u.id === item.id ? { ...u, progress } : u)),
+        }));
+      };
 
-      try {
-        const onProgress = (e: UploadProgressEvent) => {
-          const progress = e.total > 0 ? Math.round((e.loaded / e.total) * 100) : 0;
-          patchNode(set, nodeId, (prev) => ({
-            uploads: prev.uploads.map((u) => (u.id === item.id ? { ...u, progress } : u)),
-          }));
-        };
-
-        const asset = await uploadFile(nodeId, file, onProgress);
-
-        // Mark processing (server is running sharp variants)
+      // Wire uploadFile status transitions directly into upload item
+      const onStatusChange = (status: UploadStatus) => {
         patchNode(set, nodeId, (prev) => ({
           uploads: prev.uploads.map((u) =>
-            u.id === item.id ? { ...u, status: 'processing', assetId: asset.id, progress: 100 } : u,
+            u.id === item.id ? { ...u, status } : u,
           ),
-          assets: [...prev.assets, { ...asset, variants: [] }],
+        }));
+      };
+
+      try {
+        const asset = await uploadFile(nodeId, file, onProgress, onStatusChange);
+
+        // Add asset to store immediately (no variants yet)
+        patchNode(set, nodeId, (prev) => ({
+          assets: prev.assets.some((a) => a.id === asset.id)
+            ? prev.assets.map((a) => (a.id === asset.id ? { ...asset, variants: [] } : a))
+            : [...prev.assets, { ...asset, variants: [] }],
+          uploads: prev.uploads.map((u) =>
+            u.id === item.id ? { ...u, assetId: asset.id, progress: 100 } : u,
+          ),
         }));
 
-        // Poll until ready or failed (bounded)
-        void pollUntilReady(nodeId, asset.id, set);
+        // Single reload to pick up generated variants
+        try {
+          const fresh = await getNodeMediaManage(nodeId);
+          patchNode(set, nodeId, { assets: fresh });
+        } catch {
+          // non-fatal — asset already visible in store without variants
+        }
       } catch (err) {
         patchNode(set, nodeId, (prev) => ({
           uploads: prev.uploads.map((u) =>
@@ -193,46 +201,3 @@ function applyReorderLocally(
   return rest.map((a, i) => ({ ...a, position: i }));
 }
 
-async function pollUntilReady(
-  nodeId: string,
-  assetId: string,
-  set: (fn: (s: MediaStoreState) => Partial<MediaStoreState>) => void,
-) {
-  for (let round = 0; round < MAX_POLL_ROUNDS; round++) {
-    await sleep(POLL_INTERVAL_MS);
-
-    try {
-      const assets = await getNodeMediaManage(nodeId);
-      const asset = assets.find((a) => a.id === assetId);
-
-      if (!asset || asset.status === 'ready' || asset.status === 'failed') {
-        patchNode(set, nodeId, (prev) => {
-          const newAssets = asset
-            ? prev.assets.map((a) => (a.id === assetId ? asset : a))
-            : prev.assets;
-          const finalStatus: UploadItemStatus = asset?.status === 'ready' ? 'ready' : 'failed';
-          return {
-            assets: newAssets,
-            uploads: prev.uploads.map((u) =>
-              u.assetId === assetId ? { ...u, status: finalStatus } : u,
-            ),
-          };
-        });
-        return;
-      }
-    } catch {
-      // network hiccup — keep polling
-    }
-  }
-
-  // Timed out — surface as failed
-  patchNode(set, nodeId, (prev) => ({
-    uploads: prev.uploads.map((u) =>
-      u.assetId === assetId ? { ...u, status: 'failed', error: 'Processing timed out' } : u,
-    ),
-  }));
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}

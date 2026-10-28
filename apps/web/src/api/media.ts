@@ -12,8 +12,20 @@ import { z } from 'zod';
 import { apiFetch, getAccessToken } from './client.js';
 
 const assetStatusResponseSchema = z.object({
-  assetId: z.string().uuid(),
+  id: z.string(),
   status: z.string(),
+  variants: z.array(z.object({
+    id: z.string(),
+    tenantId: z.string(),
+    assetId: z.string(),
+    variant: z.string(),
+    objectKey: z.string(),
+    url: z.string(),
+    width: z.number(),
+    height: z.number(),
+    byteSize: z.number(),
+    createdAt: z.string(),
+  })),
 });
 
 // ── Public read (viewer) ──────────────────────────────────────────────────────
@@ -63,60 +75,43 @@ export function confirmUpload(
 }
 
 export type UploadProgressEvent = { loaded: number; total: number };
+export type UploadStatus = 'uploading' | 'processing' | 'ready' | 'failed';
 
-/**
- * Polls GET /media/:id/status until the asset reaches 'ready' or 'failed'.
- * Starts at 1.5 s, backs off to 10 s max, gives up after 120 s total.
- */
-export async function pollAssetStatus(
+const POLL_INTERVAL_MS = 2_000;
+const POLL_MAX_ROUNDS = 30; // 60 seconds total
+
+async function pollAssetStatus(
   assetId: string,
-  signal?: AbortSignal,
-): Promise<'ready' | 'failed'> {
-  const INITIAL_INTERVAL = 1500;
-  const MAX_INTERVAL = 10_000;
-  const TIMEOUT_MS = 120_000;
-  const started = Date.now();
-  let interval = INITIAL_INTERVAL;
-
-  while (true) {
-    if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
-    if (Date.now() - started > TIMEOUT_MS) return 'failed';
-
-    await new Promise<void>((resolve, reject) => {
-      const timer = setTimeout(resolve, interval);
-      signal?.addEventListener('abort', () => { clearTimeout(timer); reject(new DOMException('Aborted', 'AbortError')); }, { once: true });
-    });
-
+  onStatusChange?: (status: UploadStatus) => void,
+): Promise<void> {
+  for (let i = 0; i < POLL_MAX_ROUNDS; i++) {
+    await new Promise<void>((r) => setTimeout(r, POLL_INTERVAL_MS));
     try {
-      const { status } = await apiFetch(
+      const res = await apiFetch(
         `/media/${assetId}/status`,
         { method: 'GET' },
         assetStatusResponseSchema,
       );
-      if (status === 'ready' || status === 'failed') return status;
+      if (res.status === 'ready') {
+        onStatusChange?.('ready');
+        return;
+      }
+      if (res.status === 'failed') {
+        onStatusChange?.('failed');
+        return;
+      }
     } catch {
-      // Transient error — keep polling
+      // transient error — keep polling
     }
-
-    interval = Math.min(interval * 1.5, MAX_INTERVAL);
   }
+  // timed out without terminal status — leave as processing
 }
 
-/**
- * Reads image dimensions from a File using createImageBitmap (with HTMLImageElement
- * fallback), then orchestrates presign → PUT to storage → confirm → poll ready.
- *
- * Uses XMLHttpRequest for the storage PUT so we can report upload progress.
- * apiFetch handles the presign/confirm API calls as normal (with auth + retry).
- *
- * When onStatusChange is provided it receives 'uploading' | 'processing' | 'ready' | 'failed'
- * status transitions so the UI can show granular progress.
- */
 export async function uploadFile(
   nodeId: string,
   file: File,
   onProgress?: (e: UploadProgressEvent) => void,
-  onStatusChange?: (status: 'uploading' | 'processing' | 'ready' | 'failed') => void,
+  onStatusChange?: (status: UploadStatus) => void,
 ): Promise<MediaAsset> {
   const { width, height } = await getImageDimensions(file);
 
@@ -133,15 +128,8 @@ export async function uploadFile(
   onStatusChange?.('processing');
   const asset = await confirmUpload(assetId, { width, height });
 
-  // If the server returned 'processing', poll until ready/failed
-  if (asset.status === 'processing') {
-    const finalStatus = await pollAssetStatus(assetId);
-    onStatusChange?.(finalStatus);
-    // Return the asset with the final status reflected
-    return { ...asset, status: finalStatus };
-  }
+  await pollAssetStatus(assetId, onStatusChange);
 
-  onStatusChange?.('ready');
   return asset;
 }
 

@@ -12,7 +12,7 @@ import { requireAuth } from './middleware/require-auth.js';
 import { resolveTenant } from './middleware/resolve-tenant.js';
 import { securityHeaders } from './middleware/security-headers.js';
 import { authRouter } from './routes/auth.js';
-import { healthRouter } from './routes/health.js';
+import { healthRouter, queueHealthRouter } from './routes/health.js';
 import { createMediaPublicRouter, createMediaRouter } from './routes/media.js';
 import { nodesRouter } from './routes/nodes.js';
 import { createNodesWriteRouter } from './routes/nodes-write.js';
@@ -85,6 +85,7 @@ export function createApp(
   app.use(requireAuth);
   app.use(writeRateLimit);
 
+  app.use(queueHealthRouter);
   const mediaRouter = createMediaRouter(storageProvider, enqueue);
   app.use(mediaRouter);
   app.use(createNodesWriteRouter());
