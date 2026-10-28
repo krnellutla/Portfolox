@@ -110,7 +110,7 @@ authRouter.get(
     }
 
     setRefreshTokenCookie(res, issued.token, issued.expiresAt);
-    res.redirect(env.WEB_APP_URL);
+    res.redirect(`${env.WEB_APP_URL}/auth/callback`);
   }),
 );
 
