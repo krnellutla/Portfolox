@@ -43,11 +43,20 @@ async function request(path: string, init: RequestInit = {}): Promise<{ status: 
     }
   }
 
-  const res = await fetch(`${env.VITE_API_BASE_URL}${path}`, {
-    ...init,
-    headers,
-    credentials: 'include',
-  });
+  const controller = new AbortController();
+  const timeoutMs = path === '/auth/refresh' || path === '/auth/logout' ? 5_000 : 30_000;
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  let res: Response;
+  try {
+    res = await fetch(`${env.VITE_API_BASE_URL}${path}`, {
+      ...init,
+      headers,
+      credentials: 'include',
+      signal: init.signal ?? controller.signal,
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   let envelope: ApiEnvelope<unknown>;
   try {
@@ -71,7 +80,13 @@ let refreshPromise: Promise<RefreshResponse | null> | null = null;
 export function refreshAccessToken(): Promise<RefreshResponse | null> {
   if (!refreshPromise) {
     refreshPromise = (async () => {
-      const { status, envelope } = await request('/auth/refresh', { method: 'POST' });
+      let status: number;
+      let envelope: ApiEnvelope<unknown>;
+      try {
+        ({ status, envelope } = await request('/auth/refresh', { method: 'POST' }));
+      } catch {
+        return null;
+      }
       if (status !== 200 || !envelope.data) return null;
 
       if (isDesktop()) {
