@@ -46,8 +46,14 @@ export function TopNav() {
 
         <div className="hidden md:flex items-center gap-2">
           <NavLink
+            to="/client-login"
+            className="px-4 py-[7px] rounded-[9px] text-sm font-medium text-ink-3 hover:text-ink transition-colors duration-150"
+          >
+            Client Login
+          </NavLink>
+          <NavLink
             to="/login"
-            className="px-4 py-[7px] rounded-[9px] text-sm font-semibold text-ink-3 hover:text-ink transition-colors duration-150"
+            className="px-4 py-[7px] rounded-[9px] text-sm font-semibold bg-ink text-paper hover:opacity-90 transition-opacity duration-150"
           >
             Sign in
           </NavLink>
