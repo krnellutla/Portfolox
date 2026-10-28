@@ -2,7 +2,7 @@
 FROM node:22-alpine AS build
 WORKDIR /app
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 
 # Copy manifests first for layer caching
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
@@ -28,11 +28,11 @@ RUN cp -r /app/packages/shared/dist /app/api-deploy/node_modules/@blueflutes/sha
 FROM node:22-alpine AS runtime
 WORKDIR /app
 
-# sharp requires native libs
-RUN apk add --no-cache vips-dev
-
 COPY --from=build /app/api-deploy ./
 COPY --from=build /app/apps/api/dist ./dist
+
+RUN chown -R node:node /app
+USER node
 
 EXPOSE 3001
 

@@ -7,7 +7,7 @@
   "functions": {
     "api/[...path].ts": {
       "memory": 1024,
-      "maxDuration": 30,
+      "maxDuration": 60,
       "includeFiles": "node_modules/@img/**"
     }
   },
@@ -24,6 +24,10 @@
         {
           "key": "Strict-Transport-Security",
           "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://pxvyvkmjpomwpwcpgjwu.supabase.co; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://pxvyvkmjpomwpwcpgjwu.supabase.co tauri://localhost http://tauri.localhost https://tauri.localhost; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
         }
       ]
     },
