@@ -92,7 +92,8 @@ const FINEART: Omit<Photo, 'albumNodeId'>[] = [
 ];
 
 async function main() {
-  const pool = new Pool({ connectionString: env.DATABASE_MIGRATION_URL });
+  const ssl = env.NODE_ENV === 'production' ? true : { rejectUnauthorized: false };
+  const pool = new Pool({ connectionString: env.DATABASE_MIGRATION_URL, ssl });
   console.log('🌱 Seeding demo data…');
 
   await withTenant(pool, DEV_TENANT_ID, async (client) => {

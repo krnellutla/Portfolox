@@ -4,7 +4,8 @@ import { Pool } from 'pg';
 import { env } from '../config/env.js';
 
 async function main() {
-  const pool = new Pool({ connectionString: env.DATABASE_MIGRATION_URL });
+  const ssl = env.NODE_ENV === 'production' ? true : { rejectUnauthorized: false };
+  const pool = new Pool({ connectionString: env.DATABASE_MIGRATION_URL, ssl });
   const db = drizzle(pool);
 
   await migrate(db, { migrationsFolder: './src/db/migrations' });
