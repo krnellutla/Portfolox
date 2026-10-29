@@ -17,11 +17,17 @@ function cookieOptions(): CookieOptions {
   // Must be Lax (not Strict) even in production: the browser arrives here
   // via a top-level cross-site GET redirect from the OAuth provider, and
   // Strict cookies are not sent on cross-site navigations.
+  //
+  // Path is hardcoded to /auth (not AUTH_COOKIE_PATH) because the OAuth
+  // callback is always at /auth/:provider/callback — the browser must send
+  // this cookie on that top-level navigation, which uses the pre-Vercel-rewrite
+  // URL (/auth/...). The refresh-token cookie uses /api/auth because it is
+  // only ever sent via fetch() to /api/auth/refresh, not a navigation URL.
   return {
     httpOnly: true,
     secure: env.NODE_ENV === 'production',
     sameSite: 'lax',
-    path: env.AUTH_COOKIE_PATH,
+    path: '/auth',
   };
 }
 
