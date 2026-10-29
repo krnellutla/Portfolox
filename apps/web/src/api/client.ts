@@ -90,12 +90,14 @@ export function refreshAccessToken(): Promise<RefreshResponse | null> {
       if (status !== 200 || !envelope.data) return null;
 
       if (isDesktop()) {
-        const parsed = desktopRefreshResponseSchema.parse(envelope.data);
-        await setRefreshToken(parsed.refreshToken);
-        return parsed;
+        const parsed = desktopRefreshResponseSchema.safeParse(envelope.data);
+        if (!parsed.success) return null;
+        await setRefreshToken(parsed.data.refreshToken);
+        return parsed.data;
       }
 
-      return refreshResponseSchema.parse(envelope.data);
+      const parsed = refreshResponseSchema.safeParse(envelope.data);
+      return parsed.success ? parsed.data : null;
     })().finally(() => {
       refreshPromise = null;
     });
