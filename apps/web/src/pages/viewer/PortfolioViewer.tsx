@@ -7,8 +7,6 @@ import { ResponsiveImage } from '../../components/ui/ResponsiveImage.js';
 
 // ─── Photo data ────────────────────────────────────────────────────────────
 
-type Category = 'City' | 'B&W' | 'Portrait' | 'Family';
-
 interface StaticPhoto {
   kind: 'static';
   src: string;

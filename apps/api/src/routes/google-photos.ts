@@ -102,6 +102,12 @@ googlePhotosRouter.post(
         galleryNodeId = inserted.rows[0]!.id;
       }
 
+      const posRow = await client.query<{ next_pos: number }>(
+        'SELECT COALESCE(MAX(position), -1) + 1 AS next_pos FROM media_assets WHERE node_id = $1',
+        [galleryNodeId],
+      );
+      let nextPos = posRow.rows[0]?.next_pos ?? 0;
+
       let synced = 0;
       let skipped = 0;
 
@@ -118,18 +124,24 @@ googlePhotosRouter.post(
 
         const thumbUrl = `${item.baseUrl}=w400-h300`;
         const objectKey = `google:${item.id}`;
+        const width = item.mediaMetadata?.width ? parseInt(item.mediaMetadata.width, 10) : null;
+        const height = item.mediaMetadata?.height ? parseInt(item.mediaMetadata.height, 10) : null;
 
         await client.query(
           `INSERT INTO media_assets
-             (tenant_id, node_id, object_key, url, mime_type, status,
-              original_filename, byte_size, google_media_item_id, google_base_url, thumbnail_url)
-           VALUES ($1, $2, $3, $4, 'image/jpeg', 'published', $5, 0, $6, $7, $8)`,
+             (tenant_id, node_id, object_key, url, mime_type, status, position,
+              original_filename, byte_size, width, height,
+              google_media_item_id, google_base_url, thumbnail_url, ready_at)
+           VALUES ($1, $2, $3, $4, 'image/jpeg', 'ready', $5, $6, 1, $7, $8, $9, $10, $11, now())`,
           [
             tenantId,
             galleryNodeId,
             objectKey,
             item.baseUrl,
+            nextPos++,
             item.filename,
+            Number.isFinite(width) && (width as number) > 0 ? width : null,
+            Number.isFinite(height) && (height as number) > 0 ? height : null,
             item.id,
             item.baseUrl,
             thumbUrl,

@@ -1,19 +1,23 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, Settings } from 'lucide-react';
 import { logout } from '../../api/auth.js';
 import { useAuthStore } from '../../stores/auth-store.js';
+import { useCartStore } from '../../stores/cartStore.js';
 
 const STUDIO_NAV_LINKS = [
   { to: '/studio/dashboard', label: 'Dashboard' },
   { to: '/studio/upload', label: 'Upload' },
+  { to: '/studio/builder', label: 'Builder' },
   { to: '/studio/analytics', label: 'Analytics' },
   { to: '/studio/orders', label: 'Orders', icon: ShoppingBag },
+  { to: '/studio/settings', label: 'Settings', icon: Settings },
 ] as const;
 
 export function TopNav() {
   const location = useLocation();
   const navigate = useNavigate();
   const clear = useAuthStore((state) => state.clear);
+  const itemCount = useCartStore((state) => state.itemCount);
   const isStudio = location.pathname.startsWith('/studio');
 
   async function handleLogout() {
@@ -55,6 +59,18 @@ export function TopNav() {
         )}
 
         <div className="hidden md:flex items-center gap-2">
+          {!isStudio && itemCount > 0 && (
+            <NavLink
+              to="/cart"
+              aria-label={`Cart (${itemCount} items)`}
+              className="relative px-3 py-1.5 rounded-[9px] text-sm font-medium text-ink-3 hover:text-ink transition-colors duration-150 flex items-center gap-1.5"
+            >
+              <ShoppingBag size={16} />
+              <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-ink text-paper font-mono text-[11px] flex items-center justify-center">
+                {itemCount}
+              </span>
+            </NavLink>
+          )}
           {isStudio ? (
             <button
               onClick={() => void handleLogout()}

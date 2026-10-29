@@ -1,59 +1,31 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { TopNav } from '../../components/nav/TopNav.js';
 import { Eyebrow } from '../../components/ui/Eyebrow.js';
 import { useEyebrow } from '../../lib/eyebrow.js';
 import { StateView } from '../../components/ui/StateView.js';
 import { SkeletonRow } from '../../components/ui/Skeleton.js';
-import { getMyGalleries } from '../../api/me.js';
+import { createGallery, getMyGalleries } from '../../api/me.js';
 import { getGooglePhotosStatus, listGoogleAlbums, syncGoogleAlbum } from '../../api/google-photos.js';
 import { qk } from '../../lib/query-client.js';
 import { seedThumbUrl } from '../../lib/seed-photos.js';
-
-interface QueueItem {
-  id: string;
-  filename: string;
-  size: string;
-  progress: number;
-  done: boolean;
-}
-
-interface Frame {
-  id: string;
-  title: string;
-  code: string;
-  album: string;
-  status: 'published' | 'draft';
-  price: number;
-  thumbIndex: number;
-}
-
-const INIT_FRAMES: Frame[] = [
-  { id: 'f1', title: 'First Light',  code: 'PFX-4200', album: 'Landscapes', status: 'published', price: 45,  thumbIndex: 0 },
-  { id: 'f2', title: 'Tideline',     code: 'PFX-4201', album: 'Landscapes', status: 'published', price: 210, thumbIndex: 1 },
-  { id: 'f3', title: 'Northbound',   code: 'PFX-4202', album: 'Landscapes', status: 'draft',     price: 45,  thumbIndex: 2 },
-  { id: 'f4', title: 'Quiet Hours',  code: 'PFX-4203', album: 'Portraits',  status: 'published', price: 18,  thumbIndex: 19 },
-  { id: 'f5', title: 'Drift',        code: 'PFX-4204', album: 'Portraits',  status: 'published', price: 80,  thumbIndex: 20 },
-];
-
-let nextQueueId = 1;
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes}B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
-}
+import { useMediaStore } from '../../stores/media-store.js';
 
 export default function UploadPage() {
   const eyebrow = useEyebrow('13 — Upload & manage');
   const [activeAlbumId, setActiveAlbumId] = useState<string | null>(null);
-  const [queue, setQueue] = useState<QueueItem[]>([]);
-  const [frames] = useState<Frame[]>(INIT_FRAMES);
+  const [creatingAlbum, setCreatingAlbum] = useState(false);
+  const [newAlbumTitle, setNewAlbumTitle] = useState('');
   const [draggingOver, setDraggingOver] = useState(false);
   const [syncingAlbumId, setSyncingAlbumId] = useState<string | null>(null);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
+
+  const byNode = useMediaStore((s) => s.byNode);
+  const loadForNode = useMediaStore((s) => s.loadForNode);
+  const enqueueUploads = useMediaStore((s) => s.enqueueUploads);
+  const deleteOptimistic = useMediaStore((s) => s.deleteOptimistic);
 
   const { data: gPhotosStatus } = useQuery({
     queryKey: ['google-photos', 'status'],
@@ -66,13 +38,47 @@ export default function UploadPage() {
     enabled: gPhotosStatus?.connected === true,
   });
 
+  const { data: galleries, isLoading: galleriesLoading } = useQuery({
+    queryKey: qk.myGalleries(),
+    queryFn: getMyGalleries,
+  });
+
+  const activeAlbum = galleries?.find((g) => g.id === activeAlbumId) ?? galleries?.[0];
+  const nodeMedia = activeAlbum ? byNode[activeAlbum.id] : undefined;
+  const uploads = nodeMedia?.uploads ?? [];
+  const assets = nodeMedia?.assets ?? [];
+
+  useEffect(() => {
+    if (activeAlbum?.id) {
+      void loadForNode(activeAlbum.id);
+    }
+  }, [activeAlbum?.id, loadForNode]);
+
+  async function handleCreateAlbum() {
+    const trimmed = newAlbumTitle.trim();
+    if (!trimmed) return;
+    try {
+      const created = await createGallery(trimmed);
+      setNewAlbumTitle('');
+      setCreatingAlbum(false);
+      setActiveAlbumId(created.id);
+      await queryClient.invalidateQueries({ queryKey: qk.myGalleries() });
+    } catch {
+      // ignore error
+    }
+  }
+
   async function handleSyncAlbum(albumId: string) {
     setSyncingAlbumId(albumId);
     setSyncMessage(null);
     try {
       const result = await syncGoogleAlbum(albumId);
       setSyncMessage(`Synced ${result.synced} photos to "${result.albumTitle}"`);
-      void queryClient.invalidateQueries({ queryKey: qk.myGalleries() });
+      await queryClient.invalidateQueries({ queryKey: qk.myGalleries() });
+      if (result.galleryNodeId) {
+        setActiveAlbumId(result.galleryNodeId);
+        await loadForNode(result.galleryNodeId);
+      }
     } catch {
       setSyncMessage('Sync failed — please try again');
     } finally {
@@ -80,38 +86,18 @@ export default function UploadPage() {
     }
   }
 
-  const { data: galleries, isLoading: galleriesLoading } = useQuery({
-    queryKey: qk.myGalleries(),
-    queryFn: getMyGalleries,
-    select: (data) => {
-      if (!activeAlbumId && data.length > 0) {
-        // set initial active album after first load
-      }
-      return data;
-    },
-  });
-
-  const activeAlbum = galleries?.find((g) => g.id === activeAlbumId) ?? galleries?.[0];
-
-  function enqueue(files: FileList | null) {
-    if (!files) return;
-    Array.from(files).forEach((file) => {
-      const id = `q${nextQueueId++}`;
-      setQueue((prev) => [
-        ...prev,
-        { id, filename: file.name, size: formatBytes(file.size), progress: 0, done: false },
-      ]);
-      let prog = 0;
-      const interval = setInterval(() => {
-        prog = Math.min(prog + Math.random() * 18 + 5, 100);
-        setQueue((prev) =>
-          prev.map((item) =>
-            item.id === id ? { ...item, progress: Math.round(prog), done: prog >= 100 } : item
-          )
-        );
-        if (prog >= 100) clearInterval(interval);
-      }, 200);
-    });
+  async function enqueue(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    const fileList = Array.from(files);
+    let targetNodeId = activeAlbum?.id;
+    if (!targetNodeId) {
+      const created = await createGallery('Untitled Album');
+      await queryClient.invalidateQueries({ queryKey: qk.myGalleries() });
+      setActiveAlbumId(created.id);
+      targetNodeId = created.id;
+    }
+    await enqueueUploads(targetNodeId, fileList);
+    await queryClient.invalidateQueries({ queryKey: qk.myGalleries() });
   }
 
   return (
@@ -127,8 +113,34 @@ export default function UploadPage() {
           <Eyebrow className="mb-4">{eyebrow}</Eyebrow>
           <div className="flex items-center justify-between mb-2.5">
             <p className="font-mono text-[10.5px] uppercase tracking-label text-muted">Albums</p>
-            <button className="font-mono text-[11px] text-ink-3 hover:text-ink transition-colors">＋</button>
+            <button
+              onClick={() => setCreatingAlbum((v) => !v)}
+              title="New album"
+              className="font-mono text-[11px] text-ink-3 hover:text-ink transition-colors"
+            >
+              ＋
+            </button>
           </div>
+          {creatingAlbum && (
+            <div className="flex gap-1.5 mb-2.5">
+              <input
+                type="text"
+                placeholder="Album title…"
+                value={newAlbumTitle}
+                onChange={(e) => setNewAlbumTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') void handleCreateAlbum();
+                }}
+                className="flex-1 min-w-0 px-2.5 py-1.5 bg-canvas border border-field rounded-[8px] text-[12.5px] text-ink outline-none focus:border-ink"
+              />
+              <button
+                onClick={() => void handleCreateAlbum()}
+                className="px-2.5 py-1.5 bg-ink text-paper rounded-[8px] font-semibold text-[12px]"
+              >
+                Add
+              </button>
+            </div>
+          )}
           {galleriesLoading ? (
             <div className="flex flex-col">
               {Array.from({ length: 4 }).map((_, i) => (
@@ -179,7 +191,7 @@ export default function UploadPage() {
             }`}
             onDragOver={(e) => { e.preventDefault(); setDraggingOver(true); }}
             onDragLeave={() => setDraggingOver(false)}
-            onDrop={(e) => { e.preventDefault(); setDraggingOver(false); enqueue(e.dataTransfer.files); }}
+            onDrop={(e) => { e.preventDefault(); setDraggingOver(false); void enqueue(e.dataTransfer.files); }}
           >
             <div className="w-14 h-14 rounded-[12px] border-2 border-field flex items-center justify-center text-[24px] text-ink-3">
               ↑
@@ -202,12 +214,12 @@ export default function UploadPage() {
               multiple
               accept="image/*,.raw,.cr2,.nef,.arw,.dng"
               className="hidden"
-              onChange={(e) => enqueue(e.target.files)}
+              onChange={(e) => void enqueue(e.target.files)}
             />
           </div>
 
           {/* Upload queue empty state */}
-          {queue.length === 0 && (
+          {uploads.length === 0 && (
             <StateView
               variant="empty"
               title="Nothing uploading"
@@ -216,34 +228,46 @@ export default function UploadPage() {
           )}
 
           {/* Upload queue */}
-          {queue.length > 0 && (
+          {uploads.length > 0 && (
             <div className="bg-surface border border-line rounded-card p-5">
               <p className="font-mono text-[10px] uppercase tracking-label text-muted mb-4">Upload queue</p>
               <div className="flex flex-col gap-3">
-                {queue.map((item, i) => (
-                  <div key={item.id} className="flex items-center gap-4">
-                    <img
-                      src={seedThumbUrl(i)}
-                      alt=""
-                      className="w-10 h-10 rounded-[6px] shrink-0 object-cover"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <p className="font-mono text-[11px] text-ink truncate">{item.filename}</p>
-                        <p className="font-mono text-[10px] text-muted ml-2 shrink-0">{item.size}</p>
+                {uploads.map((item, i) => {
+                  const isDone = item.status === 'ready';
+                  const isFailed = item.status === 'failed';
+                  return (
+                    <div key={item.id} className="flex items-center gap-4">
+                      <img
+                        src={seedThumbUrl(i)}
+                        alt=""
+                        className="w-10 h-10 rounded-[6px] shrink-0 object-cover"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <p className="font-mono text-[11px] text-ink truncate">{item.filename}</p>
+                          <p className="font-mono text-[10px] text-muted ml-2 shrink-0 capitalize">{item.status}</p>
+                        </div>
+                        <div className="h-[4px] rounded-full bg-line overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-200 ${
+                              isFailed ? 'bg-danger' : isDone ? 'bg-positive' : 'bg-ink'
+                            }`}
+                            style={{ width: `${item.progress}%` }}
+                          />
+                        </div>
+                        <p className={`font-mono text-[10px] mt-1 ${
+                          isFailed ? 'text-danger' : isDone ? 'text-positive' : 'text-muted'
+                        }`}>
+                          {isFailed
+                            ? `● ${item.error ?? 'Upload failed'}`
+                            : isDone
+                              ? '● Complete'
+                              : `● ${item.status === 'processing' ? 'Processing variants…' : `Uploading ${item.progress}%`}`}
+                        </p>
                       </div>
-                      <div className="h-[4px] rounded-full bg-line overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all duration-200 ${item.done ? 'bg-positive' : 'bg-ink'}`}
-                          style={{ width: `${item.progress}%` }}
-                        />
-                      </div>
-                      <p className={`font-mono text-[10px] mt-1 ${item.done ? 'text-positive' : 'text-muted'}`}>
-                        {item.done ? '● Complete' : `● Uploading ${item.progress}%`}
-                      </p>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -254,74 +278,131 @@ export default function UploadPage() {
               <p className="font-serif text-[20px] font-[500] text-ink">Manage frames</p>
             </div>
 
-            {/* Card list — mobile/tablet only */}
-            <div className="md:hidden flex flex-col divide-y divide-line">
-              {frames.map((frame, i) => (
-                <div key={frame.id} className="flex gap-3 p-4">
-                  <img
-                    src={seedThumbUrl(frame.thumbIndex)}
-                    alt={frame.title}
-                    className="w-12 h-12 rounded-[6px] shrink-0 object-cover"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-semibold text-ink">{frame.title}</p>
-                    <p className="font-mono text-[10px] text-muted">{frame.code}</p>
-                    <span className={`inline-flex items-center px-2 py-0.5 mt-1 rounded-[6px] font-mono text-[10px] ${
-                      frame.status === 'published' ? 'bg-positive/10 text-positive' : 'bg-canvas text-muted'
-                    }`}>
-                      {frame.status === 'published' ? 'Published' : 'Draft'}
-                    </span>
-                    <div className="flex items-center gap-2 mt-2">
-                      <button className="px-3 py-1 text-[12px] font-semibold bg-surface border border-line rounded-[7px] text-ink whitespace-nowrap">Edit</button>
-                      <button className="px-3 py-1 text-[12px] font-semibold bg-surface border border-line rounded-[7px] text-muted whitespace-nowrap">···</button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <table className="w-full hidden md:table">
-              <thead>
-                <tr className="border-b border-line">
-                  <th className="px-5 py-2.5 text-left font-mono text-[10px] uppercase tracking-label text-muted">Frame</th>
-                  <th className="px-5 py-2.5 text-left font-mono text-[10px] uppercase tracking-label text-muted">Album</th>
-                  <th className="px-5 py-2.5 text-left font-mono text-[10px] uppercase tracking-label text-muted">Status</th>
-                  <th className="px-5 py-2.5 text-left font-mono text-[10px] uppercase tracking-label text-muted">Price</th>
-                  <th className="px-5 py-2.5" />
-                </tr>
-              </thead>
-              <tbody>
-                {frames.map((frame, i) => (
-                  <tr key={frame.id} className={`border-b border-line-2 last:border-0 ${i % 2 === 0 ? '' : 'bg-canvas/50'}`}>
-                    <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-3">
+            {assets.length === 0 ? (
+              <div className="p-6">
+                <StateView
+                  variant="empty"
+                  title="No frames in this album"
+                  description="Upload files above or import an album from Google Photos."
+                />
+              </div>
+            ) : (
+              <>
+                {/* Card list — mobile/tablet only */}
+                <div className="md:hidden flex flex-col divide-y divide-line">
+                  {assets.map((asset, i) => {
+                    const thumbUrl =
+                      asset.variants.find((v) => v.variant === 'thumb')?.url ??
+                      asset.variants[0]?.url ??
+                      asset.url ??
+                      seedThumbUrl(i);
+                    const frameTitle = asset.originalFilename.replace(/\.[^.]+$/, '');
+                    const frameCode = `PFX-${asset.id.slice(0, 4).toUpperCase()}`;
+                    const isPublished = asset.status === 'ready';
+                    return (
+                      <div key={asset.id} className="flex gap-3 p-4">
                         <img
-                          src={seedThumbUrl(frame.thumbIndex)}
-                          alt={frame.title}
-                          className="w-9 h-9 rounded-[6px] shrink-0 object-cover"
+                          src={thumbUrl}
+                          alt={frameTitle}
+                          className="w-12 h-12 rounded-[6px] shrink-0 object-cover"
                         />
-                        <div>
-                          <p className="text-[13px] font-semibold text-ink">{frame.title}</p>
-                          <p className="font-mono text-[10px] text-muted">{frame.code}</p>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13px] font-semibold text-ink">{frameTitle}</p>
+                          <p className="font-mono text-[10px] text-muted">{frameCode}</p>
+                          <span className={`inline-flex items-center px-2 py-0.5 mt-1 rounded-[6px] font-mono text-[10px] ${
+                            isPublished ? 'bg-positive/10 text-positive' : 'bg-canvas text-muted'
+                          }`}>
+                            {isPublished ? 'Published' : 'Processing'}
+                          </span>
+                          <div className="flex items-center gap-2 mt-2">
+                            {activeAlbum && (
+                              <button
+                                onClick={() => {
+                                  void deleteOptimistic(activeAlbum.id, asset.id).then(() =>
+                                    queryClient.invalidateQueries({ queryKey: qk.myGalleries() }),
+                                  );
+                                }}
+                                className="px-3 py-1 text-[12px] font-semibold bg-surface border border-line rounded-[7px] text-danger whitespace-nowrap"
+                              >
+                                Delete
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </td>
-                    <td className="px-5 py-3.5 text-[13px] text-ink-3 max-w-[160px] truncate">{frame.album}</td>
-                    <td className="px-5 py-3.5">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-[6px] font-mono text-[10px] ${
-                        frame.status === 'published' ? 'bg-positive/10 text-positive' : 'bg-canvas text-muted'
-                      }`}>
-                        {frame.status === 'published' ? 'Published' : 'Draft'}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3.5 font-serif text-[16px] text-ink">${frame.price}</td>
-                    <td className="px-5 py-3.5 text-right">
-                      <button className="text-muted hover:text-ink transition-colors text-[18px]">···</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    );
+                  })}
+                </div>
+
+                <table className="w-full hidden md:table">
+                  <thead>
+                    <tr className="border-b border-line">
+                      <th className="px-5 py-2.5 text-left font-mono text-[10px] uppercase tracking-label text-muted">Frame</th>
+                      <th className="px-5 py-2.5 text-left font-mono text-[10px] uppercase tracking-label text-muted">Album</th>
+                      <th className="px-5 py-2.5 text-left font-mono text-[10px] uppercase tracking-label text-muted">Status</th>
+                      <th className="px-5 py-2.5 text-left font-mono text-[10px] uppercase tracking-label text-muted">Dimensions</th>
+                      <th className="px-5 py-2.5" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {assets.map((asset, i) => {
+                      const thumbUrl =
+                        asset.variants.find((v) => v.variant === 'thumb')?.url ??
+                        asset.variants[0]?.url ??
+                        asset.url ??
+                        seedThumbUrl(i);
+                      const frameTitle = asset.originalFilename.replace(/\.[^.]+$/, '');
+                      const frameCode = `PFX-${asset.id.slice(0, 4).toUpperCase()}`;
+                      const isPublished = asset.status === 'ready';
+                      return (
+                        <tr key={asset.id} className={`border-b border-line-2 last:border-0 ${i % 2 === 0 ? '' : 'bg-canvas/50'}`}>
+                          <td className="px-5 py-3.5">
+                            <div className="flex items-center gap-3">
+                              <img
+                                src={thumbUrl}
+                                alt={frameTitle}
+                                className="w-9 h-9 rounded-[6px] shrink-0 object-cover"
+                              />
+                              <div>
+                                <p className="text-[13px] font-semibold text-ink">{frameTitle}</p>
+                                <p className="font-mono text-[10px] text-muted">{frameCode}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-5 py-3.5 text-[13px] text-ink-3 max-w-[160px] truncate">
+                            {activeAlbum?.title ?? '—'}
+                          </td>
+                          <td className="px-5 py-3.5">
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-[6px] font-mono text-[10px] ${
+                              isPublished ? 'bg-positive/10 text-positive' : 'bg-canvas text-muted'
+                            }`}>
+                              {isPublished ? 'Published' : 'Processing'}
+                            </span>
+                          </td>
+                          <td className="px-5 py-3.5 font-mono text-[11px] text-muted">
+                            {asset.width && asset.height ? `${asset.width}×${asset.height}` : '—'}
+                          </td>
+                          <td className="px-5 py-3.5 text-right">
+                            {activeAlbum && (
+                              <button
+                                onClick={() => {
+                                  void deleteOptimistic(activeAlbum.id, asset.id).then(() =>
+                                    queryClient.invalidateQueries({ queryKey: qk.myGalleries() }),
+                                  );
+                                }}
+                                className="font-mono text-[11px] text-muted hover:text-danger transition-colors"
+                              >
+                                Delete
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </>
+            )}
           </div>
           {/* Google Photos import panel */}
           <div className="bg-surface border border-line rounded-card overflow-hidden">

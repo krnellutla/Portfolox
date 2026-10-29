@@ -19,7 +19,6 @@ describe('tenant settings API', () => {
   const hostB = `ts-b-${randomUUID()}.example.com`;
 
   let tokenA: string;
-  let tokenB: string;
 
   beforeAll(async () => {
     await withTenant(migratorPool, tenantA, async (client) => {
@@ -46,7 +45,6 @@ describe('tenant settings API', () => {
     });
 
     tokenA = await signAccessToken({ sub: userA, tenantId: tenantA, email: 'tsa@example.com' });
-    tokenB = await signAccessToken({ sub: userB, tenantId: tenantB, email: 'tsb@example.com' });
   });
 
   afterAll(async () => {

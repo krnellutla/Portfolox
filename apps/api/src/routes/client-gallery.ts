@@ -73,7 +73,7 @@ clientGalleryRouter.get('/client/:shareToken', asyncHandler(async (req, res) => 
   }
 
   const mediaRows = await req.withTenant((client) =>
-    client.query(`SELECT id FROM media_assets WHERE node_id = $1 AND status = 'published' ORDER BY position`, [node.id]),
+    client.query(`SELECT id FROM media_assets WHERE node_id = $1 AND status IN ('ready', 'published') ORDER BY position`, [node.id]),
   );
 
   res.json({

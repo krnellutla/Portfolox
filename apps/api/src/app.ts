@@ -29,6 +29,7 @@ import { galleriesRouter } from './routes/galleries.js';
 import { analyticsRouter } from './routes/analytics.js';
 import { studioOrdersRouter } from './routes/studio-orders.js';
 import { googlePhotosRouter } from './routes/google-photos.js';
+import { commerceRouter } from './routes/commerce.js';
 import { tenantSettingsPublicRouter, tenantSettingsRouter } from './routes/tenant-settings.js';
 import { createBullMQEnqueue, createInProcessEnqueue } from './services/media/queue.js';
 import type { Enqueue } from './services/media/queue.js';
@@ -79,6 +80,7 @@ export function createApp(
   app.use(communityRouter);
   app.use(conversationsRouter);
   app.use(clientGalleryRouter);
+  app.use(commerceRouter);
   app.use(tenantSettingsPublicRouter);
 
   // Protected routes — Bearer token required

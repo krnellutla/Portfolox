@@ -31,7 +31,10 @@ authRouter.get(
 
     const { url, state, codeVerifier } = createAuthorizationRequest(provider);
     const client = req.query.client === 'desktop' ? 'desktop' : undefined;
-    setOAuthStateCookie(res, { provider, state, codeVerifier, client });
+    const rawNext = typeof req.query.next === 'string' ? req.query.next : undefined;
+    const next =
+      rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : undefined;
+    setOAuthStateCookie(res, { provider, state, codeVerifier, client, next });
     res.redirect(url.toString());
   }),
 );
@@ -110,7 +113,10 @@ authRouter.get(
     }
 
     setRefreshTokenCookie(res, issued.token, issued.expiresAt);
-    res.redirect(`${env.WEB_APP_URL}/auth/callback`);
+    const callbackUrl = stateCookie.next
+      ? `${env.WEB_APP_URL}/auth/callback?next=${encodeURIComponent(stateCookie.next)}`
+      : `${env.WEB_APP_URL}/auth/callback`;
+    res.redirect(callbackUrl);
   }),
 );
 

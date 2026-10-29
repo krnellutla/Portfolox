@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { formatMoney } from '../../lib/format-money.js';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Chip } from '../../components/ui/Chip.js';
@@ -14,7 +14,6 @@ import type { Specialty, PlanTier } from '@blueflutes/shared';
 const SPECIALTIES: Specialty[] = ['Landscape', 'Portrait', 'Street', 'Wedding', 'Fine Art', 'Documentary'];
 
 export default function OnboardingPage() {
-  const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [plan, setPlan] = useState<PlanTier>('studio');
   const [displayName, setDisplayName] = useState('');
@@ -53,7 +52,11 @@ export default function OnboardingPage() {
   function toggleSpecialty(s: Specialty) {
     setSpecialties((prev) => {
       const next = new Set(prev);
-      next.has(s) ? next.delete(s) : next.add(s);
+      if (next.has(s)) {
+        next.delete(s);
+      } else {
+        next.add(s);
+      }
       return next;
     });
   }

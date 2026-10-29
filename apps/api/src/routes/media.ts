@@ -58,12 +58,14 @@ function buildSyntheticVariants(
     id: string;
     tenant_id: string;
     object_key: string;
+    url?: string;
     width: number;
     height: number;
     byte_size: number;
     created_at: Date;
   },
 ) {
+  const isGoogle = asset.object_key.startsWith('google:');
   return VARIANT_SPECS.map((spec) => {
     const hash = createHash('md5').update(`${asset.id}:${spec.name}`).digest('hex');
     const syntheticId = `${hash.slice(0, 8)}-${hash.slice(8, 12)}-${hash.slice(12, 16)}-${hash.slice(16, 20)}-${hash.slice(20, 32)}`;
@@ -76,13 +78,17 @@ function buildSyntheticVariants(
       asset.width > 0
         ? Math.max(1, Math.round(asset.byte_size * (scaledWidth / asset.width) ** 2))
         : 1;
+    const variantUrl =
+      isGoogle && asset.url
+        ? `${asset.url}=w${spec.width}`
+        : storage.getTransformUrl!(asset.object_key, spec.width, 80);
     return {
       id: syntheticId,
       tenantId: asset.tenant_id,
       assetId: asset.id,
       variant: spec.name,
       objectKey: asset.object_key,
-      url: storage.getTransformUrl!(asset.object_key, spec.width, 80),
+      url: variantUrl,
       width: scaledWidth,
       height: scaledHeight,
       byteSize: estByteSize,
@@ -128,14 +134,14 @@ export function createMediaPublicRouter(storage: StorageProvider): Router {
           `SELECT id, tenant_id, node_id, object_key, url, mime_type, status,
                   position, original_filename, byte_size, checksum, width, height, created_at
            FROM media_assets
-           WHERE node_id = $1 AND status = 'ready'
+           WHERE node_id = $1 AND status IN ('ready', 'published')
            ORDER BY position`,
           [nodeId],
         );
 
         if (assetRows.rowCount === 0) return [];
 
-        let variantsByAsset = new Map<string, unknown[]>();
+        const variantsByAsset = new Map<string, unknown[]>();
         if (!useTransform) {
           const assetIds = assetRows.rows.map((r) => r.id as string);
           const variantRows = await client.query(
@@ -170,10 +176,10 @@ export function createMediaPublicRouter(storage: StorageProvider): Router {
           objectKey: a.object_key,
           url: a.url,
           mimeType: a.mime_type,
-          status: a.status,
+          status: a.status === 'published' ? 'ready' : a.status,
           position: a.position,
           originalFilename: a.original_filename,
-          byteSize: a.byte_size,
+          byteSize: Math.max(1, (a.byte_size as number) || 1),
           checksum: a.checksum,
           width: a.width,
           height: a.height,
@@ -211,8 +217,8 @@ export function createMediaPublicRouter(storage: StorageProvider): Router {
         try {
           const cached = await redis.get(`job:status:${id}`);
           if (cached === 'ready' || cached === 'failed') {
-            const body: ApiEnvelope<{ assetId: string; status: string }> = {
-              data: { assetId: id, status: cached },
+            const body: ApiEnvelope<{ id: string; assetId: string; status: string }> = {
+              data: { id, assetId: id, status: cached },
               error: null,
             };
             res.json(body);
@@ -236,8 +242,8 @@ export function createMediaPublicRouter(storage: StorageProvider): Router {
         throw AppError.notFound('Media asset not found');
       }
 
-      const body: ApiEnvelope<{ assetId: string; status: string }> = {
-        data: { assetId: row.id, status: row.status },
+      const body: ApiEnvelope<{ id: string; assetId: string; status: string }> = {
+        data: { id: row.id, assetId: row.id, status: row.status },
         error: null,
       };
       res.json(body);
@@ -418,7 +424,7 @@ export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): R
 
         if (assetRows.rowCount === 0) return [];
 
-        let variantsByAsset = new Map<string, unknown[]>();
+        const variantsByAsset = new Map<string, unknown[]>();
         if (!useTransform) {
           const assetIds = assetRows.rows.map((r) => r.id as string);
           const variantRows = await client.query(
@@ -453,10 +459,10 @@ export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): R
           objectKey: a.object_key,
           url: a.url,
           mimeType: a.mime_type,
-          status: a.status,
+          status: a.status === 'published' ? 'ready' : a.status,
           position: a.position,
           originalFilename: a.original_filename,
-          byteSize: a.byte_size,
+          byteSize: Math.max(1, (a.byte_size as number) || 1),
           checksum: a.checksum,
           width: a.width,
           height: a.height,

@@ -12,7 +12,8 @@ import { z } from 'zod';
 import { apiFetch, getAccessToken } from './client.js';
 
 const assetStatusResponseSchema = z.object({
-  id: z.string(),
+  id: z.string().optional(),
+  assetId: z.string().optional(),
   status: z.string(),
   variants: z.array(z.object({
     id: z.string(),
@@ -25,7 +26,7 @@ const assetStatusResponseSchema = z.object({
     height: z.number(),
     byteSize: z.number(),
     createdAt: z.string(),
-  })),
+  })).optional(),
 });
 
 // ── Public read (viewer) ──────────────────────────────────────────────────────
@@ -205,9 +206,10 @@ function putToStorage(
     xhr.open('PUT', url);
     xhr.setRequestHeader('Content-Type', file.type);
 
-    // Forward the access token for self-hosted storage that requires auth
+    // Forward the access token only for non-S3-presigned self-hosted storage endpoints.
+    // S3 presigned URLs carry authentication in X-Amz-* query params and reject an extra Authorization header.
     const token = getAccessToken();
-    if (token) {
+    if (token && !url.includes('X-Amz-')) {
       xhr.setRequestHeader('Authorization', `Bearer ${token}`);
     }
 

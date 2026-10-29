@@ -117,7 +117,6 @@ function GalleryGrid({ photoOrder, title }: { photoOrder: string[]; title: strin
 // ---------------------------------------------------------------------------
 export default function ClientGallery() {
   const { shareToken } = useParams<{ shareToken: string }>();
-  const [unlocked, setUnlocked] = useState(false);
 
   const { data, error, isLoading, refetch } = useQuery({
     queryKey: qk.clientGallery(shareToken ?? ''),
@@ -146,7 +145,6 @@ export default function ClientGallery() {
       <PasswordGate
         shareToken={shareToken}
         onUnlocked={() => {
-          setUnlocked(true);
           void refetch();
         }}
       />

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { refreshAccessToken } from '../../api/auth.js';
 import { setAccessToken } from '../../api/client.js';
 import { StateView } from '../../components/ui/StateView.js';
@@ -12,9 +12,16 @@ import { useAuthStore } from '../../stores/auth-store.js';
  * silent-refresh flow used on page load.
  */
 export default function AuthCallback() {
+  const [searchParams] = useSearchParams();
   const status = useAuthStore((state) => state.status);
   const setSession = useAuthStore((state) => state.setSession);
   const clear = useAuthStore((state) => state.clear);
+
+  const rawNext = searchParams.get('next');
+  const nextPath =
+    rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//')
+      ? rawNext
+      : '/studio/dashboard';
 
   useEffect(() => {
     refreshAccessToken()
@@ -32,7 +39,7 @@ export default function AuthCallback() {
   }, []);
 
   if (status === 'authenticated') {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={nextPath} replace />;
   }
 
   if (status === 'unauthenticated') {
