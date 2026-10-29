@@ -16,7 +16,8 @@ async function main() {
     throw new Error('Set TENANT_NAME and TENANT_HOST (e.g. portfolix.tinkeryard.dev)');
   }
 
-  const pool = new Pool({ connectionString: env.DATABASE_MIGRATION_URL });
+  const ssl = env.NODE_ENV === 'production' ? true : { rejectUnauthorized: false };
+  const pool = new Pool({ connectionString: env.DATABASE_MIGRATION_URL, ssl });
   try {
     const existing = await pool.query('SELECT tenant_id FROM tenant_domains WHERE host = $1', [host]);
     if (existing.rowCount && existing.rowCount > 0) {

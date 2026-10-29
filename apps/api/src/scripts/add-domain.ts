@@ -14,7 +14,8 @@ import { env } from '../config/env.js';
 async function main() {
   const args = process.argv.slice(2);
 
-  const pool = new Pool({ connectionString: env.DATABASE_MIGRATION_URL });
+  const ssl = env.NODE_ENV === 'production' ? true : { rejectUnauthorized: false };
+  const pool = new Pool({ connectionString: env.DATABASE_MIGRATION_URL, ssl });
 
   if (args.includes('--list')) {
     const { rows } = await pool.query<{ id: string; name: string; host: string; is_primary: boolean }>(
