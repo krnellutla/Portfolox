@@ -13,7 +13,8 @@
     "db:bootstrap-roles": "tsx src/scripts/bootstrap-roles.ts",
     "db:migrate": "tsx src/scripts/migrate.ts",
     "db:seed": "tsx src/scripts/seed.ts",
-    "db:create-tenant": "tsx src/scripts/create-tenant.ts"
+    "db:create-tenant": "tsx src/scripts/create-tenant.ts",
+    "db:add-domain": "tsx src/scripts/add-domain.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1073.0",
