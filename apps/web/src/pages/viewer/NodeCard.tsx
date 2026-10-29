@@ -4,12 +4,6 @@ import { getNodeMedia } from '../../api/media.js';
 import { ResponsiveImage } from '../../components/ui/ResponsiveImage.js';
 import type { NodeTreeItem } from '../../lib/build-tree.js';
 
-const TYPE_ICON: Record<NodeTreeItem['type'], string> = {
-  folder: '📁',
-  gallery: '🖼️',
-  page: '📄',
-};
-
 const TYPE_LABEL: Record<NodeTreeItem['type'], string> = {
   folder: 'Folder',
   gallery: 'Gallery',

@@ -3,7 +3,6 @@ import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../../src/app.js';
 import { withTenant } from '../../src/db/with-tenant.js';
-import { signAccessToken } from '../../src/lib/jwt.js';
 import { FakeStorageProvider } from '../../src/services/storage/index.js';
 import type { Enqueue } from '../../src/services/media/queue.js';
 import { createTestMigratorPool, createTestPool } from '../db-test-utils.js';
@@ -25,7 +24,6 @@ describe('GET /media?nodeId', () => {
 
   let assetReadyId: string;
   let assetProcessingId: string;
-  let tokenA: string;
 
   beforeAll(async () => {
     assetReadyId = randomUUID();
@@ -86,8 +84,6 @@ describe('GET /media?nodeId', () => {
         [galleryNodeB, tenantB],
       );
     });
-
-    tokenA = await signAccessToken({ sub: userA, tenantId: tenantA, email: 'puba@example.com' });
   });
 
   afterAll(async () => {

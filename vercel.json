@@ -33,7 +33,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://pxvyvkmjpomwpwcpgjwu.supabase.co; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://pxvyvkmjpomwpwcpgjwu.supabase.co tauri://localhost http://tauri.localhost https://tauri.localhost; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://pxvyvkmjpomwpwcpgjwu.supabase.co https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://images.pexels.com https://images.unsplash.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://pxvyvkmjpomwpwcpgjwu.supabase.co tauri://localhost http://tauri.localhost https://tauri.localhost; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
         }
       ]
     },

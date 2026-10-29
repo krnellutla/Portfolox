@@ -57,7 +57,6 @@ const envSchema = z.object({
 
   // Redis (optional — gallery responses are cached when set)
   REDIS_URL: z.string().url().optional(),
-  QUEUE_PROVIDER: z.enum(['bullmq', 'inline']).default('inline'),
 
   // Queue provider: 'bullmq' requires REDIS_URL; 'inline' processes synchronously
   QUEUE_PROVIDER: z.enum(['bullmq', 'inline']).default('inline'),

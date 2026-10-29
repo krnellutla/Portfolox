@@ -85,7 +85,6 @@ describe('DELETE /media/:id', () => {
   const galleryB = randomUUID();
 
   let tokenA: string;
-  let tokenB: string;
 
   beforeAll(async () => {
     await withTenant(migratorPool, tenantA, async (client) => {
@@ -119,7 +118,6 @@ describe('DELETE /media/:id', () => {
       );
     });
     tokenA = await signAccessToken({ sub: userA, tenantId: tenantA, email: 'dela@example.com' });
-    tokenB = await signAccessToken({ sub: userB, tenantId: tenantB, email: 'delb@example.com' });
   });
 
   afterAll(async () => {

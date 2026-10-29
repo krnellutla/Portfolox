@@ -53,7 +53,6 @@ export default function SearchPage() {
       q,
       styles: style ? [style as StyleLabel] : prev.styles,
     }));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function updateFilters(patch: Partial<SearchFilters>) {

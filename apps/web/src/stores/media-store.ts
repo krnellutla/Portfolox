@@ -1,4 +1,4 @@
-import type { MediaAssetWithVariants, MediaListResponse } from '@blueflutes/shared';
+import type { MediaAssetWithVariants } from '@blueflutes/shared';
 import { create } from 'zustand';
 import {
   deleteMedia,
@@ -96,9 +96,7 @@ export const useMediaStore = create<MediaStoreState>((set, get) => ({
 
     // Sequential upload queue
     for (let i = 0; i < files.length; i++) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const item = items[i]!;
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const file = files[i]!;
 
       const onProgress = (e: UploadProgressEvent) => {

@@ -63,6 +63,7 @@ describe('GET /auth/:provider and /auth/:provider/callback', () => {
   });
 
   afterAll(async () => {
+    await migratorPool.query('DELETE FROM google_oauth_tokens WHERE tenant_id IN ($1, $2)', [tenantId, desktopTenantId]);
     await migratorPool.query('DELETE FROM tokens WHERE tenant_id IN ($1, $2)', [tenantId, desktopTenantId]);
     await migratorPool.query('DELETE FROM users WHERE tenant_id IN ($1, $2)', [tenantId, desktopTenantId]);
     await migratorPool.query('DELETE FROM tenant_domains WHERE tenant_id IN ($1, $2)', [tenantId, desktopTenantId]);
@@ -160,7 +161,7 @@ describe('GET /auth/:provider and /auth/:provider/callback', () => {
       .set('Cookie', `${OAUTH_STATE_COOKIE}=${stateCookie}`);
 
     expect(res.status).toBe(302);
-    expect(res.headers.location).toBe('http://localhost:5173');
+    expect(res.headers.location).toBe('http://localhost:5173/auth/callback');
 
     const refreshCookie = cookieValue(setCookies(res), REFRESH_TOKEN_COOKIE);
     expect(refreshCookie).toBeTruthy();
@@ -281,7 +282,7 @@ describe('GET /auth/:provider and /auth/:provider/callback', () => {
       .set('Cookie', `${OAUTH_STATE_COOKIE}=${stateCookie}`);
 
     expect(res.status).toBe(302);
-    expect(res.headers.location).toBe('http://localhost:5173');
+    expect(res.headers.location).toBe('http://localhost:5173/auth/callback');
 
     const refreshCookie = cookieValue(setCookies(res), REFRESH_TOKEN_COOKIE);
     expect(refreshCookie).toBeTruthy();

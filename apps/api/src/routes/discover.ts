@@ -50,7 +50,7 @@ discoverRouter.get(
       client.query(
         `SELECT id, node_id, url, original_filename, width, height, tenant_id, created_at
          FROM media_assets
-         WHERE status = 'published'
+         WHERE status IN ('ready', 'published')
            ${cursor ? 'AND created_at < $2' : ''}
          ORDER BY created_at DESC
          LIMIT $1`,

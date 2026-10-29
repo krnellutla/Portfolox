@@ -1,4 +1,3 @@
-import { StateView } from '../../components/ui/StateView.js';
 import type { NodeTreeItem } from '../../lib/build-tree.js';
 import { NodeCard } from './NodeCard.js';
 

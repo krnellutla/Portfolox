@@ -27,6 +27,7 @@ import { Input } from '../../components/ui/Input.js';
 import { Toggle } from '../../components/ui/Toggle.js';
 import { StateView } from '../../components/ui/StateView.js';
 import { getMyGalleries, reorderGallery, updateGallery } from '../../api/me.js';
+import { getNodeMediaManage } from '../../api/media.js';
 import { protectGallery, galleryShareUrl } from '../../api/client-gallery.js';
 import { qk, queryClient } from '../../lib/query-client.js';
 import { seedPhotoUrl } from '../../lib/seed-photos.js';
@@ -95,6 +96,12 @@ export default function GalleryBuilderPage() {
   const [selectedGalleryId, setSelectedGalleryId] = useState<string | null>(null);
   const selectedGallery: Gallery | undefined = galleries?.find((g) => g.id === selectedGalleryId) ?? galleries?.[0];
 
+  const { data: galleryAssets } = useQuery({
+    queryKey: ['media-manage', selectedGallery?.id],
+    queryFn: () => getNodeMediaManage(selectedGallery!.id),
+    enabled: Boolean(selectedGallery?.id),
+  });
+
   // Local editable state synced from selected gallery
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -121,6 +128,26 @@ export default function GalleryBuilderPage() {
       setPasswordInput('');
     }
   }, [selectedGallery?.id]);
+
+  useEffect(() => {
+    if (galleryAssets && galleryAssets.length > 0) {
+      setFrames(
+        galleryAssets.map((asset, idx) => ({
+          id: asset.id,
+          code: `PFX-${asset.id.slice(0, 4).toUpperCase()}`,
+          src:
+            asset.variants.find((v) => v.variant === 'medium')?.url ??
+            asset.variants.find((v) => v.variant === 'small')?.url ??
+            asset.variants.find((v) => v.variant === 'thumb')?.url ??
+            asset.variants[0]?.url ??
+            asset.url ??
+            seedPhotoUrl(idx, 800),
+        })),
+      );
+    } else if (galleryAssets) {
+      setFrames(PLACEHOLDER_FRAMES);
+    }
+  }, [galleryAssets]);
 
   const reorderMutation = useMutation({
     mutationFn: ({ galleryId, photoOrder }: { galleryId: string; photoOrder: string[] }) =>

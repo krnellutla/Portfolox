@@ -72,7 +72,6 @@ describe('PATCH /media/:id/move', () => {
   const galleryB = randomUUID();
 
   let tokenA: string;
-  let tokenB: string;
 
   beforeAll(async () => {
     await withTenant(migratorPool, tenantA, async (client) => {
@@ -106,7 +105,6 @@ describe('PATCH /media/:id/move', () => {
       );
     });
     tokenA = await signAccessToken({ sub: userA, tenantId: tenantA, email: 'mova@example.com' });
-    tokenB = await signAccessToken({ sub: userB, tenantId: tenantB, email: 'movb@example.com' });
   });
 
   afterAll(async () => {

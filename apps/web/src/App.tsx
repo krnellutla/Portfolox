@@ -27,6 +27,15 @@ const GalleryBuilderPage = lazy(() => import('./features/studio/GalleryBuilderPa
 const PostDetailPage = lazy(() => import('./features/community/PostDetailPage.js'));
 const OrdersPage = lazy(() => import('./features/studio/OrdersPage.js'));
 const ClientGallery = lazy(() => import('./pages/viewer/ClientGallery.js'));
+const CartPage = lazy(() => import('./features/checkout/CartPage.js'));
+const CheckoutPage = lazy(() => import('./features/checkout/CheckoutPage.js'));
+const OrderPage = lazy(() => import('./features/checkout/OrderPage.js'));
+const SettingsLayout = lazy(() => import('./features/studio/settings/SettingsLayout.js'));
+const ProfileSettings = lazy(() => import('./features/studio/settings/ProfileSettings.js'));
+const BrandingSettings = lazy(() => import('./features/studio/settings/BrandingSettings.js'));
+const DomainSettings = lazy(() => import('./features/studio/settings/DomainSettings.js'));
+const BillingSettings = lazy(() => import('./features/studio/settings/BillingSettings.js'));
+const NotificationsSettings = lazy(() => import('./features/studio/settings/NotificationsSettings.js'));
 
 function RouteFallback() {
   return <StateView variant="loading" title="Loading…" fullScreen />;
@@ -49,6 +58,10 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/client-login" element={<ClientLogin />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/lightbox" element={<LightboxPage />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/orders/:id" element={<OrderPage />} />
 
             <Route element={<RequireAuth />}>
               <Route path="/studio/dashboard" element={<StudioDashboard />} />
@@ -56,7 +69,14 @@ function App() {
               <Route path="/studio/analytics" element={<AnalyticsPage />} />
               <Route path="/studio/builder" element={<GalleryBuilderPage />} />
               <Route path="/studio/orders" element={<OrdersPage />} />
-              <Route path="/lightbox" element={<LightboxPage />} />
+              <Route path="/studio/settings" element={<SettingsLayout />}>
+                <Route index element={<Navigate to="profile" replace />} />
+                <Route path="profile" element={<ProfileSettings />} />
+                <Route path="branding" element={<BrandingSettings />} />
+                <Route path="domain" element={<DomainSettings />} />
+                <Route path="billing" element={<BillingSettings />} />
+                <Route path="notifications" element={<NotificationsSettings />} />
+              </Route>
               <Route path="/chat" element={<ChatPage />} />
             </Route>
 

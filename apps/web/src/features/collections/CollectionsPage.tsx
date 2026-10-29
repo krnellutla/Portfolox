@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { TopNav } from '../../components/nav/TopNav.js';
 import { FavoriteButton } from '../../components/photo/FavoriteButton.js';
 import { PhotoTile } from '../../components/photo/PhotoTile.js';
@@ -23,7 +23,6 @@ const SEED_LIKED = Array.from({ length: 12 }, (_, i) => ({
 
 export default function CollectionsPage() {
   const eyebrow = useEyebrow('07 — Collections');
-  const queryClient = useQueryClient();
   const [localFavs, setLocalFavs] = useState<Set<string>>(
     () => new Set(SEED_LIKED.map((p) => p.id)),
   );
@@ -40,7 +39,11 @@ export default function CollectionsPage() {
     onMutate: ({ id, favorited }) => {
       setLocalFavs((prev) => {
         const next = new Set(prev);
-        favorited ? next.delete(id) : next.add(id);
+        if (favorited) {
+          next.delete(id);
+        } else {
+          next.add(id);
+        }
         return next;
       });
     },

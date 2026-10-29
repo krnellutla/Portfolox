@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { TopNav } from '../../components/nav/TopNav.js';
-import { PhotoTile } from '../../components/photo/PhotoTile.js';
 import { Eyebrow } from '../../components/ui/Eyebrow.js';
 import { useEyebrow } from '../../lib/eyebrow.js';
 import { StatCard } from '../../components/ui/StatCard.js';

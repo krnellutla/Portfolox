@@ -11,6 +11,8 @@ export interface OAuthStateCookie {
   codeVerifier?: string;
   /** Set when the flow was initiated by the desktop app (system-browser OAuth). */
   client?: 'desktop';
+  /** Optional safe relative path to redirect to after /auth/callback completes. */
+  next?: string;
 }
 
 function cookieOptions(): CookieOptions {
@@ -18,16 +20,13 @@ function cookieOptions(): CookieOptions {
   // via a top-level cross-site GET redirect from the OAuth provider, and
   // Strict cookies are not sent on cross-site navigations.
   //
-  // Path is hardcoded to /auth (not AUTH_COOKIE_PATH) because the OAuth
-  // callback is always at /auth/:provider/callback — the browser must send
-  // this cookie on that top-level navigation, which uses the pre-Vercel-rewrite
-  // URL (/auth/...). The refresh-token cookie uses /api/auth because it is
-  // only ever sent via fetch() to /api/auth/refresh, not a navigation URL.
+  // Path is '/' so the short-lived state cookie is sent whether the OAuth
+  // callback arrives via '/auth/:provider/callback' or '/api/auth/:provider/callback'.
   return {
     httpOnly: true,
     secure: env.NODE_ENV === 'production',
     sameSite: 'lax',
-    path: '/auth',
+    path: '/',
   };
 }
 

@@ -38,9 +38,13 @@ photographersRouter.get(
 
     const rows = await req.withTenant((client) =>
       client.query(
-        `SELECT id, tenant_id, name, slug, created_at
-         FROM nodes WHERE type = 'gallery'
-         ORDER BY position`,
+        `SELECT n.id, n.tenant_id, n.name, n.slug, n.created_at,
+                COUNT(m.id)::int AS frame_count
+         FROM nodes n
+         LEFT JOIN media_assets m ON m.node_id = n.id AND m.status IN ('ready', 'published')
+         WHERE n.type = 'gallery'
+         GROUP BY n.id
+         ORDER BY n.position`,
       ),
     );
 
@@ -55,7 +59,7 @@ photographersRouter.get(
         layout: 'grid',
         printsForSale: false,
         photoOrder: [],
-        counts: { frames: 0, views: 0 },
+        counts: { frames: (r.frame_count as number) ?? 0, views: 0 },
       })),
       error: null,
     });
@@ -75,7 +79,7 @@ photographersRouter.get(
       client.query(
         `SELECT id, node_id, url, original_filename, width, height, tenant_id, position, created_at
          FROM media_assets
-         WHERE status = 'published'
+         WHERE status IN ('ready', 'published')
            ${gallery ? 'AND node_id = $1' : ''}
            ${cursor ? `AND position > ${gallery ? '$2' : '$1'}` : ''}
          ORDER BY position

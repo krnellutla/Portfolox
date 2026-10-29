@@ -55,7 +55,7 @@ searchRouter.get(
       client.query(
         `SELECT id, node_id, url, original_filename, width, height, tenant_id, position
          FROM media_assets
-         WHERE status = 'published'
+         WHERE status IN ('ready', 'published')
            ${q ? "AND original_filename ILIKE '%' || $1 || '%'" : ''}
            ${cursor ? `AND position > ${q ? '$2' : '$1'}` : ''}
          ORDER BY position
@@ -66,7 +66,7 @@ searchRouter.get(
 
     const countRow = await req.withTenant((client) =>
       client.query(
-        `SELECT COUNT(*) FROM media_assets WHERE status = 'published' ${q ? "AND original_filename ILIKE '%' || $1 || '%'" : ''}`,
+        `SELECT COUNT(*) FROM media_assets WHERE status IN ('ready', 'published') ${q ? "AND original_filename ILIKE '%' || $1 || '%'" : ''}`,
         q ? [q] : [],
       ),
     );

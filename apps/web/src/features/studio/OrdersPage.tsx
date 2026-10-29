@@ -1,12 +1,12 @@
 // Route: /studio/orders
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { X, ExternalLink, ShoppingBag } from 'lucide-react';
+import { X, ExternalLink } from 'lucide-react';
 import { TopNav } from '../../components/nav/TopNav.js';
 import { StateView } from '../../components/ui/StateView.js';
 import { qk } from '../../lib/query-client.js';
 import { getMyOrders, getMyOrder, refundOrder } from '../../api/studio-orders.js';
-import type { OrderV2, OrderStatus } from '@blueflutes/shared';
+import type { OrderStatus } from '@blueflutes/shared';
 
 const STATUS_FILTERS: { id: string; label: string }[] = [
   { id: 'all', label: 'All' },
