@@ -65,13 +65,39 @@ const ALL_PHOTOS: StaticPhoto[] = [
 
 // ─── CMS media loading ─────────────────────────────────────────────────────
 
-function getAllGalleryNodes(nodes: NodeTreeItem[]): NodeTreeItem[] {
-  const result: NodeTreeItem[] = [];
+interface GalleryWithCategory {
+  gallery: NodeTreeItem;
+  category: string;
+}
+
+function getAllGalleryNodes(
+  nodes: NodeTreeItem[],
+  parentCategory?: string,
+): GalleryWithCategory[] {
+  const result: GalleryWithCategory[] = [];
   for (const node of nodes) {
-    if (node.type === 'gallery') result.push(node);
-    if (node.children.length > 0) result.push(...getAllGalleryNodes(node.children));
+    if (node.type === 'gallery') {
+      result.push({
+        gallery: node,
+        category: parentCategory ?? node.name,
+      });
+    }
+    if (node.children.length > 0) {
+      const nextCategory = node.type === 'folder' ? node.name : parentCategory;
+      result.push(...getAllGalleryNodes(node.children, nextCategory));
+    }
   }
   return result;
+}
+
+function formatCmsCaption(rawFilename: string | undefined, albumName: string): string {
+  if (!rawFilename) return albumName;
+  const stem = rawFilename.replace(/\.[^.]+$/, '').trim();
+  // Replace raw camera code stems (IMG_1234, DSC_1234, PXL_..., _DSC...) with the album name
+  if (/^(_?(IMG|DSC|PXL|DSCF|DJI|MVI|GOPR)[_-]?\d+|photo-[a-f0-9]+)$/i.test(stem)) {
+    return albumName;
+  }
+  return stem;
 }
 
 function useCmsPhotos(nodes: NodeTreeItem[] | null): CmsPhoto[] {
@@ -84,14 +110,14 @@ function useCmsPhotos(nodes: NodeTreeItem[] | null): CmsPhoto[] {
 
     let cancelled = false;
     Promise.all(
-      galleries.map((g) =>
-        getNodeMedia(g.id)
+      galleries.map(({ gallery, category }) =>
+        getNodeMedia(gallery.id)
           .then((media: MediaListResponse): CmsPhoto[] =>
             media.map((asset) => ({
               kind: 'cms' as const,
               asset,
-              caption: asset.originalFilename ?? '',
-              category: g.name,
+              caption: formatCmsCaption(asset.originalFilename, gallery.name),
+              category,
             })),
           )
           .catch((): CmsPhoto[] => []),

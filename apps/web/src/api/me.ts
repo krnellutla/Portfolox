@@ -1,5 +1,10 @@
 import { z } from 'zod';
-import { photographerSchema, handleAvailableSchema, gallerySchema } from '@blueflutes/shared';
+import {
+  photographerSchema,
+  handleAvailableSchema,
+  gallerySchema,
+  autoCategorizeResultSchema,
+} from '@blueflutes/shared';
 import { apiFetch } from './client.js';
 
 export function getMe() {
@@ -51,10 +56,28 @@ export function reorderGallery(galleryId: string, photoOrder: string[]) {
   );
 }
 
-export function updateGallery(galleryId: string, patch: Partial<{ title: string; description: string; visibility: string; layout: string; printsForSale: boolean }>) {
+export function updateGallery(
+  galleryId: string,
+  patch: Partial<{
+    title: string;
+    description: string;
+    visibility: string;
+    layout: string;
+    printsForSale: boolean;
+    category: string | null;
+  }>,
+) {
   return apiFetch(
     `/me/galleries/${galleryId}`,
     { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) },
     gallerySchema,
+  );
+}
+
+export function autoCategorizeGalleries() {
+  return apiFetch(
+    '/me/galleries/auto-categorize',
+    { method: 'POST' },
+    autoCategorizeResultSchema,
   );
 }
