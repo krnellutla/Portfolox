@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { randomUUID } from 'crypto';
+import type { AutoCategorizeResult } from '@blueflutes/shared';
 import { asyncHandler } from '../lib/async-handler.js';
 import { AppError } from '../lib/app-error.js';
 import { hashPassword } from './client-gallery.js';
+import { assignGalleryCategory, inferAlbumCategory } from '../services/google-photos.js';
 
 export const galleriesRouter: Router = Router();
 
@@ -19,6 +21,9 @@ function nodeToGallery(r: Record<string, unknown>, tenantId: string) {
     title: r.name as string,
     description: '',
     coverPhotoId: photoOrder[0] ?? null,
+    coverPhotoUrl: (r.cover_photo_url as string | null) ?? null,
+    category: (r.category_name as string | null) ?? null,
+    googleAlbumId: (r.google_album_id as string | null) ?? null,
     visibility: 'public',
     layout: 'grid',
     printsForSale: false,
@@ -29,28 +34,39 @@ function nodeToGallery(r: Record<string, unknown>, tenantId: string) {
   };
 }
 
+const GALLERY_SELECT_SQL = `
+  SELECT n.id, n.name, n.share_token, n.is_password_protected, n.google_album_id,
+         p.name AS category_name,
+         COUNT(m.id)::int AS frame_count,
+         COALESCE(ARRAY_AGG(m.id ORDER BY m.position) FILTER (WHERE m.id IS NOT NULL), '{}') AS photo_order,
+         (ARRAY_AGG(COALESCE(m.thumbnail_url, m.url) ORDER BY m.position) FILTER (WHERE m.id IS NOT NULL))[1] AS cover_photo_url
+  FROM nodes n
+  LEFT JOIN nodes p ON p.id = n.parent_id AND p.type = 'folder'
+  LEFT JOIN media_assets m ON m.node_id = n.id
+`;
+
 galleriesRouter.get('/me/galleries', asyncHandler(async (req, res) => {
   if (!req.user || !req.withTenant) throw AppError.unauthorized('Not authenticated');
 
   const rows = await req.withTenant((client) =>
     client.query(
-      `SELECT n.id, n.name, n.share_token, n.is_password_protected,
-              COUNT(m.id)::int AS frame_count,
-              COALESCE(ARRAY_AGG(m.id ORDER BY m.position) FILTER (WHERE m.id IS NOT NULL), '{}') AS photo_order
-       FROM nodes n
-       LEFT JOIN media_assets m ON m.node_id = n.id
+      `${GALLERY_SELECT_SQL}
        WHERE n.type = 'gallery'
-       GROUP BY n.id
-       ORDER BY n.position`,
+       GROUP BY n.id, p.name
+       ORDER BY n.position, n.created_at DESC`,
     ),
   );
   res.json({ data: rows.rows.map((r) => nodeToGallery(r as Record<string, unknown>, req.user!.tenantId)), error: null });
 }));
 
-const createGallerySchema = z.object({ title: z.string().min(1) });
+const createGallerySchema = z.object({
+  title: z.string().min(1),
+  category: z.string().min(1).optional(),
+});
+
 galleriesRouter.post('/me/galleries', asyncHandler(async (req, res) => {
   if (!req.user || !req.withTenant) throw AppError.unauthorized('Not authenticated');
-  const { title } = createGallerySchema.parse(req.body);
+  const { title, category } = createGallerySchema.parse(req.body);
   const id = randomUUID();
   const baseSlug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || `gallery-${id.slice(0, 6)}`;
 
@@ -65,11 +81,21 @@ galleriesRouter.post('/me/galleries', asyncHandler(async (req, res) => {
     );
     const slug = (existingSlug.rowCount ?? 0) > 0 ? `${baseSlug}-${id.slice(0, 6)}` : baseSlug;
 
-    const r = await client.query(
+    await client.query(
       `INSERT INTO nodes (id, tenant_id, type, name, slug, position)
-       VALUES ($1, $2, 'gallery', $3, $4, $5)
-       RETURNING id, name, share_token, is_password_protected`,
+       VALUES ($1, $2, 'gallery', $3, $4, $5)`,
       [id, req.user!.tenantId, title, slug, position],
+    );
+
+    if (category) {
+      await assignGalleryCategory(client, req.user!.tenantId, id, category);
+    }
+
+    const r = await client.query(
+      `${GALLERY_SELECT_SQL}
+       WHERE n.id = $1
+       GROUP BY n.id, p.name`,
+      [id],
     );
     return r.rows[0] as Record<string, unknown>;
   });
@@ -82,23 +108,78 @@ const updateGallerySchema = z.object({
   visibility: z.string().optional(),
   layout: z.string().optional(),
   printsForSale: z.boolean().optional(),
+  category: z.string().nullable().optional(),
 }).partial();
 
 galleriesRouter.patch('/me/galleries/:id', asyncHandler(async (req, res) => {
   if (!req.user || !req.withTenant) throw AppError.unauthorized('Not authenticated');
-  const { id } = req.params;
+  const id = req.params['id'];
+  if (!id || typeof id !== 'string') throw AppError.notFound('Gallery not found');
   const body = updateGallerySchema.parse(req.body);
 
-  if (body.title) {
-    await req.withTenant((client) =>
-      client.query(`UPDATE nodes SET name = $1 WHERE id = $2 AND type = 'gallery'`, [body.title, id]),
+  const row = await req.withTenant(async (client) => {
+    if (body.title) {
+      await client.query(`UPDATE nodes SET name = $1, updated_at = now() WHERE id = $2 AND type = 'gallery'`, [body.title, id]);
+    }
+    if (body.category !== undefined) {
+      await assignGalleryCategory(client, req.user!.tenantId, id, body.category);
+    }
+    const r = await client.query(
+      `${GALLERY_SELECT_SQL}
+       WHERE n.id = $1 AND n.type = 'gallery'
+       GROUP BY n.id, p.name`,
+      [id],
     );
-  }
-  const row = await req.withTenant((client) =>
-    client.query(`SELECT id, name FROM nodes WHERE id = $1`, [id]),
-  );
-  if (!row.rows[0]) throw AppError.notFound('Gallery not found');
-  res.json({ data: nodeToGallery(row.rows[0] as Record<string, unknown>, req.user!.tenantId), error: null });
+    return r.rows[0] as Record<string, unknown> | undefined;
+  });
+
+  if (!row) throw AppError.notFound('Gallery not found');
+  res.json({ data: nodeToGallery(row, req.user.tenantId), error: null });
+}));
+
+galleriesRouter.post('/me/galleries/auto-categorize', asyncHandler(async (req, res) => {
+  if (!req.user || !req.withTenant) throw AppError.unauthorized('Not authenticated');
+  const tenantId = req.user.tenantId;
+
+  const result = await req.withTenant(async (client) => {
+    const galleries = await client.query<{ id: string; name: string }>(
+      `SELECT id, name FROM nodes WHERE tenant_id = $1 AND type = 'gallery' ORDER BY position`,
+      [tenantId],
+    );
+
+    const categories: Record<string, number> = {};
+    let categorized = 0;
+
+    for (const g of galleries.rows) {
+      const assets = await client.query<{
+        original_filename: string;
+        width: number | null;
+        height: number | null;
+      }>(
+        `SELECT original_filename, width, height FROM media_assets WHERE node_id = $1`,
+        [g.id],
+      );
+
+      const inferred = inferAlbumCategory(
+        g.name,
+        assets.rows.map((a) => ({
+          filename: a.original_filename,
+          mediaMetadata: {
+            width: a.width ? String(a.width) : undefined,
+            height: a.height ? String(a.height) : undefined,
+          },
+        })),
+      );
+
+      await assignGalleryCategory(client, tenantId, g.id, inferred);
+      categories[inferred] = (categories[inferred] ?? 0) + 1;
+      categorized++;
+    }
+
+    return { categorized, categories } satisfies AutoCategorizeResult;
+  });
+
+  res.json({ data: result, error: null });
 }));
 
 const reorderGallerySchema = z.object({ photoOrder: z.array(z.string()) });

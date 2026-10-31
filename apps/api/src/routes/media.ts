@@ -184,9 +184,10 @@ export function createMediaPublicRouter(storage: StorageProvider): Router {
           width: a.width,
           height: a.height,
           createdAt: a.created_at,
-          variants: useTransform
-            ? buildSyntheticVariants(storage, a)
-            : (variantsByAsset.get(a.id as string) ?? []),
+          variants:
+            useTransform || (a.object_key as string).startsWith('google:')
+              ? buildSyntheticVariants(storage, a)
+              : (variantsByAsset.get(a.id as string) ?? []),
         }));
       });
 
@@ -467,9 +468,10 @@ export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): R
           width: a.width,
           height: a.height,
           createdAt: a.created_at,
-          variants: useTransform
-            ? buildSyntheticVariants(storage, a)
-            : (variantsByAsset.get(a.id as string) ?? []),
+          variants:
+            useTransform || (a.object_key as string).startsWith('google:')
+              ? buildSyntheticVariants(storage, a)
+              : (variantsByAsset.get(a.id as string) ?? []),
         }));
       });
 
@@ -545,6 +547,7 @@ export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): R
 
       // Best-effort storage cleanup after the DB transaction commits
       for (const key of objectKeysToDelete) {
+        if (key.startsWith('google:')) continue;
         await storage.deleteObject(key).catch((err: unknown) => {
           req.log.warn(
             { key, err: err instanceof Error ? err.message : String(err) },

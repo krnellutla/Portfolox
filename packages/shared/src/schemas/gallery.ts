@@ -12,6 +12,9 @@ export const gallerySchema = z.object({
   title: z.string(),
   description: z.string(),
   coverPhotoId: z.string().nullable(),
+  coverPhotoUrl: z.string().nullable().optional(),
+  category: z.string().nullable().optional(),
+  googleAlbumId: z.string().nullable().optional(),
   visibility: galleryVisibility,
   layout: galleryLayout,
   printsForSale: z.boolean(),
@@ -38,7 +41,7 @@ export type ClientGallery = z.infer<typeof clientGallerySchema>;
 export const galleryOrderSchema = z.object({ photoOrder: z.array(z.string()) });
 export const createGallerySchema = z.object({ title: z.string().min(1) });
 export const updateGallerySchema = gallerySchema
-  .pick({ title: true, description: true, visibility: true, layout: true, printsForSale: true })
+  .pick({ title: true, description: true, visibility: true, layout: true, printsForSale: true, category: true })
   .partial();
 
 // Password protection
