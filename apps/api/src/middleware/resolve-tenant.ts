@@ -2,6 +2,7 @@ import type { Pool } from 'pg';
 import { withTenant } from '../db/with-tenant.js';
 import { AppError } from '../lib/app-error.js';
 import { asyncHandler } from '../lib/async-handler.js';
+import { logger } from '../lib/logger.js';
 import { findTenantByHost } from '../services/tenant-resolution.js';
 
 /**
@@ -35,11 +36,13 @@ export function resolveTenant(pool: Pool) {
   return asyncHandler(async (req, _res, next) => {
     const host = normalizeHost(req.headers.host);
     if (!host) {
+      logger.warn({ rawHost: req.headers.host }, 'resolve-tenant: missing or unparseable Host header');
       throw AppError.notFound('Tenant not found for this host');
     }
 
     const tenantId = await findTenantByHost(pool, host);
     if (!tenantId) {
+      logger.warn({ host }, 'resolve-tenant: no tenant_domains row for host');
       throw AppError.notFound('Tenant not found for this host');
     }
 

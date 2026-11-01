@@ -49,17 +49,21 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setStatus('loading');
+    console.debug('[auth] SessionProvider: starting silent refresh', { path: window.location.pathname });
 
     refreshAccessToken()
       .then((result) => {
         if (result) {
+          console.debug('[auth] SessionProvider: refresh succeeded', { userId: result.user.id });
           setAccessToken(result.accessToken);
           setSession(result.user);
         } else {
+          console.debug('[auth] SessionProvider: refresh returned null — no session');
           clear();
         }
       })
-      .catch(() => {
+      .catch((err: unknown) => {
+        console.debug('[auth] SessionProvider: refresh threw', err);
         clear();
       });
   }, []);
