@@ -24,11 +24,15 @@ export default function AuthCallback() {
       ? rawNext
       : '/studio/dashboard';
 
+  console.debug('[auth] AuthCallback: rendered', { status, nextPath });
+
   if (status === 'authenticated') {
+    console.debug('[auth] AuthCallback: authenticated — navigating to', nextPath);
     return <Navigate to={nextPath} replace />;
   }
 
   if (status === 'unauthenticated') {
+    console.debug('[auth] AuthCallback: unauthenticated — redirecting to /login');
     return <Navigate to="/login" replace />;
   }
 

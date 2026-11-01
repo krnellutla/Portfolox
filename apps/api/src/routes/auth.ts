@@ -100,6 +100,11 @@ authRouter.get(
       }),
     );
 
+    req.log.info(
+      { provider, tenantId, userId: user.id, client: stateCookie.client ?? 'web' },
+      'auth.callback: token family created, issuing session',
+    );
+
     if (stateCookie.client === 'desktop') {
       // System-browser flow: there is no cookie jar shared with the desktop
       // app's webview, so hand off the freshly issued refresh token via the
@@ -108,6 +113,7 @@ authRouter.get(
       // rotated token to the OS keychain.
       const redirectUrl = new URL(env.DESKTOP_AUTH_REDIRECT_URL);
       redirectUrl.searchParams.set('refresh_token', issued.token);
+      req.log.info({ provider, tenantId }, 'auth.callback: redirecting to desktop deep-link');
       res.redirect(redirectUrl.toString());
       return;
     }
@@ -116,6 +122,10 @@ authRouter.get(
     const callbackUrl = stateCookie.next
       ? `${env.WEB_APP_URL}/auth/callback?next=${encodeURIComponent(stateCookie.next)}`
       : `${env.WEB_APP_URL}/auth/callback`;
+    req.log.info(
+      { provider, tenantId, cookiePath: env.AUTH_COOKIE_PATH, callbackUrl: callbackUrl.split('?')[0] },
+      'auth.callback: refresh cookie set, redirecting to web callback',
+    );
     res.redirect(callbackUrl);
   }),
 );
@@ -132,8 +142,13 @@ authRouter.post(
     const desktopToken = getDesktopRefreshTokenHeader(req);
     const refreshToken = cookieToken ?? desktopToken;
     if (!refreshToken) {
+      req.log.warn(
+        { tenantId, hasCookie: !!cookieToken, hasHeader: !!desktopToken },
+        'auth.refresh: missing refresh token',
+      );
       throw AppError.unauthorized('Missing refresh token');
     }
+    req.log.info({ tenantId, source: cookieToken ? 'cookie' : 'header' }, 'auth.refresh: token present, rotating');
 
     const withTenant = req.withTenant;
 
@@ -156,10 +171,12 @@ authRouter.post(
 
     if (cookieToken) {
       setRefreshTokenCookie(res, rotated.token, rotated.expiresAt);
+      req.log.info({ tenantId, userId: user.id }, 'auth.refresh: success (web), new cookie set');
       const body: ApiEnvelope<RefreshResponse> = { data: { accessToken, user }, error: null };
       res.json(body);
       return;
     }
+    req.log.info({ tenantId, userId: user.id }, 'auth.refresh: success (desktop), token in body');
 
     // Desktop: no cookie to set across the tauri:// origin — return the
     // rotated refresh token in the body so the client persists it to the OS

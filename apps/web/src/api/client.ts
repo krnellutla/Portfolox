@@ -80,13 +80,16 @@ let refreshPromise: Promise<RefreshResponse | null> | null = null;
 export function refreshAccessToken(): Promise<RefreshResponse | null> {
   if (!refreshPromise) {
     refreshPromise = (async () => {
+      console.debug('[auth] refreshAccessToken: calling POST /auth/refresh');
       let status: number;
       let envelope: ApiEnvelope<unknown>;
       try {
         ({ status, envelope } = await request('/auth/refresh', { method: 'POST' }));
-      } catch {
+      } catch (err) {
+        console.debug('[auth] refreshAccessToken: fetch threw', err);
         return null;
       }
+      console.debug('[auth] refreshAccessToken: response', { status, hasData: !!envelope.data, error: envelope.error });
       if (status !== 200 || !envelope.data) return null;
 
       if (isDesktop()) {
