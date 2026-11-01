@@ -1,42 +1,28 @@
-import { useEffect } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
-import { refreshAccessToken } from '../../api/auth.js';
-import { setAccessToken } from '../../api/client.js';
 import { StateView } from '../../components/ui/StateView.js';
 import { useAuthStore } from '../../stores/auth-store.js';
 
 /**
  * Landing page after the OAuth provider redirects back through
  * /auth/:provider/callback, which has already set the refresh cookie and
- * redirected here. Exchanges that cookie for an access token via the same
- * silent-refresh flow used on page load.
+ * redirected here.
+ *
+ * SessionProvider (the parent) blocks rendering until its own silent-refresh
+ * resolves, so by the time this component mounts, status is already
+ * 'authenticated' or 'unauthenticated' — no second refresh needed here.
+ * A redundant refresh would rotate the cookie a second time and, if that
+ * rotation failed, would call clear() and log the user out immediately after
+ * a successful login.
  */
 export default function AuthCallback() {
   const [searchParams] = useSearchParams();
   const status = useAuthStore((state) => state.status);
-  const setSession = useAuthStore((state) => state.setSession);
-  const clear = useAuthStore((state) => state.clear);
 
   const rawNext = searchParams.get('next');
   const nextPath =
     rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//')
       ? rawNext
       : '/studio/dashboard';
-
-  useEffect(() => {
-    refreshAccessToken()
-      .then((result) => {
-        if (result) {
-          setAccessToken(result.accessToken);
-          setSession(result.user);
-        } else {
-          clear();
-        }
-      })
-      .catch(() => {
-        clear();
-      });
-  }, []);
 
   if (status === 'authenticated') {
     return <Navigate to={nextPath} replace />;
