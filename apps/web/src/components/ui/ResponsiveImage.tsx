@@ -63,6 +63,14 @@ export function ResponsiveImage({ asset, sizes = '100vw', className, alt = '' }:
           }}
         />
       )}
+      {/* Transparent overlay sits above the image to intercept right-click and
+          drag without blocking click bubbling to parent containers */}
+      <span
+        aria-hidden="true"
+        onContextMenu={blockSave}
+        onDragStart={blockSave}
+        style={{ position: 'absolute', inset: 0, zIndex: 2 }}
+      />
     </>
   );
 }

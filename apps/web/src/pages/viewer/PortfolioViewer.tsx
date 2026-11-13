@@ -406,6 +406,7 @@ function PhotoTileImage({ photo }: { photo: ViewerPhoto }) {
       loading="lazy"
       draggable={false}
       onContextMenu={(e) => e.preventDefault()}
+      onDragStart={(e) => e.preventDefault()}
       className="photo-protected w-full h-auto block transition-transform duration-700 group-hover:scale-[1.02]"
     />
   );
@@ -496,6 +497,7 @@ function AboutSection() {
               loading="lazy"
               draggable={false}
               onContextMenu={(e) => e.preventDefault()}
+              onDragStart={(e) => e.preventDefault()}
             />
           </div>
 

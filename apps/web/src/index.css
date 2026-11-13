@@ -105,10 +105,12 @@ body {
   font-family: var(--font-sans);
 }
 
-/* Prevent iOS long-press save and native drag on protected gallery images */
+/* Image copy deterrents on all protected gallery images.
+   Complements the site-wide contextmenu/dragstart capture listeners in main.tsx
+   and the transparent overlay spans in ResponsiveImage / PhotoTile. */
 .photo-protected {
-  -webkit-touch-callout: none;
-  -webkit-user-drag: none;
+  -webkit-touch-callout: none; /* iOS long-press "Save Image" */
+  -webkit-user-drag: none;     /* Safari drag-to-desktop */
   user-select: none;
 }
 

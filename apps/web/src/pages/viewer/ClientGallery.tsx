@@ -101,6 +101,7 @@ function GalleryGrid({ photoOrder, title }: { photoOrder: string[]; title: strin
                 loading="lazy"
                 draggable={false}
                 onContextMenu={(e) => e.preventDefault()}
+                onDragStart={(e) => e.preventDefault()}
               />
             </div>
           ))}
