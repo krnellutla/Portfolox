@@ -17,11 +17,6 @@ const envSchema = z.object({
   JWT_ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().int().positive().default(900),
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(30),
 
-  GOOGLE_CLIENT_ID: z.string().min(1).optional(),
-  GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
-  GITHUB_CLIENT_ID: z.string().min(1).optional(),
-  GITHUB_CLIENT_SECRET: z.string().min(1).optional(),
-  OAUTH_REDIRECT_BASE_URL: z.string().url().default('http://localhost:3001'),
   WEB_APP_URL: z.string().url().default('http://localhost:5173'),
   // Path the auth cookies are scoped to. Must match the public path of the /auth
   // routes: '/auth' when the API is served at the root, '/api/auth' behind a /api prefix.
@@ -42,18 +37,9 @@ const envSchema = z.object({
         .filter((origin) => origin.length > 0),
     ),
 
-  // Deep link the desktop app registers to receive the OAuth callback
-  // (system-browser flow): the API redirects here with a one-time refresh
-  // token instead of setting the refresh cookie. Restricted to the
-  // app's custom URL scheme so a misconfigured env can't redirect a live
-  // refresh token to an arbitrary http(s) endpoint.
-  DESKTOP_AUTH_REDIRECT_URL: z
-    .string()
-    .url()
-    .default('blueflutes://auth/callback')
-    .refine((value) => new URL(value).protocol === 'blueflutes:', {
-      message: 'DESKTOP_AUTH_REDIRECT_URL must use the blueflutes: scheme',
-    }),
+  // Email delivery via Resend (https://resend.com)
+  RESEND_API_KEY: z.string().min(1),
+  RESEND_FROM_EMAIL: z.string().email().default('noreply@blueflutes.app'),
 
   // Redis (optional — gallery responses are cached when set)
   REDIS_URL: z.string().url().optional(),

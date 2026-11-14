@@ -10,6 +10,38 @@ export async function findUserById(client: PoolClient, userId: string) {
 }
 
 /**
+ * Finds a user by (tenantId, email), creating one if none exists.
+ * On conflict only bumps updatedAt — does not overwrite displayName/avatarUrl
+ * (used by OTP auth where we have no richer profile data).
+ */
+export async function findOrCreateUserByEmail(
+  client: PoolClient,
+  params: { tenantId: string; email: string },
+) {
+  const db = drizzle(client, { schema });
+
+  const [user] = await db
+    .insert(schema.users)
+    .values({
+      tenantId: params.tenantId,
+      email: params.email.toLowerCase(),
+      displayName: params.email.split('@')[0] ?? params.email,
+      avatarUrl: null,
+    })
+    .onConflictDoUpdate({
+      target: [schema.users.tenantId, schema.users.email],
+      set: { updatedAt: new Date() },
+    })
+    .returning();
+
+  if (!user) {
+    throw new Error('findOrCreateUserByEmail: insert did not return a row');
+  }
+
+  return user;
+}
+
+/**
  * Creates the tenant-scoped user for an OAuth profile, or updates the
  * display name/avatar of an existing one matched by (tenantId, email).
  */

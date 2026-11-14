@@ -1,8 +1,23 @@
 import { z } from 'zod';
 import { userSchema } from './user.js';
 
-export const authProvider = z.enum(['google', 'github']);
-export type AuthProvider = z.infer<typeof authProvider>;
+// OTP request — POST /auth/otp/request
+export const otpRequestSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+});
+export type OtpRequest = z.infer<typeof otpRequestSchema>;
+
+// OTP verification — POST /auth/otp/verify
+export const otpVerifySchema = z.object({
+  email: z.string().email(),
+  code: z.string().length(6).regex(/^\d{6}$/, 'Code must be 6 digits'),
+});
+export type OtpVerify = z.infer<typeof otpVerifySchema>;
+
+export const otpRequestResponseSchema = z.object({
+  expiresAt: z.string().datetime(),
+});
+export type OtpRequestResponse = z.infer<typeof otpRequestResponseSchema>;
 
 export const refreshResponseSchema = z.object({
   accessToken: z.string(),

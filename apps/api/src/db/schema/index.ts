@@ -8,3 +8,4 @@ export * from './media-variants.js';
 export * from './tenant-settings.js';
 export * from './google-oauth-tokens.js';
 export * from './commerce.js';
+export * from './otp-codes.js';

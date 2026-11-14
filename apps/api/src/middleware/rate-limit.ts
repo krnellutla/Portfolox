@@ -22,3 +22,22 @@ export const writeRateLimit = rateLimit({
   skip,
   message: { data: null, error: { code: 'RATE_LIMITED', message: 'Too many requests, please try again later.' } },
 });
+
+/**
+ * 3 OTP requests per email+IP per 10 minutes.
+ * Keyed by `${ip}:${email}` to prevent one attacker from starving all users,
+ * while still limiting per-email abuse from a single source.
+ */
+export const otpRequestRateLimit = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 3,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  skip,
+  keyGenerator: (req) => {
+    const ip = req.ip ?? 'unknown';
+    const email = typeof req.body?.email === 'string' ? req.body.email.toLowerCase() : '';
+    return `${ip}:${email}`;
+  },
+  message: { data: null, error: { code: 'RATE_LIMITED', message: 'Too many sign-in requests for this email. Please wait before trying again.' } },
+});
