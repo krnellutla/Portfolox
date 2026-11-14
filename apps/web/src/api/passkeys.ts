@@ -24,7 +24,7 @@ import { apiFetch } from './client.js';
 
 export async function registerPasskey(friendlyName?: string): Promise<PasskeyCredential> {
   // 1. Get challenge from server
-  const beginEnvelope = await apiFetch<unknown>('/auth/passkey/register/begin', {
+  const beginEnvelope = await apiFetch('/auth/passkey/register/begin', {
     method: 'POST',
   });
   const options = (beginEnvelope as ApiEnvelope<unknown>).data as Parameters<
@@ -51,7 +51,7 @@ export async function authenticateWithPasskey(
   email?: string,
 ): Promise<RefreshResponse | DesktopRefreshResponse> {
   // 1. Get challenge
-  const beginEnvelope = await apiFetch<unknown>('/auth/passkey/auth/begin', {
+  const beginEnvelope = await apiFetch('/auth/passkey/auth/begin', {
     method: 'POST',
     body: JSON.stringify(email ? { email } : {}),
   });

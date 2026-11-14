@@ -40,20 +40,14 @@ export function resolveTenant(pool: Pool) {
       throw AppError.notFound('Tenant not found for this host');
     }
 
-    const tenantId = await findTenantByHost(pool, host);
-    if (!tenantId) {
+    const tenant = await findTenantByHost(pool, host);
+    if (!tenant) {
       logger.warn({ host }, 'resolve-tenant: no tenant_domains row for host');
       throw AppError.notFound('Tenant not found for this host');
     }
 
-    // Fetch tenant name inside a tenant-scoped transaction (RLS requires app.tenant_id).
-    const name = await withTenant(pool, tenantId, async (client) => {
-      const r = await client.query<{ name: string }>('SELECT name FROM tenants WHERE id = $1', [tenantId]);
-      return r.rows[0]?.name ?? '';
-    });
-
-    req.tenant = { id: tenantId, name };
-    req.withTenant = (callback) => withTenant(pool, tenantId, callback);
+    req.tenant = { id: tenant.tenantId, name: tenant.name };
+    req.withTenant = (callback) => withTenant(pool, tenant.tenantId, callback);
 
     next();
   });

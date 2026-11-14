@@ -114,7 +114,13 @@ export function refreshAccessToken(): Promise<RefreshResponse | null> {
  * /auth/refresh itself), attempts a single silent refresh-and-retry before
  * giving up.
  */
-export async function apiFetch<T = unknown>(path: string, init: RequestInit, schema: z.ZodType<T> = z.unknown() as z.ZodType<T>): Promise<T> {
+export async function apiFetch(path: string, init: RequestInit): Promise<unknown>;
+export async function apiFetch<T>(path: string, init: RequestInit, schema: z.ZodType<T>): Promise<T>;
+export async function apiFetch<T>(
+  path: string,
+  init: RequestInit,
+  schema?: z.ZodType<T>,
+): Promise<T | unknown> {
   let { status, envelope } = await request(path, init);
 
   if (status === 401 && path !== '/auth/refresh') {
@@ -129,5 +135,5 @@ export async function apiFetch<T = unknown>(path: string, init: RequestInit, sch
     throw new ApiError(envelope.error.code, envelope.error.message, status);
   }
 
-  return schema.parse(envelope.data);
+  return schema ? schema.parse(envelope.data) : envelope.data;
 }

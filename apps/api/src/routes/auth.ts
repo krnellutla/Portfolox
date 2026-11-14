@@ -118,7 +118,7 @@ authRouter.post(
     const { user, rotated } = await req.withTenant(async (client) => {
       const rotated = await rotateRefreshToken(client, {
         token: refreshToken,
-        tenantId: req.tenant?.id ?? '',
+        tenantId: req.tenant!.id,
         ttlDays: env.REFRESH_TOKEN_TTL_DAYS,
         userAgent: req.headers['user-agent'] ?? null,
         ip: req.ip ?? null,
@@ -161,7 +161,7 @@ authRouter.post(
 
     if (refreshToken) {
       await req.withTenant((client) =>
-        revokeRefreshToken(client, req.tenant?.id ?? '', refreshToken)
+        revokeRefreshToken(client, req.tenant!.id, refreshToken)
       ).catch(() => {
         // Best-effort — if the token is already invalid, that's fine
       });
