@@ -7,6 +7,7 @@ const SETTINGS_NAV = [
   { to: '/studio/settings/domain', label: 'Domain' },
   { to: '/studio/settings/billing', label: 'Plan & billing' },
   { to: '/studio/settings/notifications', label: 'Notifications' },
+  { to: '/studio/settings/security', label: 'Security' },
 ] as const;
 
 export default function SettingsLayout() {

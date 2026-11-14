@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { requestOtp, verifyOtp } from '../../api/auth.js';
+import { authenticateWithPasskey } from '../../api/passkeys.js';
 import { isDesktop } from '../../lib/platform.js';
 import { setRefreshToken } from '../../lib/secure-storage.js';
 import { setAccessToken } from '../../api/client.js';
@@ -60,6 +61,26 @@ export default function Login() {
     setStep('email');
   }
 
+  async function handlePasskey() {
+    setError(null);
+    setLoading(true);
+    try {
+      const result = await authenticateWithPasskey();
+      if (isDesktop() && 'refreshToken' in result) {
+        await setRefreshToken(result.refreshToken as string);
+      }
+      setAccessToken(result.accessToken);
+      setSession(result.user);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (!msg.includes('NotAllowedError') && !msg.includes('AbortError')) {
+        setError('Passkey sign-in failed. Try your email instead.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const minutesLeft = expiresAt
     ? Math.max(0, Math.ceil((expiresAt.getTime() - Date.now()) / 60_000))
     : 5;
@@ -105,6 +126,21 @@ export default function Login() {
                   {loading ? 'Sending…' : 'Continue'}
                 </button>
               </form>
+
+              <div className="flex items-center gap-3 my-5">
+                <span className="flex-1 h-px bg-line" />
+                <span className="text-[12px] text-ink-3 uppercase tracking-[0.08em]">or</span>
+                <span className="flex-1 h-px bg-line" />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => void handlePasskey()}
+                disabled={loading}
+                className="w-full py-[13px] border border-field rounded-[10px] font-semibold text-[14.5px] text-ink hover:bg-field-bg transition-colors duration-150 disabled:opacity-50"
+              >
+                Sign in with a passkey
+              </button>
 
               <p className="text-center text-[13px] text-ink-3 mt-6">
                 New here?{' '}

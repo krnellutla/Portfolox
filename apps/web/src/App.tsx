@@ -36,6 +36,7 @@ const BrandingSettings = lazy(() => import('./features/studio/settings/BrandingS
 const DomainSettings = lazy(() => import('./features/studio/settings/DomainSettings.js'));
 const BillingSettings = lazy(() => import('./features/studio/settings/BillingSettings.js'));
 const NotificationsSettings = lazy(() => import('./features/studio/settings/NotificationsSettings.js'));
+const SecuritySettings = lazy(() => import('./features/studio/settings/SecuritySettings.js'));
 
 function RouteFallback() {
   return <StateView variant="loading" title="Loading…" fullScreen />;
@@ -76,6 +77,7 @@ function App() {
                 <Route path="domain" element={<DomainSettings />} />
                 <Route path="billing" element={<BillingSettings />} />
                 <Route path="notifications" element={<NotificationsSettings />} />
+                <Route path="security" element={<SecuritySettings />} />
               </Route>
               <Route path="/chat" element={<ChatPage />} />
             </Route>

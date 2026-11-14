@@ -12,6 +12,7 @@ import { requireAuth } from './middleware/require-auth.js';
 import { resolveTenant } from './middleware/resolve-tenant.js';
 import { securityHeaders } from './middleware/security-headers.js';
 import { authRouter } from './routes/auth.js';
+import { passkeysRouter } from './routes/passkeys.js';
 import { healthRouter, queueHealthRouter } from './routes/health.js';
 import { createMediaPublicRouter, createMediaRouter } from './routes/media.js';
 import { nodesRouter } from './routes/nodes.js';
@@ -68,6 +69,7 @@ export function createApp(
   app.use(corsMiddleware);
   app.use('/auth', authRateLimit);
   app.use(authRouter);
+  app.use(passkeysRouter);
 
   // Public read routes — no Bearer token required
   app.use(nodesRouter);

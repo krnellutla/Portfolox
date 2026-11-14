@@ -41,6 +41,19 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().min(1),
   RESEND_FROM_EMAIL: z.string().email().default('noreply@blueflutes.app'),
 
+  // WebAuthn / Passkeys
+  // rpID must be a registrable domain suffix of the page's origin.
+  // localhost for local dev; your base domain (e.g. blueflutes.app) in production.
+  WEBAUTHN_RP_ID: z.string().min(1).default('localhost'),
+  WEBAUTHN_RP_NAME: z.string().min(1).default('Blueflutes'),
+  // Comma-separated allowed origins for WebAuthn verification.
+  WEBAUTHN_ORIGINS: z
+    .string()
+    .default('http://localhost:5173')
+    .transform((v) =>
+      v.split(',').map((o) => o.trim()).filter((o) => o.length > 0),
+    ),
+
   // Redis (optional — gallery responses are cached when set)
   REDIS_URL: z.string().url().optional(),
 
