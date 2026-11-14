@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { asyncHandler } from '../lib/async-handler.js';
 import { AppError } from '../lib/app-error.js';
+import { findUserById } from '../services/users.js';
 
 export const meRouter: Router = Router();
 
@@ -10,17 +11,14 @@ meRouter.get(
   asyncHandler(async (req, res) => {
     if (!req.user || !req.withTenant) throw AppError.unauthorized('Not authenticated');
 
-    const row = await req.withTenant((client) =>
-      client.query('SELECT id, email FROM users WHERE id = $1', [req.user!.id]),
-    );
-    if (!row.rows[0]) throw AppError.notFound('User not found');
+    const user = await req.withTenant((client) => findUserById(client, req.user!.id));
+    if (!user) throw AppError.notFound('User not found');
 
-    const u = row.rows[0];
     res.json({
       data: {
-        id: u.id,
-        handle: u.email.split('@')[0],
-        displayName: u.email.split('@')[0],
+        id: user.id,
+        handle: user.email.split('@')[0],
+        displayName: user.email.split('@')[0],
         avatarUrl: null,
         coverUrl: null,
         location: '',

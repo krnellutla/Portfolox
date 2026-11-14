@@ -1,6 +1,7 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import { env } from '../config/env.js';
+import { logger } from '../lib/logger.js';
 import * as schema from './schema/index.js';
 
 // In production (or when connecting to a remote DB such as Supabase) the
@@ -28,7 +29,12 @@ export const pool = new Pool({
 // Safety net: cap every statement at 10 s so a slow tenant-lookup or
 // runaway query cannot stall the entire request pipeline.
 pool.on('connect', (client) => {
-  void client.query('SET statement_timeout = 10000');
+  client.query('SET statement_timeout = 10000').catch((err: unknown) => {
+    // Log and swallow — a failed SET degrades protection but must not crash
+    // the pool event emitter (pg would emit an 'error' event and potentially
+    // crash the process if we threw here instead of catching).
+    logger.error({ err }, 'pool.connect: failed to set statement_timeout');
+  });
 });
 
 /**
