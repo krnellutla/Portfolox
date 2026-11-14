@@ -10,11 +10,9 @@
       "includeFiles": "node_modules/@img/**"
     }
   },
-  "rewrites": {
-    "afterFiles": [
-      { "source": "/(.*)", "destination": "/index.html" }
-    ]
-  },
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
   "headers": [
     {
       "source": "/(.*)",

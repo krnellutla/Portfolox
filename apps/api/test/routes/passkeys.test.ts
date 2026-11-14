@@ -116,11 +116,13 @@ describe('Passkey routes — management (list / rename / delete)', () => {
 
   it('POST /auth/passkey/register/finish — stores credential', async () => {
     // Insert a challenge row directly so finish can consume it
-    await migratorPool.query(
-      `INSERT INTO webauthn_challenges (tenant_id, user_id, challenge, type, expires_at)
-       VALUES ($1, $2, $3, 'registration', NOW() + INTERVAL '5 minutes')`,
-      [tenantId, userId, 'mock-challenge-registration'],
-    );
+    await withTenant(migratorPool, tenantId, async (client) => {
+      await client.query(
+        `INSERT INTO webauthn_challenges (tenant_id, user_id, challenge, type, expires_at)
+         VALUES ($1, $2, $3, 'registration', NOW() + INTERVAL '5 minutes')`,
+        [tenantId, userId, 'mock-challenge-registration'],
+      );
+    });
 
     const res = await request(app)
       .post('/auth/passkey/register/finish')

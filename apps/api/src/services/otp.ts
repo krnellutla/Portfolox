@@ -1,5 +1,5 @@
 import { createHash, randomInt } from 'node:crypto';
-import { and, eq, gt, isNull, lt } from 'drizzle-orm';
+import { and, desc, eq, gt, isNull, lt } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import type { PoolClient } from 'pg';
 import { AppError } from '../lib/app-error.js';
@@ -71,7 +71,7 @@ export async function verifyOtpCode(
         gt(schema.otpCodes.expiresAt, now),
       ),
     )
-    .orderBy(schema.otpCodes.createdAt)
+    .orderBy(desc(schema.otpCodes.createdAt))
     .limit(1);
 
   if (!record) {

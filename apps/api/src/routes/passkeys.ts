@@ -41,13 +41,11 @@ passkeysRouter.post(
     const tenant = req.tenant;
     if (!tenant || !req.withTenant) throw AppError.notFound('Tenant not found');
     if (!req.user) throw AppError.unauthorized('Authentication required');
+    const { id: userId, email: userEmail } = req.user;
 
-    const options = await beginRegistration(req.withTenant, {
-      tenantId: tenant.id,
-      userId: req.user.id,
-      userEmail: req.user.email,
-      ip: req.ip ?? null,
-    });
+    const options = await req.withTenant((client) =>
+      beginRegistration(client, { tenantId: tenant.id, userId, userEmail, ip: req.ip ?? null })
+    );
 
     const response: ApiEnvelope<typeof options> = { data: options, error: null };
     res.json(response);
@@ -62,6 +60,7 @@ passkeysRouter.post(
     const tenant = req.tenant;
     if (!tenant || !req.withTenant) throw AppError.notFound('Tenant not found');
     if (!req.user) throw AppError.unauthorized('Authentication required');
+    const userId = req.user.id;
 
     const friendlyName =
       typeof req.body.friendlyName === 'string' ? req.body.friendlyName : null;
@@ -69,12 +68,9 @@ passkeysRouter.post(
 
     if (!registrationResponse) throw AppError.badRequest('Missing registration response');
 
-    const credential = await finishRegistration(req.withTenant, {
-      tenantId: tenant.id,
-      userId: req.user.id,
-      response: registrationResponse,
-      friendlyName,
-    });
+    const credential = await req.withTenant((client) =>
+      finishRegistration(client, { tenantId: tenant.id, userId, response: registrationResponse, friendlyName })
+    );
 
     const parsed = passkeyCredentialSchema.parse({
       id: credential.id,
@@ -104,11 +100,13 @@ passkeysRouter.post(
     const parsed = passkeyAuthBeginSchema.safeParse(req.body);
     const email = parsed.success ? parsed.data.email : undefined;
 
-    const options = await beginAuthentication(req.withTenant, {
-      tenantId: tenant.id,
-      email: email ?? null,
-      ip: req.ip ?? null,
-    });
+    const options = await req.withTenant((client) =>
+      beginAuthentication(client, {
+        tenantId: tenant.id,
+        email: email ?? null,
+        ip: req.ip ?? null,
+      })
+    );
 
     const response: ApiEnvelope<typeof options> = { data: options, error: null };
     res.json(response);
@@ -125,21 +123,20 @@ passkeysRouter.post(
     const authResponse = req.body.response as AuthenticationResponseJSON;
     if (!authResponse) throw AppError.badRequest('Missing authentication response');
 
-    const { userId } = await finishAuthentication(req.withTenant, {
-      tenantId: tenant.id,
-      response: authResponse,
-    });
-
-    const user = await findUserById(req.withTenant, userId);
-    if (!user) throw AppError.unauthorized('User not found');
-
     const isDesktopClient = req.query.client === 'desktop';
-    const { token, expiresAt } = await createRefreshTokenFamily(req.withTenant, {
-      tenantId: tenant.id,
-      userId: user.id,
-      ttlDays: env.REFRESH_TOKEN_TTL_DAYS,
-      userAgent: req.headers['user-agent'] ?? null,
-      ip: req.ip ?? null,
+
+    const { user, token, expiresAt } = await req.withTenant(async (client) => {
+      const { userId } = await finishAuthentication(client, { tenantId: tenant.id, response: authResponse });
+      const user = await findUserById(client, userId);
+      if (!user) throw AppError.unauthorized('User not found');
+      const { token, expiresAt } = await createRefreshTokenFamily(client, {
+        tenantId: tenant.id,
+        userId: user.id,
+        ttlDays: env.REFRESH_TOKEN_TTL_DAYS,
+        userAgent: req.headers['user-agent'] ?? null,
+        ip: req.ip ?? null,
+      });
+      return { user, token, expiresAt };
     });
 
     const accessToken = await signAccessToken({ sub: user.id, tenantId: tenant.id, email: user.email });
@@ -171,11 +168,11 @@ passkeysRouter.get(
     const tenant = req.tenant;
     if (!tenant || !req.withTenant) throw AppError.notFound('Tenant not found');
     if (!req.user) throw AppError.unauthorized('Authentication required');
+    const userId = req.user.id;
 
-    const credentials = await listCredentials(req.withTenant, {
-      tenantId: tenant.id,
-      userId: req.user.id,
-    });
+    const credentials = await req.withTenant((client) =>
+      listCredentials(client, { tenantId: tenant.id, userId })
+    );
 
     const response: ApiEnvelope<PasskeyListResponse> = {
       data: { credentials: credentials.map((c) => passkeyCredentialSchema.parse(c)) },
@@ -193,17 +190,15 @@ passkeysRouter.patch(
     const tenant = req.tenant;
     if (!tenant || !req.withTenant) throw AppError.notFound('Tenant not found');
     if (!req.user) throw AppError.unauthorized('Authentication required');
+    const userId = req.user.id;
+    const credentialDbId = String(req.params.id);
 
-    const credentialDbId = req.params.id;
     const parsed = passkeyRenameSchema.safeParse(req.body);
     if (!parsed.success) throw AppError.badRequest('friendlyName must be 1–60 characters');
 
-    await renameCredential(req.withTenant, {
-      tenantId: tenant.id,
-      userId: req.user.id,
-      credentialDbId,
-      friendlyName: parsed.data.friendlyName,
-    });
+    await req.withTenant((client) =>
+      renameCredential(client, { tenantId: tenant.id, userId, credentialDbId, friendlyName: parsed.data.friendlyName })
+    );
 
     const response: ApiEnvelope<{ success: true }> = { data: { success: true }, error: null };
     res.json(response);
@@ -218,12 +213,12 @@ passkeysRouter.delete(
     const tenant = req.tenant;
     if (!tenant || !req.withTenant) throw AppError.notFound('Tenant not found');
     if (!req.user) throw AppError.unauthorized('Authentication required');
+    const userId = req.user.id;
+    const credentialDbId = String(req.params.id);
 
-    await deleteCredential(req.withTenant, {
-      tenantId: tenant.id,
-      userId: req.user.id,
-      credentialDbId: req.params.id,
-    });
+    await req.withTenant((client) =>
+      deleteCredential(client, { tenantId: tenant.id, userId, credentialDbId })
+    );
 
     const response: ApiEnvelope<{ success: true }> = { data: { success: true }, error: null };
     res.json(response);

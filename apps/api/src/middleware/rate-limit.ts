@@ -34,6 +34,7 @@ export const otpRequestRateLimit = rateLimit({
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   skip,
+  validate: { keyGeneratorIpFallback: false },
   keyGenerator: (req) => {
     const ip = req.ip ?? 'unknown';
     const email = typeof req.body?.email === 'string' ? req.body.email.toLowerCase() : '';

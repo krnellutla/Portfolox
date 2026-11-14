@@ -1,6 +1,6 @@
 import type { ApiEnvelope, RefreshResponse } from '@blueflutes/shared';
 import { desktopRefreshResponseSchema, refreshResponseSchema } from '@blueflutes/shared';
-import type { z } from 'zod';
+import { z } from 'zod';
 import { env } from '../config/env.js';
 import { isDesktop } from '../lib/platform.js';
 import { getRefreshToken, setRefreshToken } from '../lib/secure-storage.js';
@@ -114,7 +114,7 @@ export function refreshAccessToken(): Promise<RefreshResponse | null> {
  * /auth/refresh itself), attempts a single silent refresh-and-retry before
  * giving up.
  */
-export async function apiFetch<T>(path: string, init: RequestInit, schema: z.ZodType<T>): Promise<T> {
+export async function apiFetch<T = unknown>(path: string, init: RequestInit, schema: z.ZodType<T> = z.unknown() as z.ZodType<T>): Promise<T> {
   let { status, envelope } = await request(path, init);
 
   if (status === 401 && path !== '/auth/refresh') {

@@ -31,11 +31,9 @@ authRouter.post(
     }
     const { email } = parsed.data;
 
-    const { code, expiresAt } = await createOtpCode(req.withTenant, {
-      tenantId: tenant.id,
-      email,
-      ip: req.ip ?? null,
-    });
+    const { code, expiresAt } = await req.withTenant((client) =>
+      createOtpCode(client, { tenantId: tenant.id, email, ip: req.ip ?? null })
+    );
 
     await sendOtpEmail({
       to: email,
@@ -67,21 +65,20 @@ authRouter.post(
     }
     const { email, code } = parsed.data;
 
-    // Throws on bad/expired/exhausted code
-    await verifyOtpCode(req.withTenant, { tenantId: tenant.id, email, code });
-
-    const user = await findOrCreateUserByEmail(req.withTenant, {
-      tenantId: tenant.id,
-      email,
-    });
-
     const isDesktopClient = req.query.client === 'desktop';
-    const { token, expiresAt } = await createRefreshTokenFamily(req.withTenant, {
-      tenantId: tenant.id,
-      userId: user.id,
-      ttlDays: env.REFRESH_TOKEN_TTL_DAYS,
-      userAgent: req.headers['user-agent'] ?? null,
-      ip: req.ip ?? null,
+
+    const { user, token, expiresAt } = await req.withTenant(async (client) => {
+      // Throws on bad/expired/exhausted code
+      await verifyOtpCode(client, { tenantId: tenant.id, email, code });
+      const user = await findOrCreateUserByEmail(client, { tenantId: tenant.id, email });
+      const { token, expiresAt } = await createRefreshTokenFamily(client, {
+        tenantId: tenant.id,
+        userId: user.id,
+        ttlDays: env.REFRESH_TOKEN_TTL_DAYS,
+        userAgent: req.headers['user-agent'] ?? null,
+        ip: req.ip ?? null,
+      });
+      return { user, token, expiresAt };
     });
 
     const accessToken = await signAccessToken({ sub: user.id, tenantId: tenant.id, email: user.email });
@@ -118,18 +115,18 @@ authRouter.post(
       throw AppError.unauthorized('No refresh token');
     }
 
-    const rotated = await rotateRefreshToken(req.withTenant, {
-      token: refreshToken,
-      tenantId: req.tenant?.id ?? '',
-      ttlDays: env.REFRESH_TOKEN_TTL_DAYS,
-      userAgent: req.headers['user-agent'] ?? null,
-      ip: req.ip ?? null,
+    const { user, rotated } = await req.withTenant(async (client) => {
+      const rotated = await rotateRefreshToken(client, {
+        token: refreshToken,
+        tenantId: req.tenant?.id ?? '',
+        ttlDays: env.REFRESH_TOKEN_TTL_DAYS,
+        userAgent: req.headers['user-agent'] ?? null,
+        ip: req.ip ?? null,
+      });
+      const user = await findUserById(client, rotated.userId);
+      if (!user) throw AppError.unauthorized('User not found');
+      return { user, rotated };
     });
-
-    const user = await findUserById(req.withTenant, rotated.userId);
-    if (!user) {
-      throw AppError.unauthorized('User not found');
-    }
 
     const accessToken = await signAccessToken({ sub: user.id, tenantId: user.tenantId, email: user.email });
     const isDesktopClient = !!getDesktopRefreshTokenHeader(req);
@@ -163,7 +160,9 @@ authRouter.post(
       getDesktopRefreshTokenHeader(req) ?? getRefreshTokenCookie(req);
 
     if (refreshToken) {
-      await revokeRefreshToken(req.withTenant, req.tenant?.id ?? '', refreshToken).catch(() => {
+      await req.withTenant((client) =>
+        revokeRefreshToken(client, req.tenant?.id ?? '', refreshToken)
+      ).catch(() => {
         // Best-effort — if the token is already invalid, that's fine
       });
     }

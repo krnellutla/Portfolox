@@ -14,3 +14,4 @@ export async function findTenantByHost(pool: Pool, host: string): Promise<string
 
   return result.rows[0]?.tenant_id ?? null;
 }
+

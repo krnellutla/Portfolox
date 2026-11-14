@@ -72,6 +72,10 @@ const envSchema = z.object({
   // Supabase-specific (required when STORAGE_PROVIDER=supabase)
   SUPABASE_URL: z.string().url().optional(),
 
+  // Google OAuth (optional — required for Google Photos integration)
+  GOOGLE_CLIENT_ID: z.string().min(1).optional(),
+  GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
+
   MEDIA_MAX_UPLOAD_BYTES: z.coerce.number().int().positive().default(50 * 1024 * 1024),
   MEDIA_PRESIGN_TTL_SECONDS: z.coerce.number().int().positive().default(300),
 }).superRefine((data, ctx) => {

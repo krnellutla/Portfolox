@@ -33,11 +33,13 @@ async function seedOtp(
   const usedAt = opts.usedAt ?? null;
   const attempts = opts.attempts ?? 0;
 
-  await migratorPool.query(
-    `INSERT INTO otp_codes (tenant_id, email, code_hash, expires_at, used_at, attempts)
-     VALUES ($1, $2, $3, $4, $5, $6)`,
-    [tenantId, email.toLowerCase(), hashOtpCode(code), expiresAt, usedAt, attempts],
-  );
+  await withTenant(migratorPool, tenantId, async (client) => {
+    await client.query(
+      `INSERT INTO otp_codes (tenant_id, email, code_hash, expires_at, used_at, attempts)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [tenantId, email.toLowerCase(), hashOtpCode(code), expiresAt, usedAt, attempts],
+    );
+  });
 }
 
 describe('POST /auth/otp/request', () => {

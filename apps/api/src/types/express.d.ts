@@ -6,6 +6,7 @@ declare global {
       /** Set by resolve-tenant middleware once the Host header is matched. */
       tenant?: {
         id: string;
+        name: string;
       };
       /** Runs `callback` inside withTenant(pool, req.tenant.id, callback). */
       withTenant?: <T>(callback: (client: PoolClient) => Promise<T>) => Promise<T>;
