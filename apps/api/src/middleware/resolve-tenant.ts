@@ -46,7 +46,7 @@ export function resolveTenant(pool: Pool) {
       throw AppError.notFound('Tenant not found for this host');
     }
 
-    req.tenant = { id: tenant.tenantId, name: tenant.name };
+    req.tenant = { id: tenant.tenantId };
     req.withTenant = (callback) => withTenant(pool, tenant.tenantId, callback);
 
     next();
