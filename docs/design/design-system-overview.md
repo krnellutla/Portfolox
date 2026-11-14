@@ -1,5 +1,16 @@
 # Handoff: Blueflutes — photographer portfolio + print store + community
 
+> **Read `REVISIONS.md` first.** It records the v2 design review (October 2026) and
+> overrides this file where they differ: accessibility tokens, responsive rules,
+> loading/empty/error states, the print purchase flow, orders, studio settings, and
+> more. This README remains the spec for the original 15 screens, which are already
+> built in `apps/web/src/features`.
+>
+> Things in this README that are out of date for this repo: tokens live in
+> `apps/web/src/index.css` (Tailwind v4 `@theme`), not a `tailwind.config.js`; shared
+> primitives are in `components/ui/`; sign-in is Google and GitHub OAuth only; the
+> color values for `muted`, `field` and `negative` changed in v2.
+
 ## Overview
 **Blueflutes** is a platform for professional photographers to host portfolios, sell
 prints affordably, run private client galleries, and talk to peers in a community
@@ -50,9 +61,9 @@ Full machine-readable tokens are in **`tokens.tailwind.js`** (drop into `theme.e
 Key points:
 
 - **Color** — `paper #f4f3f0` (bg), `surface #ffffff` (cards), `ink #16150f`
-  (text/buttons/active), `ink-3 #56544c` (secondary), `muted #9a988f` (tertiary/mono),
-  `line #e0ded8` (hairlines), `field #d6d3cb` (input borders).
-  Semantics: `positive #3f7a5e`, `negative #c0683f`. No gradients in chrome; the only
+  (text/buttons/active), `ink-3 #56544c` (secondary), `muted #6b6960` (tertiary/mono; `muted-inverse #9a988f`
+  on dark), `line #e0ded8` (hairlines), `field #8a877f` (input borders).
+  Semantics: `positive #3f7a5e`, `negative #a8552f`. (v2 values — see REVISIONS.md R1.) No gradients in chrome; the only
   saturated color appears in the six search **color chips**.
 - **Type** — Display: **Newsreader** (serif, weight 500, tight tracking) for headlines,
   names, prices, big numbers. UI/body: **Hanken Grotesk** (400–700). Metadata:
@@ -170,7 +181,8 @@ Build these once; every screen composes them.
   Center: prev/next round buttons flanking a **3:2 hero image** (max 760, `shadow-lightbox`).
   Right **PhotoMetaPanel** (344px, scrolls): title Newsreader 30 + mono code; EXIF rows
   (label mono / value) — Exposure, Camera, Edition, Released; a **Buy a print** block
-  (translucent card, "from $18", solid-inverse "Choose size & checkout" → pricing);
+  (translucent card, "from $18", solid-inverse "Choose size" → opens the PrintPanel;
+  see REVISIONS.md R4 — it no longer links to pricing);
   Like / Share row; then **CommentThread** (input + Post, list of comments w/ avatar,
   name, time, body, ♡count + Reply).
 - **Behavior:** prev/next cycle the active gallery (wrap-around). Posting a comment
@@ -344,4 +356,5 @@ reproduces the placeholder gradients (replace with real images).
 - `tokens.tailwind.js` — design tokens for `theme.extend` (+ `PHOTO_TONES`).
 - `data-models.ts` — TypeScript domain models.
 - `api-spec.md` — suggested REST/WS endpoints per screen.
-- `screenshots/` — PNG of each screen (visual reference).
+- `screenshots/` — PNG of each v1 screen at 1440px wide (re-captured October 2026).
+- `REVISIONS.md` — the v2 changes. Overrides this file.

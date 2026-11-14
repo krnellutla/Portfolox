@@ -13,6 +13,11 @@ const ssl =
     ? true
     : { rejectUnauthorized: false };
 
+/**
+ * Shared PostgreSQL connection pool bound to `DATABASE_URL` (runtime role
+ * `DB_APP_ROLE` / `blueflutes_app`). Tenant-scoped queries should acquire a
+ * transaction client through `withTenant(tenantId, fn)` so RLS policies apply.
+ */
 export const pool = new Pool({
   connectionString: env.DATABASE_URL,
   max: env.DB_POOL_MAX,
@@ -20,4 +25,8 @@ export const pool = new Pool({
   ssl,
 });
 
+/**
+ * Drizzle ORM instance configured with the full application schema and shared
+ * `pool`. Prefer `withTenant(tenantId, fn)` for all tenant-isolated queries.
+ */
 export const db = drizzle(pool, { schema });

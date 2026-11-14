@@ -11,14 +11,33 @@ export const OTP_MAX_ATTEMPTS = 5;
 export const OTP_REQUEST_WINDOW_MS = 10 * 60 * 1000;
 export const OTP_REQUEST_MAX = 3;
 
+/**
+ * Generates a cryptographically random 6-digit zero-padded numeric OTP string.
+ *
+ * @returns 6-digit numeric OTP code (e.g., `"042819"`).
+ */
 export function generateOtpCode(): string {
   return String(randomInt(0, 1_000_000)).padStart(6, '0');
 }
 
+/**
+ * Hashes a plaintext OTP code with SHA-256 before database persistence or comparison.
+ *
+ * @param code Plaintext 6-digit OTP code.
+ * @returns Lowercase hex-encoded SHA-256 digest.
+ */
 export function hashOtpCode(code: string): string {
   return createHash('sha256').update(code).digest('hex');
 }
 
+/**
+ * Invalidates any prior unused OTP codes for `(tenantId, email)` and stores a
+ * newly generated SHA-256 hashed code with a 5-minute TTL.
+ *
+ * @param client Tenant-scoped PostgreSQL transaction client from `withTenant`.
+ * @param params Tenant identifier, target email address, and optional client IP.
+ * @returns Plaintext 6-digit `code` (for email delivery) and its `expiresAt` timestamp.
+ */
 export async function createOtpCode(
   client: PoolClient,
   params: { tenantId: string; email: string; ip?: string | null },
@@ -52,6 +71,15 @@ export async function createOtpCode(
   return { code, expiresAt };
 }
 
+/**
+ * Verifies a submitted OTP code against the most recent unused, unexpired record
+ * for `(tenantId, email)`, tracking failed attempts and marking the code used.
+ *
+ * @param client Tenant-scoped PostgreSQL transaction client from `withTenant`.
+ * @param params Tenant identifier, normalized target email, and 6-digit OTP code.
+ * @returns Resolves when the OTP matches; otherwise rejects.
+ * @throws {AppError} `401 Unauthorized` when expired/missing, attempts exceed `OTP_MAX_ATTEMPTS`, or code mismatches.
+ */
 export async function verifyOtpCode(
   client: PoolClient,
   params: { tenantId: string; email: string; code: string },
@@ -104,7 +132,12 @@ export async function verifyOtpCode(
     .where(eq(schema.otpCodes.id, record.id));
 }
 
-/** Remove expired OTP records (called opportunistically — no hard dependency) */
+/**
+ * Removes expired OTP records older than `OTP_TTL_MS` (opportunistic cleanup).
+ *
+ * @param client PostgreSQL transaction client with table access.
+ * @returns Resolves once expired rows are deleted.
+ */
 export async function purgeExpiredOtpCodes(client: PoolClient): Promise<void> {
   const db = drizzle(client, { schema });
   await db

@@ -482,8 +482,8 @@ export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): R
   );
 
   // ── DELETE /media/:id ─────────────────────────────────────────────────────
-  // TODO(Phase 3): strip objectKey/checksum from all client-facing payloads once
-  // the shared schema has separate public vs. internal asset types.
+  // Deletes the media asset and cascading variants within a tenant transaction,
+  // followed by best-effort post-commit `storage.deleteObject` object cleanup.
 
   router.delete(
     '/media/:id',

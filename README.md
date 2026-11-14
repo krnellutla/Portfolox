@@ -1,202 +1,84 @@
-# Blueflutes
+# Portfolix (Blueflutes)
 
-A multi-tenant photographer portfolio platform. One React codebase serves both web and desktop (Tauri) clients. Tenants are isolated via PostgreSQL Row-Level Security and resolved by host/domain.
+Multi-tenant photography portfolio CMS, client proofing platform, and print-commerce studio built as a **pnpm + Turborepo** TypeScript monorepo.
 
----
+## Core Capabilities
 
-## Stack
-
-| Layer | Tech |
-|-------|------|
-| Monorepo | pnpm workspaces + Turborepo |
-| API | Express + TypeScript |
-| Web | Vite + React 18 + Tailwind CSS v4 |
-| Desktop | Tauri 2.x (wraps the web app) |
-| Database | PostgreSQL 16 + Drizzle ORM |
-| Auth | OAuth 2.0 (Google, GitHub) → JWT access + refresh tokens |
-| Validation | Zod (shared across API and clients) |
-| State | Zustand |
-| Routing | React Router (lazy-loaded code splitting) |
+- **Multi-Tenant Portfolios & Hierarchical CMS**: Strict custom-domain host resolution (`tenant_domains`) paired with PostgreSQL Row-Level Security (`withTenant`) and nested category/album trees (`nodes`).
+- **Media Upload & Variant Engine**: Presigned S3/MinIO/Supabase direct uploads processed asynchronously via Sharp + BullMQ (or inline in serverless mode) into responsive image variants.
+- **Google Photos Import & Auto-Categorization**: Bulk album sync and automated category classification from Studio Dashboard.
+- **Client Proofing & Print Commerce**: Share-token proofing galleries alongside print SKU selection, guest cookie carts (`cart_session`), and integer-cent order totals.
+- **Passwordless Auth**: 6-digit Email OTP (Resend) and WebAuthn Passkeys (`@simplewebauthn/server`) backed by rotating refresh token families, plus a Tauri v2 desktop shell.
 
 ---
 
-## Features
+## Monorepo Layout
 
-### Multi-tenancy
-- Shared PostgreSQL schema with Row-Level Security on every tenant-scoped table
-- Host-based tenant resolution via `tenant_domains` lookup (unique index on `host`)
-- RLS enforced by a restricted runtime role (`NOBYPASSRLS`) — assertions run at boot
-- Tenant context set via `SET LOCAL` per request/transaction
-
-### Authentication
-- OAuth 2.0 with Google and GitHub
-- JWT access tokens (15 min TTL, in-memory on client) + refresh tokens with rotation
-- Reuse detection: consuming a rotated token invalidates the entire family
-- Web: httpOnly Secure SameSite cookie for refresh token
-- Desktop: OS keychain storage via Tauri keychain plugin; deep-link OAuth callback (`blueflutes://auth/callback`)
-- `/auth/refresh`, `/auth/logout` (server-side revocation)
-
-### API
-- Express + TypeScript with standardised JSON envelope on every response: `{ data, error: { code, message } | null }`
-- Middleware order: security headers → request logging → tenant resolution → CORS → rate limiting → auth routes → public routes → requireAuth → 404 → error handler
-- Structured JSON logging (pino) with request ID, tenant ID; no PII or tokens in logs
-- Zod validation on every endpoint request body/params
-- Health endpoint at `GET /health`
-
-### Security
-- **Helmet** — CSP, HSTS (production), X-Content-Type-Options, X-Frame-Options, Referrer-Policy
-- **Rate limiting** — auth endpoints: 10 req / 15 min per IP; write endpoints: 60 req / min per IP (via `express-rate-limit`, `trust proxy=1` for correct IP keying behind nginx)
-- **CORS** — per-tenant allowlist via `CORS_ALLOWED_ORIGINS` env var; defaults to deny-all
-- **HTTPS** enforced by HSTS in production
-- 12-factor config: all secrets via env vars, Zod-validated at boot (fail fast)
-
-### Data Model
-- `tenants`, `tenant_domains` — multi-tenancy backbone
-- `users`, `tokens` — auth with refresh token rotation fields
-- `nodes` — folder/gallery hierarchy as adjacency list (`parent_id`)
-- `media_assets` — cloud-storage URLs + metadata only (no binary data in DB)
-
-### Web UI — 15 screens
-
-| Screen | Route | Description |
-|--------|-------|-------------|
-| Discover | `/discover` | Hero, search, category chips, featured photographers, fresh frames |
-| Search & filter | `/search` | Sidebar facets (style, color, location), active chips, 4-col photo grid |
-| Portfolio | `/portfolio/:handle` | Cover band, avatar, stats bar, gallery chips, 5-col photo grid |
-| Lightbox | `/lightbox` | Dark surface, EXIF panel, print buy block, comments thread |
-| Community | `/community` | Spaces sidebar, composer, feed, trending tags, active-now rail |
-| Chat | `/chat` | Conversation list, message bubbles, typing indicator, mock WS layer |
-| Collections | `/collections` | 4-col collection grid + liked photos |
-| Pricing | `/pricing` | Monthly/annual toggle, 3-col plan grid, print options |
-| Client gallery | `/client/:shareToken` | Private proofing, multi-select, favorites, floating action pill |
-| Onboarding | `/onboarding` | 4-step flow: account → plan → studio setup → done |
-| Studio Dashboard | `/studio/dashboard` | KPI cards, revenue bar chart, recent sales, top galleries |
-| Analytics | `/studio/analytics` | Range segmented, top frames table with sparklines, conversion funnel, top buyers |
-| Upload & manage | `/studio/upload` | Drag-drop zone, live progress queue, frames management table |
-| Gallery Builder | `/studio/builder` | Drag-to-reorder via `@dnd-kit/sortable`, settings panel |
-| Mobile / responsive | — | `MobileTabBar` at `<md`, grid collapses, full responsive coverage |
-
-### Desktop (Tauri 2.x)
-- Wraps the shared React web app — no duplicated UI code
-- OS keychain token storage (no plaintext tokens on disk)
-- Window management (size, min dimensions, titlebar)
-- Local file picker stub (Phase 2: media upload)
-- Auto-updater configured (Tauri updater)
+| Workspace / Path | Package Name | Responsibility |
+| :--- | :--- | :--- |
+| `apps/web` | `@blueflutes/web` | React 18 + Vite + Tailwind CSS v4 portfolio viewer, Studio CMS, proofing & checkout SPA. |
+| `apps/api` | `@blueflutes/api` | Express 4 REST API, Drizzle ORM + Postgres RLS data layer, OTP/Passkey auth, Sharp/BullMQ media pipeline. |
+| `apps/desktop` | `@blueflutes/desktop` | Tauri v2 native desktop shell wrapping `@blueflutes/web` with OS secure refresh-token storage. |
+| `packages/shared` | `@blueflutes/shared` | Shared Zod schemas, response `{ data, error }` envelope types, and DTO validators. |
+| `api/[...path].ts` | — | Vercel serverless catch-all entrypoint forwarding `/api/*` requests to Express. |
 
 ---
 
-## Project Structure
+## 5-Minute Local Quickstart
 
-```
-.
-├── apps/
-│   ├── api/          # Express + TypeScript API
-│   ├── web/          # Vite + React 18 + Tailwind CSS v4
-│   └── desktop/      # Tauri 2.x desktop wrapper
-├── packages/
-│   └── shared/       # Zod schemas, shared TypeScript types, API contracts
-├── docker-compose.yml
-└── .env.example
-```
-
----
-
-## Getting Started
-
-### Prerequisites
-- Node.js 22+
-- pnpm 9+
-- PostgreSQL 16 (or Docker)
-
-### Local development
+**Prerequisites**: Node.js `>=20.18.0`, `pnpm@9.15.0` (`npm`/`yarn` are not used), Docker (for local Postgres 16 + MinIO).
 
 ```bash
-# Install dependencies
+# 1. Install dependencies
 pnpm install
 
-# Copy env and fill in values
+# 2. Configure environment variables
+cp .env.example .env
 cp apps/api/.env.example apps/api/.env
+# Fill in JWT_SECRET, RESEND_API_KEY, and storage credentials as needed
 
-# Start Postgres (Docker)
-docker run --name blueflutes-pg -e POSTGRES_PASSWORD=postgres \
-  -p 5432:5432 -d postgres:16
+# 3. Start local Postgres 16 and MinIO
+docker compose up -d postgres minio minio-init
 
-# Bootstrap DB roles, run migrations, and seed dev data
+# 4. Bootstrap non-superuser DB role, run migrations, and seed sample data
 pnpm --filter @blueflutes/api db:bootstrap-roles
 pnpm --filter @blueflutes/api db:migrate
 pnpm --filter @blueflutes/api db:seed
 
-# Start all services in watch mode
+# 5. Start API (:3001) and Web (:5173) dev servers
 pnpm dev
 ```
 
-Web app: http://localhost:5173  
-API: http://localhost:3001
-
-### Docker (full stack)
-
-```bash
-cp .env.example .env   # fill in POSTGRES_PASSWORD, JWT_SECRET, DB_APP_ROLE_PASSWORD
-docker compose up
-```
-
-Web: http://localhost:8080  
-API: http://localhost:3001
-
-### Run tests
-
-```bash
-pnpm test                             # all workspaces
-pnpm --filter @blueflutes/api test  # API only (76 tests)
-```
-
-### Build
-
-```bash
-pnpm build      # all workspaces
-pnpm typecheck  # TypeScript across all workspaces
-```
+For production deployment (Vercel + Supabase poolers) and Tauri desktop builds, see [05 — Developer Setup & Runbook](./docs/05-DEVELOPER-SETUP-AND-RUNBOOK.md).
 
 ---
 
-## Environment Variables
+## Developer & Application Documentation (`/docs`)
 
-See [`apps/api/.env.example`](apps/api/.env.example) for the full annotated list.
+All technical and product documentation lives under `/docs`:
 
-| Variable | Description |
-|----------|-------------|
-| `DATABASE_URL` | Runtime connection (non-superuser, NOBYPASSRLS role) |
-| `DATABASE_MIGRATION_URL` | Migration connection (schema owner) |
-| `JWT_SECRET` | HS256 signing key — min 32 characters |
-| `CORS_ALLOWED_ORIGINS` | Comma-separated extra origins (e.g. `tauri://localhost`) |
-| `GOOGLE_CLIENT_ID/SECRET` | Google OAuth app credentials |
-| `GITHUB_CLIENT_ID/SECRET` | GitHub OAuth app credentials |
-| `DESKTOP_AUTH_REDIRECT_URL` | Deep-link for desktop OAuth (`blueflutes://auth/callback`) |
+| Guide | Topics Covered |
+| :--- | :--- |
+| [01 — Architecture & Stack](./docs/01-ARCHITECTURE-AND-STACK.md) | Monorepo structure, Vercel + Express topology, middleware & deployment architecture. |
+| [02 — Database Schema & Multi-Tenancy](./docs/02-DATABASE-SCHEMA-AND-MULTI-TENANCY.md) | PostgreSQL 16 + Drizzle schema, 12 schema modules (18 tables), Row-Level Security (`withTenant`), startup assertions. |
+| [03 — Media & Google Photos Pipeline](./docs/03-MEDIA-AND-GOOGLE-PHOTOS-PIPELINE.md) | Presigned uploads, Sharp variant generation, BullMQ/inline queue, Google Photos import & auto-categorization. |
+| [04 — API & Auth Contracts](./docs/04-API-AND-AUTH-CONTRACTS.md) | All 21 routers, `{ data, error }` envelope, Email OTP + WebAuthn Passkeys, refresh rotation, Zod env config. |
+| [05 — Developer Setup & Runbook](./docs/05-DEVELOPER-SETUP-AND-RUNBOOK.md) | Local onboarding, DB CLI scripts, testing, Vercel + Supabase dual-pooler deployment, troubleshooting. |
+| [06 — Frontend & User Manual](./docs/06-FRONTEND-AND-USER-MANUAL.md) | React Router v6 routes, `apiFetch` refresh, Zustand + TanStack Query `qk`, Studio & client user workflows. |
+| [docs/design/](./docs/design/design-system-overview.md) | Archived UX handoff bundle (`design-system-overview.md`, `revisions-history.md`, `initial-api-spec.md`, `build-prompts.md`). |
+| [CLAUDE.md](./CLAUDE.md) | Repository engineering conventions and working agreements. |
 
 ---
 
-## Roadmap
+## Common Commands
 
-### Phase 1 — Foundation (complete)
-- [x] M1.1 — Monorepo scaffold (pnpm + Turborepo, shared types)
-- [x] M1.2 — Database schema + RLS migrations + seed
-- [x] M1.3 — API foundation (tenant resolution, error handler, structured logging)
-- [x] M1.4 — Auth (OAuth 2.0, JWT, refresh rotation, reuse detection)
-- [x] M1.5 — Web frontend (15 screens, auth flow, public viewer)
-- [x] M1.6 — Desktop wrap (Tauri 2.x, OS keychain, deep-link OAuth)
-- [x] M1.7 — Production hardening (Docker, rate limiting, Helmet, nginx)
-
-### Phase 2 — Media pipeline
-- Media upload: file picker → presigned cloud upload → `media_assets` record
-- Image processing: thumbnails, responsive variants
-- Node/gallery CRUD (drag-drop ordering, nesting)
-
-### Phase 3 — Tenant experience
-- Custom domain onboarding + verification
-- Per-tenant theming; public viewer polish (lightbox, SEO/meta)
-- Visitor analytics
-
-### Phase 4 — Scale & operations
-- CI/CD pipeline; staging environment
-- Backups, monitoring/alerting, performance budgets
-- Billing/plan tiers
+```bash
+pnpm dev                               # Start API & Web dev servers
+pnpm build                             # Build all packages & apps via Turborepo
+pnpm -r typecheck                      # TypeScript check across all workspaces
+pnpm -r lint                           # ESLint across all workspaces
+pnpm --filter @blueflutes/shared test  # Run shared schema unit tests
+pnpm --filter @blueflutes/web test     # Run web unit tests
+pnpm --filter @blueflutes/api test     # Run API Vitest suite
+pnpm format                            # Prettier format workspace
+```
