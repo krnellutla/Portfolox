@@ -1,7 +1,13 @@
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../src/app.js';
 import request from 'supertest';
 import { createTestPool } from './db-test-utils.js';
+
+// Tenant resolution needs no live DB for these unit tests: mock the lookup so
+// unknown hosts return null (→ 404) without connecting to Postgres.
+vi.mock('../src/services/tenant-resolution.js', () => ({
+  findTenantByHost: vi.fn().mockResolvedValue(null),
+}));
 
 describe('GET /health', () => {
   const pool = createTestPool();
