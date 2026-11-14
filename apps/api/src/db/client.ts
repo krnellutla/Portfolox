@@ -25,6 +25,12 @@ export const pool = new Pool({
   ssl,
 });
 
+// Safety net: cap every statement at 10 s so a slow tenant-lookup or
+// runaway query cannot stall the entire request pipeline.
+pool.on('connect', (client) => {
+  void client.query('SET statement_timeout = 10000');
+});
+
 /**
  * Drizzle ORM instance configured with the full application schema and shared
  * `pool`. Prefer `withTenant(tenantId, fn)` for all tenant-isolated queries.

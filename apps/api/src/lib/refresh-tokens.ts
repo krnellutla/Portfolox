@@ -111,6 +111,9 @@ export async function rotateRefreshToken(
     throw AppError.unauthorized('Invalid refresh token');
   }
 
+  // Reuse check comes before expiry: a rotated/revoked token that is also
+  // expired is still a security signal (possible token theft after rotation),
+  // so the family must be revoked regardless of its expiry state.
   if (row.revoked_at || row.rotated_to) {
     throw new ReuseDetectedError(row.family_id);
   }

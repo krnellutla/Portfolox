@@ -9,6 +9,10 @@ export interface AccessTokenPayload {
   email: string;
 }
 
+// HS256 (symmetric HMAC) is acceptable for a monolith where a single service
+// both signs and verifies tokens. If the architecture ever splits into separate
+// services that need to verify tokens independently, migrate to RS256 or ES256
+// (asymmetric) so verifiers only need the public key, not the signing secret.
 export async function signAccessToken(payload: AccessTokenPayload): Promise<string> {
   return new SignJWT({ tenantId: payload.tenantId, email: payload.email })
     .setProtectedHeader({ alg: 'HS256' })
