@@ -2,6 +2,26 @@ import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import type { PoolClient } from 'pg';
 import { AppError } from './app-error.js';
 
+/**
+ * Thrown when a refresh token that has already been rotated or revoked is
+ * presented. The caller must revoke the token family (on a fresh connection,
+ * outside the current transaction) and then surface a 401.
+ *
+ * We deliberately do NOT revoke inside rotateRefreshToken: that function runs
+ * within a withTenant transaction, and committing a revocation mid-transaction
+ * before throwing would couple this module to withTenant's internals. Instead,
+ * the caller catches this error, runs revokeTokenFamily in a separate
+ * withTenant call (its own committed transaction), and then re-throws a 401.
+ */
+export class ReuseDetectedError extends Error {
+  readonly familyId: string;
+  constructor(familyId: string) {
+    super('Refresh token reuse detected');
+    this.name = 'ReuseDetectedError';
+    this.familyId = familyId;
+  }
+}
+
 export interface RefreshTokenMeta {
   userAgent?: string | null;
   ip?: string | null;
@@ -92,15 +112,7 @@ export async function rotateRefreshToken(
   }
 
   if (row.revoked_at || row.rotated_to) {
-    // Commit the revocation before throwing: the caller's withTenant
-    // transaction will roll back on this error, which would otherwise undo
-    // the family revocation we're relying on to actually block reuse. The
-    // subsequent ROLLBACK in withTenant's catch then runs against a
-    // connection with no open transaction, which Postgres treats as a
-    // harmless no-op warning rather than an error.
-    await revokeTokenFamily(client, params.tenantId, row.family_id);
-    await client.query('COMMIT');
-    throw AppError.unauthorized('Refresh token reuse detected');
+    throw new ReuseDetectedError(row.family_id);
   }
 
   if (row.expires_at.getTime() <= Date.now()) {

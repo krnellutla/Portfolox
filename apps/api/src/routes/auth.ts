@@ -7,7 +7,7 @@ import { asyncHandler } from '../lib/async-handler.js';
 import { clearRefreshTokenCookie, getRefreshTokenCookie, setRefreshTokenCookie } from '../lib/cookies.js';
 import { getDesktopRefreshTokenHeader } from '../lib/desktop-auth.js';
 import { signAccessToken } from '../lib/jwt.js';
-import { createRefreshTokenFamily, revokeRefreshToken, rotateRefreshToken } from '../lib/refresh-tokens.js';
+import { createRefreshTokenFamily, revokeRefreshToken, revokeTokenFamily, rotateRefreshToken, ReuseDetectedError } from '../lib/refresh-tokens.js';
 import { otpRequestRateLimit } from '../middleware/rate-limit.js';
 import { sendOtpEmail } from '../services/email.js';
 import { createOtpCode, verifyOtpCode, OTP_TTL_MS } from '../services/otp.js';
@@ -130,6 +130,16 @@ authRouter.post(
       const user = await findUserById(client, rotated.userId);
       if (!user) throw AppError.unauthorized('User not found');
       return { user, rotated };
+    }).catch(async (err: unknown) => {
+      if (err instanceof ReuseDetectedError) {
+        // Revoke the entire token family in its own committed transaction,
+        // separate from the now-rolled-back rotation attempt above.
+        await req.withTenant!((client) =>
+          revokeTokenFamily(client, req.tenant!.id, err.familyId),
+        );
+        throw AppError.unauthorized('Refresh token reuse detected');
+      }
+      throw err;
     });
 
     const accessToken = await signAccessToken({ sub: user.id, tenantId: user.tenantId, email: user.email });
