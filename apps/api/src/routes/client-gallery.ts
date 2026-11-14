@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { pbkdf2, randomBytes, timingSafeEqual } from 'crypto';
 import { promisify } from 'util';
 import { z } from 'zod';
+import { env } from '../config/env.js';
 
 const pbkdf2Async = promisify(pbkdf2);
 import { asyncHandler } from '../lib/async-handler.js';
@@ -59,10 +60,10 @@ clientGalleryRouter.get('/client/:shareToken', asyncHandler(async (req, res) => 
     is_password_protected: boolean;
   };
 
-  // Password gate check
+  // Password gate check — uses a signed cookie so the client cannot forge access
   if (node.is_password_protected) {
     const cookieName = `gallery_${shareToken}_unlocked`;
-    const cookie = req.cookies?.[cookieName];
+    const cookie = req.signedCookies?.[cookieName];
     if (cookie !== '1') {
       res.status(403).json({
         data: null,
@@ -143,8 +144,9 @@ clientGalleryRouter.post('/client/:shareToken/unlock', asyncHandler(async (req, 
 
   const cookieName = `gallery_${shareToken}_unlocked`;
   res.cookie(cookieName, '1', {
+    signed: true,
     httpOnly: true,
-    secure: process.env['NODE_ENV'] === 'production',
+    secure: env.NODE_ENV === 'production',
     sameSite: 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });

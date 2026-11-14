@@ -61,7 +61,7 @@ export function createApp(
   app.use(securityHeaders);
   app.use(requestLogging);
   app.use(express.json());
-  app.use(cookieParser());
+  app.use(cookieParser(env.JWT_SECRET));
 
   app.use(healthRouter);
 
