@@ -1,15 +1,28 @@
+import type { Request } from 'express';
 import rateLimit from 'express-rate-limit';
 import { env } from '../config/env.js';
 
 const skip = () => env.NODE_ENV === 'test';
 
-/** 10 requests per 15 minutes per IP — applied to all /auth/* routes */
+/**
+ * 10 requests per 15 minutes per IP+tenant — applied to all /auth/* routes.
+ * Keyed by `${ip}:${tenantId}` so users behind a shared NAT don't share a
+ * single bucket across tenants; an attacker on the same NAT can only exhaust
+ * their own tenant's quota, not every tenant's.
+ */
 export const authRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   skip,
+  validate: { keyGeneratorIpFallback: false },
+  keyGenerator: (req) => {
+    const expressReq = req as Request;
+    const ip = expressReq.ip ?? 'unknown';
+    const tenantId = expressReq.tenant?.id ?? 'unknown';
+    return `${ip}:${tenantId}`;
+  },
   message: { data: null, error: { code: 'RATE_LIMITED', message: 'Too many requests, please try again later.' } },
 });
 

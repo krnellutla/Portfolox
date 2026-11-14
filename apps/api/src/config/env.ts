@@ -20,7 +20,8 @@ const envSchema = z.object({
   WEB_APP_URL: z.string().url().default('http://localhost:5173'),
   // Path the auth cookies are scoped to. Must match the public path of the /auth
   // routes: '/auth' when the API is served at the root, '/api/auth' behind a /api prefix.
-  AUTH_COOKIE_PATH: z.string().regex(/^\//).default('/auth'),
+  // Validated to start with /auth so a misconfigured '/' cannot expose the cookie to all routes.
+  AUTH_COOKIE_PATH: z.string().regex(/^\/auth(?:\/|$)/).default('/auth'),
 
   // Comma-separated list of additional origins allowed to make
   // credentialed cross-origin requests (e.g. the Tauri desktop shell's

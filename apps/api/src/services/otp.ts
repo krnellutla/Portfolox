@@ -1,4 +1,4 @@
-import { createHash, randomInt } from 'node:crypto';
+import { createHash, randomInt, timingSafeEqual } from 'node:crypto';
 import { and, desc, eq, gt, isNull, lt } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import type { PoolClient } from 'pg';
@@ -116,7 +116,13 @@ export async function verifyOtpCode(
   }
 
   const expectedHash = hashOtpCode(params.code);
-  if (record.codeHash !== expectedHash) {
+  // Both are hex-encoded SHA-256 digests (always 64 chars); timingSafeEqual
+  // prevents a timing side-channel from leaking whether a code exists for the email.
+  const hashMatch = timingSafeEqual(
+    Buffer.from(record.codeHash, 'hex'),
+    Buffer.from(expectedHash, 'hex'),
+  );
+  if (!hashMatch) {
     // Increment attempt counter
     await db
       .update(schema.otpCodes)
