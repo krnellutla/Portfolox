@@ -5,7 +5,6 @@ import {
   type AuthenticationResponseJSON,
 } from '@simplewebauthn/browser';
 import type {
-  ApiEnvelope,
   DesktopRefreshResponse,
   PasskeyCredential,
   PasskeyListResponse,
@@ -24,12 +23,9 @@ import { apiFetch } from './client.js';
 
 export async function registerPasskey(friendlyName?: string): Promise<PasskeyCredential> {
   // 1. Get challenge from server
-  const beginEnvelope = await apiFetch('/auth/passkey/register/begin', {
+  const options = await apiFetch('/auth/passkey/register/begin', {
     method: 'POST',
   });
-  const options = (beginEnvelope as ApiEnvelope<unknown>).data as Parameters<
-    typeof startRegistration
-  >[0];
 
   // 2. Browser WebAuthn prompt
   const registrationResponse: RegistrationResponseJSON = await startRegistration({ optionsJSON: options as never });
@@ -39,6 +35,7 @@ export async function registerPasskey(friendlyName?: string): Promise<PasskeyCre
     '/auth/passkey/register/finish',
     {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ response: registrationResponse, friendlyName: friendlyName ?? null }),
     },
     passkeyCredentialSchema,
@@ -51,13 +48,11 @@ export async function authenticateWithPasskey(
   email?: string,
 ): Promise<RefreshResponse | DesktopRefreshResponse> {
   // 1. Get challenge
-  const beginEnvelope = await apiFetch('/auth/passkey/auth/begin', {
+  const options = await apiFetch('/auth/passkey/auth/begin', {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(email ? { email } : {}),
   });
-  const options = (beginEnvelope as ApiEnvelope<unknown>).data as Parameters<
-    typeof startAuthentication
-  >[0];
 
   // 2. Browser WebAuthn prompt
   const authResponse: AuthenticationResponseJSON = await startAuthentication({ optionsJSON: options as never });
@@ -70,7 +65,11 @@ export async function authenticateWithPasskey(
 
   return apiFetch<RefreshResponse | DesktopRefreshResponse>(
     path,
-    { method: 'POST', body: JSON.stringify({ response: authResponse }) },
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ response: authResponse }),
+    },
     schema,
   );
 }
@@ -84,6 +83,7 @@ export async function listPasskeys(): Promise<PasskeyListResponse> {
 export async function renamePasskey(id: string, friendlyName: string): Promise<void> {
   await apiFetch('/auth/passkey/credentials/' + id, {
     method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ friendlyName }),
   });
 }

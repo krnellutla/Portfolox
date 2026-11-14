@@ -1,25 +1,33 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { formatMoney } from '../../lib/format-money.js';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { checkHandle, updatePlan, updateStudio } from '../../api/me.js';
+import { getPlans } from '../../api/plans.js';
 import { Chip } from '../../components/ui/Chip.js';
 import { Input } from '../../components/ui/Input.js';
-import { StepIndicator } from './StepIndicator.js';
-import { getPlans } from '../../api/plans.js';
-import { updatePlan, updateStudio, checkHandle } from '../../api/me.js';
+import { formatMoney } from '../../lib/format-money.js';
 import { qk } from '../../lib/query-client.js';
+import { useAuthStore } from '../../stores/auth-store.js';
 import { PLANS as FALLBACK_PLANS } from '../pricing/mock.js';
+import { StepIndicator } from './StepIndicator.js';
 import type { Specialty, PlanTier } from '@blueflutes/shared';
 
 const SPECIALTIES: Specialty[] = ['Landscape', 'Portrait', 'Street', 'Wedding', 'Fine Art', 'Documentary'];
 
 export default function OnboardingPage() {
+  const authStatus = useAuthStore((state) => state.status);
   const [step, setStep] = useState(0);
   const [plan, setPlan] = useState<PlanTier>('studio');
   const [displayName, setDisplayName] = useState('');
   const [handle, setHandle] = useState('');
   const [handleAvail, setHandleAvail] = useState<boolean | null>(null);
   const [specialties, setSpecialties] = useState<Set<Specialty>>(new Set(['Landscape']));
+
+  useEffect(() => {
+    if (authStatus === 'authenticated' && step === 0) {
+      setStep(1);
+    }
+  }, [authStatus, step]);
 
   const { data: plans } = useQuery({
     queryKey: qk.plans(),
@@ -85,15 +93,18 @@ export default function OnboardingPage() {
             </p>
 
             <div className="flex flex-col gap-[11px]">
-              {(['Google', 'GitHub'] as const).map((provider) => (
-                <a
-                  key={provider}
-                  href={`${import.meta.env.VITE_API_BASE_URL}/auth/${provider.toLowerCase()}`}
-                  className="w-full py-[13px] bg-surface border border-field rounded-[10px] font-semibold text-[14.5px] text-ink hover:border-ink transition-colors duration-150 text-center block"
-                >
-                  Continue with {provider}
-                </a>
-              ))}
+              <Link
+                to="/login?next=/onboarding"
+                className="w-full py-[13px] bg-ink text-paper rounded-[10px] font-semibold text-[14.5px] hover:opacity-90 transition-opacity duration-150 text-center block"
+              >
+                Continue with Email or Passkey
+              </Link>
+              <p className="text-center text-[13px] text-ink-3 mt-2">
+                Already have an account?{' '}
+                <Link to="/login?next=/onboarding" className="text-ink underline underline-offset-2 hover:text-ink-2">
+                  Sign in →
+                </Link>
+              </p>
             </div>
           </>
         )}

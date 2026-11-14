@@ -1,13 +1,13 @@
 import { useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { requestOtp, verifyOtp } from '../../api/auth.js';
-import { authenticateWithPasskey } from '../../api/passkeys.js';
+import { authenticateWithPasskey, listPasskeys, registerPasskey } from '../../api/passkeys.js';
 import { isDesktop } from '../../lib/platform.js';
 import { setRefreshToken } from '../../lib/secure-storage.js';
-import { setAccessToken } from '../../api/client.js';
+import { ApiError, setAccessToken } from '../../api/client.js';
 import { useAuthStore } from '../../stores/auth-store.js';
 
-type Step = 'email' | 'code';
+type Step = 'email' | 'code' | 'passkey-enroll';
 
 export default function Login() {
   const [step, setStep] = useState<Step>('email');
@@ -18,7 +18,20 @@ export default function Login() {
   const [expiresAt, setExpiresAt] = useState<Date | null>(null);
   const codeInputRef = useRef<HTMLInputElement>(null);
 
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const rawNext = searchParams.get('next');
+  const nextPath =
+    rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//')
+      ? rawNext
+      : '/studio/dashboard';
+
+  const status = useAuthStore((state) => state.status);
   const setSession = useAuthStore((state) => state.setSession);
+
+  if (status === 'authenticated' && step !== 'passkey-enroll') {
+    return <Navigate to={nextPath} replace />;
+  }
 
   async function handleEmailSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -48,6 +61,20 @@ export default function Login() {
       }
       setAccessToken(result.accessToken);
       setSession(result.user);
+
+      let hasPasskeys = true;
+      try {
+        const { credentials } = await listPasskeys();
+        hasPasskeys = credentials.length > 0;
+      } catch {
+        hasPasskeys = true;
+      }
+
+      if (!hasPasskeys) {
+        setStep('passkey-enroll');
+      } else {
+        navigate(nextPath, { replace: true });
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Invalid code. Please try again.');
     } finally {
@@ -65,20 +92,49 @@ export default function Login() {
     setError(null);
     setLoading(true);
     try {
-      const result = await authenticateWithPasskey();
+      const result = await authenticateWithPasskey(email.trim() || undefined);
       if (isDesktop() && 'refreshToken' in result) {
         await setRefreshToken(result.refreshToken as string);
       }
       setAccessToken(result.accessToken);
       setSession(result.user);
+      navigate(nextPath, { replace: true });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       if (!msg.includes('NotAllowedError') && !msg.includes('AbortError')) {
-        setError('Passkey sign-in failed. Try your email instead.');
+        setError(
+          err instanceof ApiError
+            ? err.message
+            : 'Passkey sign-in failed. Try your email instead.',
+        );
       }
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleEnrollPasskey() {
+    setError(null);
+    setLoading(true);
+    try {
+      await registerPasskey();
+      navigate(nextPath, { replace: true });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (!msg.includes('NotAllowedError') && !msg.includes('AbortError')) {
+        setError(
+          err instanceof ApiError
+            ? err.message
+            : 'Could not enable passkey on this device. You can add one later in Security settings.',
+        );
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleSkipPasskey() {
+    navigate(nextPath, { replace: true });
   }
 
   const minutesLeft = expiresAt
@@ -149,7 +205,7 @@ export default function Login() {
                 </Link>
               </p>
             </>
-          ) : (
+          ) : step === 'code' ? (
             <>
               <h1 className="font-serif text-[30px] font-[500] text-ink text-center tracking-[-0.01em] mb-1.5">
                 Check your email
@@ -198,6 +254,39 @@ export default function Login() {
                   Try again
                 </button>
               </p>
+            </>
+          ) : (
+            <>
+              <h1 className="font-serif text-[30px] font-[500] text-ink text-center tracking-[-0.01em] mb-1.5">
+                Use a passkey next time
+              </h1>
+              <p className="text-[14.5px] text-ink-3 text-center mb-[26px]">
+                Sign in faster next time with your device&apos;s biometrics or PIN — no email code needed.
+              </p>
+
+              <div className="flex flex-col gap-[11px]">
+                {error && (
+                  <p className="text-[13px] text-red-500 text-center">{error}</p>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => void handleEnrollPasskey()}
+                  disabled={loading}
+                  className="w-full py-[13px] bg-ink text-paper rounded-[10px] font-semibold text-[14.5px] hover:opacity-90 transition-opacity duration-150 disabled:opacity-50"
+                >
+                  {loading ? 'Follow your device…' : 'Enable passkey'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSkipPasskey}
+                  disabled={loading}
+                  className="w-full py-[13px] border border-field rounded-[10px] font-semibold text-[14.5px] text-ink hover:bg-field-bg transition-colors duration-150 disabled:opacity-50"
+                >
+                  Skip for now
+                </button>
+              </div>
             </>
           )}
         </div>

@@ -6,7 +6,7 @@ import {
   type AuthenticationResponseJSON,
   type RegistrationResponseJSON,
 } from '@simplewebauthn/server';
-import { and, eq, gt, isNull } from 'drizzle-orm';
+import { and, desc, eq, gt, isNull } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import type { PoolClient } from 'pg';
 import { env } from '../config/env.js';
@@ -17,6 +17,13 @@ const CHALLENGE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 // ─── Challenge helpers ────────────────────────────────────────────────────────
 
+/**
+ * Persists a single-use WebAuthn challenge with a 5-minute TTL.
+ *
+ * @param client Tenant-scoped PostgreSQL transaction client from `withTenant`.
+ * @param params Tenant ID, optional user ID (`null` for discoverable sign-in), flow type, challenge string, and client IP.
+ * @returns Resolves once the challenge row is inserted.
+ */
 export async function createChallenge(
   client: PoolClient,
   params: {
@@ -40,6 +47,14 @@ export async function createChallenge(
   });
 }
 
+/**
+ * Consumes the oldest unused, unexpired WebAuthn challenge matching `(tenantId, type, userId)`.
+ *
+ * @param client Tenant-scoped PostgreSQL transaction client from `withTenant`.
+ * @param params Tenant ID, optional user ID filter, and challenge type (`registration` | `authentication`).
+ * @returns The stored base64url challenge string.
+ * @throws {AppError} `401 Unauthorized` when no matching active challenge exists.
+ */
 export async function consumeChallenge(
   client: PoolClient,
   params: { tenantId: string; userId: string | null; type: 'registration' | 'authentication' },
@@ -62,7 +77,7 @@ export async function consumeChallenge(
     .select()
     .from(schema.webauthnChallenges)
     .where(and(...conditions))
-    .orderBy(schema.webauthnChallenges.createdAt)
+    .orderBy(desc(schema.webauthnChallenges.createdAt))
     .limit(1);
 
   if (!row) throw AppError.unauthorized('Challenge expired or not found');
@@ -77,6 +92,14 @@ export async function consumeChallenge(
 
 // ─── Registration ─────────────────────────────────────────────────────────────
 
+/**
+ * Generates WebAuthn registration options for an authenticated user (excluding
+ * already-registered credentials) and persists a single-use challenge.
+ *
+ * @param client Tenant-scoped PostgreSQL transaction client from `withTenant`.
+ * @param params Tenant ID, user ID, user email for RP display, and optional client IP.
+ * @returns WebAuthn `PublicKeyCredentialCreationOptionsJSON` options payload.
+ */
 export async function beginRegistration(
   client: PoolClient,
   params: { tenantId: string; userId: string; userEmail: string; ip?: string | null },
@@ -121,6 +144,16 @@ export async function beginRegistration(
   return options;
 }
 
+/**
+ * Consumes the registration challenge, verifies the authenticator attestation,
+ * and stores the newly registered passkey credential in `passkey_credentials`.
+ *
+ * @param client Tenant-scoped PostgreSQL transaction client from `withTenant`.
+ * @param params Tenant ID, user ID, WebAuthn registration response JSON, and optional label.
+ * @returns Newly inserted passkey credential record.
+ * @throws {AppError} `401 Unauthorized` if challenge is missing/expired or attestation fails.
+ * @throws {Error} If the credential insert fails to return a row.
+ */
 export async function finishRegistration(
   client: PoolClient,
   params: {
@@ -153,7 +186,10 @@ export async function finishRegistration(
   const { credential, credentialDeviceType, credentialBackedUp, aaguid } =
     verification.registrationInfo;
 
-  const credentialIdStr = Buffer.from(credential.id).toString('base64url');
+  const credentialIdStr =
+    typeof credential.id === 'string'
+      ? credential.id
+      : Buffer.from(credential.id).toString('base64url');
   const publicKeyHex = Buffer.from(credential.publicKey).toString('hex');
   const transports = params.response.response.transports
     ? JSON.stringify(params.response.response.transports)
@@ -185,6 +221,14 @@ export async function finishRegistration(
 
 // ─── Authentication ───────────────────────────────────────────────────────────
 
+/**
+ * Generates WebAuthn authentication options (scoped to `email` when provided, or
+ * discoverable otherwise) and persists a single-use authentication challenge.
+ *
+ * @param client Tenant-scoped PostgreSQL transaction client from `withTenant`.
+ * @param params Tenant ID, optional user email hint, and optional client IP.
+ * @returns WebAuthn `PublicKeyCredentialRequestOptionsJSON` options payload.
+ */
 export async function beginAuthentication(
   client: PoolClient,
   params: { tenantId: string; email?: string | null; ip?: string | null },
@@ -237,6 +281,15 @@ export async function beginAuthentication(
   return options;
 }
 
+/**
+ * Consumes an authentication challenge, verifies the passkey assertion signature
+ * and signature counter against replay attacks, and updates `counter`/`lastUsedAt`.
+ *
+ * @param client Tenant-scoped PostgreSQL transaction client from `withTenant`.
+ * @param params Tenant ID and WebAuthn authentication response JSON.
+ * @returns Object containing authenticated `userId` and database `credentialId`.
+ * @throws {AppError} `401 Unauthorized` on expired challenge, unknown passkey, invalid signature, or counter replay.
+ */
 export async function finishAuthentication(
   client: PoolClient,
   params: {
@@ -311,6 +364,13 @@ export async function finishAuthentication(
 
 // ─── Credential management ────────────────────────────────────────────────────
 
+/**
+ * Lists non-secret metadata for all passkeys registered to `(tenantId, userId)`.
+ *
+ * @param client Tenant-scoped PostgreSQL transaction client from `withTenant`.
+ * @param params Tenant ID and user ID.
+ * @returns Array of registered passkey metadata records ordered by `createdAt`.
+ */
 export async function listCredentials(
   client: PoolClient,
   params: { tenantId: string; userId: string },
@@ -338,6 +398,14 @@ export async function listCredentials(
     .orderBy(schema.passkeyCredentials.createdAt);
 }
 
+/**
+ * Renames a user's passkey credential within the active tenant.
+ *
+ * @param client Tenant-scoped PostgreSQL transaction client from `withTenant`.
+ * @param params Tenant ID, user ID, credential UUID, and new `friendlyName`.
+ * @returns Resolves when the credential is updated.
+ * @throws {AppError} `404 Not Found` if no matching credential exists for the user/tenant.
+ */
 export async function renameCredential(
   client: PoolClient,
   params: { tenantId: string; userId: string; credentialDbId: string; friendlyName: string },
@@ -358,6 +426,14 @@ export async function renameCredential(
   if (result.rowCount === 0) throw AppError.notFound('Passkey not found');
 }
 
+/**
+ * Deletes a registered passkey credential belonging to `(tenantId, userId)`.
+ *
+ * @param client Tenant-scoped PostgreSQL transaction client from `withTenant`.
+ * @param params Tenant ID, user ID, and credential UUID.
+ * @returns Resolves when the credential is removed.
+ * @throws {AppError} `404 Not Found` if no matching credential exists for the user/tenant.
+ */
 export async function deleteCredential(
   client: PoolClient,
   params: { tenantId: string; userId: string; credentialDbId: string },

@@ -9,6 +9,10 @@ import { env } from '../config/env.js';
  * migration. Safe to re-run.
  */
 async function main() {
+  if (!env.DATABASE_MIGRATION_URL) {
+    throw new Error('DATABASE_MIGRATION_URL must be set to bootstrap the runtime role');
+  }
+
   if (!env.DB_APP_ROLE_PASSWORD) {
     throw new Error('DB_APP_ROLE_PASSWORD must be set to bootstrap the runtime role');
   }

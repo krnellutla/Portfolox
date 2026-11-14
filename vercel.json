@@ -11,6 +11,7 @@
     }
   },
   "rewrites": [
+    { "source": "/auth/:path*", "destination": "/api/auth/:path*" },
     { "source": "/((?!api(?:/|$)).*)", "destination": "/index.html" }
   ],
   "headers": [

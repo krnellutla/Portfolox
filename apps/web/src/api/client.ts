@@ -28,6 +28,9 @@ export class ApiError extends Error {
 
 async function request(path: string, init: RequestInit = {}): Promise<{ status: number; envelope: ApiEnvelope<unknown> }> {
   const headers = new Headers(init.headers);
+  if (typeof init.body === 'string' && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
   if (accessToken) {
     headers.set('Authorization', `Bearer ${accessToken}`);
   }
@@ -62,7 +65,7 @@ async function request(path: string, init: RequestInit = {}): Promise<{ status: 
   try {
     envelope = (await res.json()) as ApiEnvelope<unknown>;
   } catch {
-    throw new ApiError('INTERNAL_ERROR', 'Unexpected non-JSON response', res.status);
+    throw new ApiError('INTERNAL_ERROR', `Unexpected non-JSON response (HTTP ${res.status})`, res.status);
   }
 
   return { status: res.status, envelope };

@@ -4,7 +4,6 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createApp } from '../../src/app.js';
 import { withTenant } from '../../src/db/with-tenant.js';
 import { REFRESH_TOKEN_COOKIE } from '../../src/lib/cookies.js';
-import { DESKTOP_REFRESH_TOKEN_HEADER } from '../../src/lib/desktop-auth.js';
 import { hashOtpCode } from '../../src/services/otp.js';
 import { createTestMigratorPool, createTestPool } from '../db-test-utils.js';
 

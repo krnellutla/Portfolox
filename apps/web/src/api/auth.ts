@@ -17,7 +17,11 @@ export { refreshAccessToken };
 export async function requestOtp(email: string): Promise<OtpRequestResponse> {
   return apiFetch<OtpRequestResponse>(
     '/auth/otp/request',
-    { method: 'POST', body: JSON.stringify({ email }) },
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    },
     otpRequestResponseSchema,
   );
 }
@@ -30,7 +34,11 @@ export async function verifyOtp(
   const schema = isDesktop() ? desktopRefreshResponseSchema : refreshResponseSchema;
   return apiFetch<RefreshResponse | DesktopRefreshResponse>(
     path,
-    { method: 'POST', body: JSON.stringify({ email, code }) },
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, code }),
+    },
     schema,
   );
 }

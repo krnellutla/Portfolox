@@ -1,9 +1,18 @@
+import { ErrorCode } from '@blueflutes/shared';
 import { Resend } from 'resend';
 import { env } from '../config/env.js';
+import { AppError } from '../lib/app-error.js';
 
 let resend: Resend | null = null;
 
 function getResend(): Resend {
+  if (!env.RESEND_API_KEY) {
+    throw new AppError(
+      ErrorCode.INTERNAL_ERROR,
+      'Email delivery is not configured (missing RESEND_API_KEY)',
+      503,
+    );
+  }
   if (!resend) {
     resend = new Resend(env.RESEND_API_KEY);
   }
@@ -44,6 +53,10 @@ export async function sendOtpEmail(params: {
   });
 
   if (error) {
-    throw new Error(`Failed to send OTP email: ${error.message}`);
+    throw new AppError(
+      ErrorCode.INTERNAL_ERROR,
+      `Failed to send OTP email: ${error.message}`,
+      502,
+    );
   }
 }

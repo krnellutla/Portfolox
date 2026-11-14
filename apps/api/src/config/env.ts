@@ -5,7 +5,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().positive().default(3001),
   DATABASE_URL: z.string().url(),
-  DATABASE_MIGRATION_URL: z.string().url(),
+  DATABASE_MIGRATION_URL: z.string().url().optional(),
   DATABASE_TEST_URL: z.string().url().optional(),
   DATABASE_TEST_MIGRATION_URL: z.string().url().optional(),
   DB_POOL_MAX: z.coerce.number().int().positive().default(10),
@@ -38,20 +38,26 @@ const envSchema = z.object({
     ),
 
   // Email delivery via Resend (https://resend.com)
-  RESEND_API_KEY: z.string().min(1),
+  RESEND_API_KEY: z.string().min(1).optional(),
   RESEND_FROM_EMAIL: z.string().email().default('noreply@blueflutes.app'),
 
   // WebAuthn / Passkeys
   // rpID must be a registrable domain suffix of the page's origin.
-  // localhost for local dev; your base domain (e.g. blueflutes.app) in production.
-  WEBAUTHN_RP_ID: z.string().min(1).default('localhost'),
+  // When unset, derived from WEB_APP_URL (localhost for local dev; custom
+  // domain hostname in production).
+  WEBAUTHN_RP_ID: z.string().min(1).optional(),
   WEBAUTHN_RP_NAME: z.string().min(1).default('Blueflutes'),
   // Comma-separated allowed origins for WebAuthn verification.
   WEBAUTHN_ORIGINS: z
     .string()
-    .default('http://localhost:5173')
+    .optional()
     .transform((v) =>
-      v.split(',').map((o) => o.trim()).filter((o) => o.length > 0),
+      v
+        ? v
+            .split(',')
+            .map((o) => o.trim())
+            .filter((o) => o.length > 0)
+        : undefined,
     ),
 
   // Redis (optional — gallery responses are cached when set)
@@ -125,6 +131,16 @@ const envSchema = z.object({
       path: ['REDIS_URL'],
     });
   }
+}).transform((data) => {
+  const webOrigin = new URL(data.WEB_APP_URL);
+  return {
+    ...data,
+    WEBAUTHN_RP_ID: data.WEBAUTHN_RP_ID ?? webOrigin.hostname,
+    WEBAUTHN_ORIGINS:
+      data.WEBAUTHN_ORIGINS && data.WEBAUTHN_ORIGINS.length > 0
+        ? data.WEBAUTHN_ORIGINS
+        : [webOrigin.origin],
+  };
 });
 
 export type Env = z.infer<typeof envSchema>;

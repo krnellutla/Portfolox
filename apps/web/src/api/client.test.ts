@@ -87,6 +87,36 @@ describe('apiFetch', () => {
     await expect(apiFetch('/nodes', { method: 'GET' }, dataSchema)).rejects.toThrow(ApiError);
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
+
+  it('sets Content-Type: application/json automatically for string request bodies', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(200, { data: { value: 'ok' }, error: null }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await apiFetch('/auth/otp/request', {
+      method: 'POST',
+      body: JSON.stringify({ email: 'user@example.com' }),
+    }, dataSchema);
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect((init.headers as Headers).get('Content-Type')).toBe('application/json');
+  });
+
+  it('includes HTTP status when throwing on a non-JSON response', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      status: 502,
+      json: async () => {
+        throw new SyntaxError('Unexpected token <');
+      },
+    } as unknown as Response);
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(apiFetch('/nodes', { method: 'GET' }, dataSchema)).rejects.toMatchObject({
+      name: 'ApiError',
+      code: 'INTERNAL_ERROR',
+      status: 502,
+      message: 'Unexpected non-JSON response (HTTP 502)',
+    });
+  });
 });
 
 describe('refreshAccessToken', () => {
