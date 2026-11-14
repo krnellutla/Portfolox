@@ -1,6 +1,9 @@
 import type { ApiEnvelope, NodeListResponse } from '@blueflutes/shared';
 import { nodeListResponseSchema } from '@blueflutes/shared';
+import { asc, sql } from 'drizzle-orm';
+import { drizzle } from 'drizzle-orm/node-postgres';
 import { Router } from 'express';
+import * as schema from '../db/schema/index.js';
 import { AppError } from '../lib/app-error.js';
 import { asyncHandler } from '../lib/async-handler.js';
 
@@ -19,26 +22,24 @@ nodesRouter.get(
       throw AppError.notFound('Tenant not found for this host');
     }
 
-    const rows = await req.withTenant((client) =>
-      client.query(
-        `SELECT id, parent_id, type, name, slug, position, created_at, updated_at
-         FROM nodes
-         ORDER BY parent_id NULLS FIRST, position`,
-      ),
-    );
+    const rows = await req.withTenant((client) => {
+      const db = drizzle(client, { schema });
+      return db
+        .select({
+          id: schema.nodes.id,
+          parentId: schema.nodes.parentId,
+          type: schema.nodes.type,
+          name: schema.nodes.name,
+          slug: schema.nodes.slug,
+          position: schema.nodes.position,
+          createdAt: schema.nodes.createdAt,
+          updatedAt: schema.nodes.updatedAt,
+        })
+        .from(schema.nodes)
+        .orderBy(sql`${schema.nodes.parentId} NULLS FIRST`, asc(schema.nodes.position));
+    });
 
-    const nodes: NodeListResponse = nodeListResponseSchema.parse(
-      rows.rows.map((row) => ({
-        id: row.id,
-        parentId: row.parent_id,
-        type: row.type,
-        name: row.name,
-        slug: row.slug,
-        position: row.position,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
-      })),
-    );
+    const nodes: NodeListResponse = nodeListResponseSchema.parse(rows);
 
     const body: ApiEnvelope<NodeListResponse> = { data: nodes, error: null };
     res.json(body);

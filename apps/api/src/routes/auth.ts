@@ -11,6 +11,7 @@ import { createRefreshTokenFamily, revokeRefreshToken, revokeTokenFamily, rotate
 import { otpRequestRateLimit } from '../middleware/rate-limit.js';
 import { sendOtpEmail } from '../services/email.js';
 import { createOtpCode, verifyOtpCode, OTP_TTL_MS } from '../services/otp.js';
+import { findTenantById } from '../services/tenants.js';
 import { findOrCreateUserByEmail, findUserById } from '../services/users.js';
 
 export const authRouter: Router = Router();
@@ -34,9 +35,9 @@ authRouter.post(
     const { code, expiresAt, tenantName } = await req.withTenant(async (client) => {
       const [otp, tenantRow] = await Promise.all([
         createOtpCode(client, { tenantId: tenant.id, email, ip: req.ip ?? null }),
-        client.query<{ name: string }>('SELECT name FROM tenants WHERE id = $1', [tenant.id]),
+        findTenantById(client, tenant.id),
       ]);
-      return { ...otp, tenantName: tenantRow.rows[0]?.name ?? '' };
+      return { ...otp, tenantName: tenantRow?.name ?? '' };
     });
 
     await sendOtpEmail({

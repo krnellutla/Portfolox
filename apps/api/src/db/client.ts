@@ -29,7 +29,7 @@ export const pool = new Pool({
 // Safety net: cap every statement at 10 s so a slow tenant-lookup or
 // runaway query cannot stall the entire request pipeline.
 pool.on('connect', (client) => {
-  client.query('SET statement_timeout = 10000').catch((err: unknown) => {
+  client.query(`SET statement_timeout = ${env.DB_STATEMENT_TIMEOUT_MS}`).catch((err: unknown) => {
     // Log and swallow — a failed SET degrades protection but must not crash
     // the pool event emitter (pg would emit an 'error' event and potentially
     // crash the process if we threw here instead of catching).

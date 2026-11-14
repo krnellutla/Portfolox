@@ -8,7 +8,10 @@ import {
   updateNodeRequestSchema,
 } from '@blueflutes/shared';
 import { slugify } from '@blueflutes/shared';
+import { eq } from 'drizzle-orm';
+import { drizzle } from 'drizzle-orm/node-postgres';
 import { Router } from 'express';
+import * as schema from '../db/schema/index.js';
 import { AppError } from '../lib/app-error.js';
 import { asyncHandler } from '../lib/async-handler.js';
 import { validate } from '../lib/validate.js';
@@ -34,6 +37,21 @@ function mapNodeRow(row: Record<string, unknown>): NodeResponse {
     position: row.position,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+  });
+}
+
+type DrizzleNode = typeof schema.nodes.$inferSelect;
+
+function mapDrizzleNode(row: DrizzleNode): NodeResponse {
+  return nodeResponseSchema.parse({
+    id: row.id,
+    parentId: row.parentId,
+    type: row.type,
+    name: row.name,
+    slug: row.slug,
+    position: row.position,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
   });
 }
 
@@ -116,31 +134,21 @@ export function createNodesWriteRouter(): Router {
       const { id } = req.params as { id: string };
       const { name, slug } = req.body as { name?: string; slug?: string };
 
-      const setClauses: string[] = ['updated_at = NOW()'];
-      const values: unknown[] = [id];
-
-      if (name !== undefined) {
-        values.push(name);
-        setClauses.push(`name = $${values.length}`);
-      }
-      if (slug !== undefined) {
-        values.push(slug);
-        setClauses.push(`slug = $${values.length}`);
-      }
-
       let node: NodeResponse;
       try {
         node = await req.withTenant(async (client) => {
-          const row = await client.query(
-            `UPDATE nodes SET ${setClauses.join(', ')}
-             WHERE id = $1
-             RETURNING id, parent_id, type, name, slug, position, created_at, updated_at`,
-            values,
-          );
-          if (row.rowCount === 0) {
-            throw AppError.notFound('Node not found');
-          }
-          return mapNodeRow(row.rows[0]);
+          const db = drizzle(client, { schema });
+          const [updated] = await db
+            .update(schema.nodes)
+            .set({
+              ...(name !== undefined ? { name } : {}),
+              ...(slug !== undefined ? { slug } : {}),
+              updatedAt: new Date(),
+            })
+            .where(eq(schema.nodes.id, id))
+            .returning();
+          if (!updated) throw AppError.notFound('Node not found');
+          return mapDrizzleNode(updated);
         });
       } catch (err) {
         if (isUniqueViolation(err)) {

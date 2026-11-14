@@ -10,6 +10,7 @@ const envSchema = z.object({
   DATABASE_TEST_MIGRATION_URL: z.string().url().optional(),
   DB_POOL_MAX: z.coerce.number().int().positive().default(10),
   DB_POOL_IDLE_TIMEOUT_MS: z.coerce.number().int().nonnegative().default(30_000),
+  DB_STATEMENT_TIMEOUT_MS: z.coerce.number().int().positive().default(10_000),
   DB_APP_ROLE: z.string().min(1).default('blueflutes_app'),
   DB_APP_ROLE_PASSWORD: z.string().min(1).optional(),
 
