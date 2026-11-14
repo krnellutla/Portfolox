@@ -4,7 +4,10 @@ import {
   themeTokensSchema,
   updateTenantSettingsRequestSchema,
 } from '@blueflutes/shared';
+import { eq } from 'drizzle-orm';
+import { drizzle } from 'drizzle-orm/node-postgres';
 import { Router } from 'express';
+import * as schema from '../db/schema/index.js';
 import { AppError } from '../lib/app-error.js';
 import { asyncHandler } from '../lib/async-handler.js';
 import { validate } from '../lib/validate.js';
@@ -22,16 +25,18 @@ const DEFAULT_THEME: ThemeTokens = {
   gridColumns: 5,
 };
 
-function rowToTheme(row: Record<string, unknown>): ThemeTokens {
+type DrizzleSettings = typeof schema.tenantSettings.$inferSelect;
+
+function rowToTheme(row: DrizzleSettings): ThemeTokens {
   return themeTokensSchema.parse({
-    colorBg: row.color_bg,
-    colorInk: row.color_ink,
-    colorAccent: row.color_accent,
-    colorMuted: row.color_muted,
-    fontHeading: row.font_heading,
-    fontBody: row.font_body,
-    galleryLayout: row.gallery_layout,
-    gridColumns: row.grid_columns,
+    colorBg: row.colorBg,
+    colorInk: row.colorInk,
+    colorAccent: row.colorAccent,
+    colorMuted: row.colorMuted,
+    fontHeading: row.fontHeading,
+    fontBody: row.fontBody,
+    galleryLayout: row.galleryLayout,
+    gridColumns: row.gridColumns,
   });
 }
 
@@ -44,13 +49,16 @@ tenantSettingsPublicRouter.get(
   asyncHandler(async (req, res) => {
     if (!req.tenant || !req.withTenant) throw AppError.notFound('Tenant not found for this host');
 
-    const result = await req.withTenant((client) =>
-      client.query('SELECT * FROM tenant_settings WHERE tenant_id = $1', [req.tenant!.id]),
-    );
+    const row = await req.withTenant(async (client) => {
+      const db = drizzle(client, { schema });
+      const [found] = await db
+        .select()
+        .from(schema.tenantSettings)
+        .where(eq(schema.tenantSettings.tenantId, req.tenant!.id));
+      return found ?? null;
+    });
 
-    const theme = result.rows[0]
-      ? rowToTheme(result.rows[0] as Record<string, unknown>)
-      : DEFAULT_THEME;
+    const theme = row ? rowToTheme(row) : DEFAULT_THEME;
     const body: ApiEnvelope<ThemeTokens> = { data: theme, error: null };
     res.json(body);
   }),
@@ -65,13 +73,16 @@ tenantSettingsRouter.get(
   asyncHandler(async (req, res) => {
     if (!req.user || !req.tenant || !req.withTenant) throw AppError.unauthorized('Not authenticated');
 
-    const result = await req.withTenant((client) =>
-      client.query('SELECT * FROM tenant_settings WHERE tenant_id = $1', [req.tenant!.id]),
-    );
+    const row = await req.withTenant(async (client) => {
+      const db = drizzle(client, { schema });
+      const [found] = await db
+        .select()
+        .from(schema.tenantSettings)
+        .where(eq(schema.tenantSettings.tenantId, req.tenant!.id));
+      return found ?? null;
+    });
 
-    const theme = result.rows[0]
-      ? rowToTheme(result.rows[0] as Record<string, unknown>)
-      : DEFAULT_THEME;
+    const theme = row ? rowToTheme(row) : DEFAULT_THEME;
     const body: ApiEnvelope<ThemeTokens> = { data: theme, error: null };
     res.json(body);
   }),
@@ -94,43 +105,41 @@ tenantSettingsRouter.patch(
       gridColumns?: number;
     };
 
-    const result = await req.withTenant((client) =>
-      client.query(
-        `INSERT INTO tenant_settings
-           (tenant_id, color_bg, color_ink, color_accent, color_muted,
-            font_heading, font_body, gallery_layout, grid_columns)
-         VALUES
-           ($1,
-            COALESCE($2, '#f4f3f0'), COALESCE($3, '#16150f'),
-            COALESCE($4, '#c0683f'), COALESCE($5, '#6b6960'),
-            COALESCE($6, 'newsreader'), COALESCE($7, 'hanken'),
-            COALESCE($8, 'grid'), COALESCE($9, 5))
-         ON CONFLICT (tenant_id) DO UPDATE SET
-           color_bg       = COALESCE($2, tenant_settings.color_bg),
-           color_ink      = COALESCE($3, tenant_settings.color_ink),
-           color_accent   = COALESCE($4, tenant_settings.color_accent),
-           color_muted    = COALESCE($5, tenant_settings.color_muted),
-           font_heading   = COALESCE($6, tenant_settings.font_heading),
-           font_body      = COALESCE($7, tenant_settings.font_body),
-           gallery_layout = COALESCE($8, tenant_settings.gallery_layout),
-           grid_columns   = COALESCE($9, tenant_settings.grid_columns),
-           updated_at     = NOW()
-         RETURNING *`,
-        [
-          req.tenant!.id,
-          patch.colorBg ?? null,
-          patch.colorInk ?? null,
-          patch.colorAccent ?? null,
-          patch.colorMuted ?? null,
-          patch.fontHeading ?? null,
-          patch.fontBody ?? null,
-          patch.galleryLayout ?? null,
-          patch.gridColumns ?? null,
-        ],
-      ),
-    );
+    const updated = await req.withTenant(async (client) => {
+      const db = drizzle(client, { schema });
+      const ts = schema.tenantSettings;
+      const [row] = await db
+        .insert(ts)
+        .values({
+          tenantId: req.tenant!.id,
+          colorBg: patch.colorBg ?? DEFAULT_THEME.colorBg,
+          colorInk: patch.colorInk ?? DEFAULT_THEME.colorInk,
+          colorAccent: patch.colorAccent ?? DEFAULT_THEME.colorAccent,
+          colorMuted: patch.colorMuted ?? DEFAULT_THEME.colorMuted,
+          fontHeading: patch.fontHeading ?? DEFAULT_THEME.fontHeading,
+          fontBody: patch.fontBody ?? DEFAULT_THEME.fontBody,
+          galleryLayout: patch.galleryLayout ?? DEFAULT_THEME.galleryLayout,
+          gridColumns: patch.gridColumns ?? DEFAULT_THEME.gridColumns,
+        })
+        .onConflictDoUpdate({
+          target: ts.tenantId,
+          set: {
+            ...(patch.colorBg !== undefined ? { colorBg: patch.colorBg } : {}),
+            ...(patch.colorInk !== undefined ? { colorInk: patch.colorInk } : {}),
+            ...(patch.colorAccent !== undefined ? { colorAccent: patch.colorAccent } : {}),
+            ...(patch.colorMuted !== undefined ? { colorMuted: patch.colorMuted } : {}),
+            ...(patch.fontHeading !== undefined ? { fontHeading: patch.fontHeading } : {}),
+            ...(patch.fontBody !== undefined ? { fontBody: patch.fontBody } : {}),
+            ...(patch.galleryLayout !== undefined ? { galleryLayout: patch.galleryLayout } : {}),
+            ...(patch.gridColumns !== undefined ? { gridColumns: patch.gridColumns } : {}),
+            updatedAt: new Date(),
+          },
+        })
+        .returning();
+      return row!;
+    });
 
-    const theme = rowToTheme(result.rows[0] as Record<string, unknown>);
+    const theme = rowToTheme(updated);
     const body: ApiEnvelope<ThemeTokens> = { data: theme, error: null };
     res.json(body);
   }),

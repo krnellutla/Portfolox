@@ -48,8 +48,15 @@ searchRouter.get(
     if (!req.withTenant) throw AppError.notFound('Tenant not found');
 
     const q = typeof req.query.q === 'string' ? req.query.q : null;
-    const cursor = typeof req.query.cursor === 'string' ? req.query.cursor : null;
+    const cursorRaw = typeof req.query.cursor === 'string' ? req.query.cursor : null;
     const limit = 20;
+
+    let cursorPos: number | null = null;
+    if (cursorRaw !== null) {
+      const parsed = parseInt(cursorRaw, 10);
+      if (!Number.isInteger(parsed) || parsed < 0) throw AppError.validation('Invalid cursor');
+      cursorPos = parsed;
+    }
 
     const rows = await req.withTenant((client) =>
       client.query(
@@ -57,10 +64,10 @@ searchRouter.get(
          FROM media_assets
          WHERE status IN ('ready', 'published')
            ${q ? "AND original_filename ILIKE '%' || $1 || '%'" : ''}
-           ${cursor ? `AND position > ${q ? '$2' : '$1'}` : ''}
+           ${cursorPos !== null ? `AND position > ${q ? '$2' : '$1'}` : ''}
          ORDER BY position
          LIMIT ${limit + 1}`,
-        [...(q ? [q] : []), ...(cursor ? [parseInt(cursor)] : [])],
+        [...(q ? [q] : []), ...(cursorPos !== null ? [cursorPos] : [])],
       ),
     );
 

@@ -105,6 +105,51 @@ const MIME_TO_EXT: Record<string, string> = {
   'image/gif': 'gif',
 };
 
+type AssetRow = {
+  id: unknown;
+  tenant_id: unknown;
+  node_id: unknown;
+  object_key: unknown;
+  url: unknown;
+  mime_type: unknown;
+  status: unknown;
+  position: unknown;
+  original_filename: unknown;
+  byte_size: unknown;
+  checksum: unknown;
+  width: unknown;
+  height: unknown;
+  created_at: unknown;
+};
+
+function assembleAssetList(
+  assetRows: AssetRow[],
+  variantsByAsset: Map<string, unknown[]>,
+  useTransform: boolean,
+  storage: StorageProvider,
+) {
+  return assetRows.map((a) => ({
+    id: a.id,
+    tenantId: a.tenant_id,
+    nodeId: a.node_id,
+    objectKey: a.object_key,
+    url: a.url,
+    mimeType: a.mime_type,
+    status: a.status === 'published' ? 'ready' : a.status,
+    position: a.position,
+    originalFilename: a.original_filename,
+    byteSize: Math.max(1, (a.byte_size as number) || 1),
+    checksum: a.checksum,
+    width: a.width,
+    height: a.height,
+    createdAt: a.created_at,
+    variants:
+      useTransform || (a.object_key as string).startsWith('google:')
+        ? buildSyntheticVariants(storage, a as Parameters<typeof buildSyntheticVariants>[1])
+        : (variantsByAsset.get(a.id as string) ?? []),
+  }));
+}
+
 export function createMediaPublicRouter(storage: StorageProvider): Router {
   const router = Router();
   const useTransform = typeof storage.getTransformUrl === 'function';
@@ -169,30 +214,13 @@ export function createMediaPublicRouter(storage: StorageProvider): Router {
           }
         }
 
-        return assetRows.rows.map((a) => ({
-          id: a.id,
-          tenantId: a.tenant_id,
-          nodeId: a.node_id,
-          objectKey: a.object_key,
-          url: a.url,
-          mimeType: a.mime_type,
-          status: a.status === 'published' ? 'ready' : a.status,
-          position: a.position,
-          originalFilename: a.original_filename,
-          byteSize: Math.max(1, (a.byte_size as number) || 1),
-          checksum: a.checksum,
-          width: a.width,
-          height: a.height,
-          createdAt: a.created_at,
-          variants:
-            useTransform || (a.object_key as string).startsWith('google:')
-              ? buildSyntheticVariants(storage, a)
-              : (variantsByAsset.get(a.id as string) ?? []),
-        }));
+        return assembleAssetList(assetRows.rows as AssetRow[], variantsByAsset, useTransform, storage);
       });
 
       const data: MediaListResponse = mediaListResponseSchema.parse(assets);
-      void setCachedGallery(req.tenant.id, nodeId, data);
+      setCachedGallery(req.tenant.id, nodeId, data).catch((err: unknown) => {
+        req.log.warn({ err }, 'gallery cache write failed');
+      });
       const body: ApiEnvelope<MediaListResponse> = { data, error: null };
       res.json(body);
     }),
@@ -371,7 +399,9 @@ export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): R
       });
 
       await enqueue({ tenantId: req.tenant.id, assetId: id, nodeId: asset.node_id as string });
-      void invalidateGallery(req.tenant.id, asset.node_id as string);
+      invalidateGallery(req.tenant.id, asset.node_id as string).catch((err: unknown) => {
+        req.log.warn({ err }, 'gallery cache invalidation failed');
+      });
 
       const data: MediaAsset = mediaAssetSchema.parse({
         id: asset.id,
@@ -453,26 +483,7 @@ export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): R
           }
         }
 
-        return assetRows.rows.map((a) => ({
-          id: a.id,
-          tenantId: a.tenant_id,
-          nodeId: a.node_id,
-          objectKey: a.object_key,
-          url: a.url,
-          mimeType: a.mime_type,
-          status: a.status === 'published' ? 'ready' : a.status,
-          position: a.position,
-          originalFilename: a.original_filename,
-          byteSize: Math.max(1, (a.byte_size as number) || 1),
-          checksum: a.checksum,
-          width: a.width,
-          height: a.height,
-          createdAt: a.created_at,
-          variants:
-            useTransform || (a.object_key as string).startsWith('google:')
-              ? buildSyntheticVariants(storage, a)
-              : (variantsByAsset.get(a.id as string) ?? []),
-        }));
+        return assembleAssetList(assetRows.rows as AssetRow[], variantsByAsset, useTransform, storage);
       });
 
       const data: MediaListResponse = mediaListResponseSchema.parse(assets);
@@ -543,7 +554,9 @@ export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): R
         return { objectKeysToDelete: [object_key, ...variantKeys], nodeId: node_id };
       });
 
-      void invalidateGallery(req.tenant!.id, deletedNodeId);
+      invalidateGallery(req.tenant!.id, deletedNodeId).catch((err: unknown) => {
+        req.log.warn({ err }, 'gallery cache invalidation failed');
+      });
 
       // Best-effort storage cleanup after the DB transaction commits
       for (const key of objectKeysToDelete) {
@@ -642,7 +655,9 @@ export function createMediaRouter(storage: StorageProvider, enqueue: Enqueue): R
         return updated.rows[0];
       });
 
-      void invalidateGallery(req.tenant!.id, asset.node_id as string);
+      invalidateGallery(req.tenant!.id, asset.node_id as string).catch((err: unknown) => {
+        req.log.warn({ err }, 'gallery cache invalidation failed');
+      });
 
       const data: MediaAsset = mediaAssetSchema.parse({
         id: asset.id,

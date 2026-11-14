@@ -72,8 +72,15 @@ photographersRouter.get(
     if (!req.withTenant) throw AppError.notFound('Tenant not found');
 
     const gallery = typeof req.query.gallery === 'string' ? req.query.gallery : null;
-    const cursor = typeof req.query.cursor === 'string' ? req.query.cursor : null;
+    const cursorRaw = typeof req.query.cursor === 'string' ? req.query.cursor : null;
     const limit = 20;
+
+    let cursorPos: number | null = null;
+    if (cursorRaw !== null) {
+      const parsed = parseInt(cursorRaw, 10);
+      if (!Number.isInteger(parsed) || parsed < 0) throw AppError.validation('Invalid cursor');
+      cursorPos = parsed;
+    }
 
     const rows = await req.withTenant((client) =>
       client.query(
@@ -81,10 +88,10 @@ photographersRouter.get(
          FROM media_assets
          WHERE status IN ('ready', 'published')
            ${gallery ? 'AND node_id = $1' : ''}
-           ${cursor ? `AND position > ${gallery ? '$2' : '$1'}` : ''}
+           ${cursorPos !== null ? `AND position > ${gallery ? '$2' : '$1'}` : ''}
          ORDER BY position
          LIMIT ${limit + 1}`,
-        [...(gallery ? [gallery] : []), ...(cursor ? [parseInt(cursor)] : [])],
+        [...(gallery ? [gallery] : []), ...(cursorPos !== null ? [cursorPos] : [])],
       ),
     );
 
@@ -108,7 +115,7 @@ photographersRouter.get(
           status: 'published',
           counts: { likes: 0, comments: 0, views: 0 },
         })),
-        nextCursor: hasMore ? String((items[items.length - 1] as { position: number }).position) : null,
+        nextCursor: hasMore ? String((items[items.length - 1] as { position: number; }).position) : null,
       },
       error: null,
     });
