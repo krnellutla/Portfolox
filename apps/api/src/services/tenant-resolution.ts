@@ -1,25 +1,22 @@
 import type { Pool } from 'pg';
 
 /**
- * Looks up the tenant for a normalized host in a single JOIN query. Runs on a
- * plain pooled connection with no tenant context — relies on the permissive
- * SELECT policies on both tenant_domains (tenant_domains_read_for_resolution)
- * and tenants (tenants_read_for_resolution). Both policies use USING (true) so
- * no app.tenant_id needs to be set before resolution.
+ * Looks up the tenant_id for a normalized host via tenant_domains only.
+ * Runs on a plain pooled connection with no tenant context — relies solely on
+ * the permissive SELECT policy on tenant_domains (USING (true)). No JOIN on
+ * tenants is performed here, so this works before migration 0019 is applied
+ * and before any app.tenant_id is set in the session.
  */
 export async function findTenantByHost(
   pool: Pool,
   host: string,
-): Promise<{ tenantId: string; name: string } | null> {
-  const result = await pool.query<{ tenant_id: string; name: string }>(
-    `SELECT td.tenant_id, t.name
-     FROM tenant_domains td
-     JOIN tenants t ON t.id = td.tenant_id
-     WHERE td.host = $1`,
+): Promise<{ tenantId: string } | null> {
+  const result = await pool.query<{ tenant_id: string }>(
+    `SELECT tenant_id FROM tenant_domains WHERE host = $1`,
     [host],
   );
 
   const row = result.rows[0];
-  return row ? { tenantId: row.tenant_id, name: row.name } : null;
+  return row ? { tenantId: row.tenant_id } : null;
 }
 

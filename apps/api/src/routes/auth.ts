@@ -31,14 +31,18 @@ authRouter.post(
     }
     const { email } = parsed.data;
 
-    const { code, expiresAt } = await req.withTenant((client) =>
-      createOtpCode(client, { tenantId: tenant.id, email, ip: req.ip ?? null })
-    );
+    const { code, expiresAt, tenantName } = await req.withTenant(async (client) => {
+      const [otp, tenantRow] = await Promise.all([
+        createOtpCode(client, { tenantId: tenant.id, email, ip: req.ip ?? null }),
+        client.query<{ name: string }>('SELECT name FROM tenants WHERE id = $1', [tenant.id]),
+      ]);
+      return { ...otp, tenantName: tenantRow.rows[0]?.name ?? '' };
+    });
 
     await sendOtpEmail({
       to: email,
       code,
-      tenantName: tenant.name,
+      tenantName,
       expiresInMinutes: Math.ceil(OTP_TTL_MS / 60_000),
     });
 
