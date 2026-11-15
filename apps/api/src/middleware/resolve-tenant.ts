@@ -1,4 +1,5 @@
 import type { Pool } from 'pg';
+import { env } from '../config/env.js';
 import { withTenant } from '../db/with-tenant.js';
 import { AppError } from '../lib/app-error.js';
 import { asyncHandler } from '../lib/async-handler.js';
@@ -34,6 +35,15 @@ export function normalizeHost(rawHost: string | undefined): string | null {
  */
 export function resolveTenant(pool: Pool) {
   return asyncHandler(async (req, _res, next) => {
+    // Fast path: single-tenant deployments set TENANT_ID in the environment so
+    // the host-based DB lookup is skipped entirely. The domain can change without
+    // any database update.
+    if (env.TENANT_ID) {
+      req.tenant = { id: env.TENANT_ID };
+      req.withTenant = (callback) => withTenant(pool, env.TENANT_ID!, callback);
+      return next();
+    }
+
     const host = normalizeHost(req.headers.host);
     if (!host) {
       logger.warn({ rawHost: req.headers.host }, 'resolve-tenant: missing or unparseable Host header');

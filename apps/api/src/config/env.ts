@@ -19,10 +19,16 @@ const envSchema = z.object({
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(30),
 
   WEB_APP_URL: z.string().url().default('http://localhost:5173'),
-  // Path the auth cookies are scoped to. Must match the public path of the /auth
-  // routes: '/auth' when the API is served at the root, '/api/auth' behind a /api prefix.
-  // Validated to start with /auth so a misconfigured '/' cannot expose the cookie to all routes.
-  AUTH_COOKIE_PATH: z.string().regex(/^\/auth(?:\/|$)/).default('/auth'),
+  // Path the auth cookies are scoped to. Must match the browser-visible path of
+  // the /auth routes: '/auth' when the API is served at the root (local dev via
+  // the Vite proxy), '/api/auth' behind a /api prefix (Vercel production).
+  // Allows an optional /api segment prefix so both values are accepted.
+  AUTH_COOKIE_PATH: z.string().regex(/^(\/api)?\/auth(?:\/|$)/).default('/auth'),
+
+  // Single-tenant shortcut: when set, resolveTenant skips the tenant_domains DB
+  // lookup and uses this UUID directly. Ideal for single-domain Vercel deployments
+  // where the hostname may change without a corresponding DB update.
+  TENANT_ID: z.string().uuid().optional(),
 
   // Comma-separated list of additional origins allowed to make
   // credentialed cross-origin requests (e.g. the Tauri desktop shell's
