@@ -1,9 +1,11 @@
 import {
   logoutResponseSchema,
+  magicLinkRequestResponseSchema,
   otpRequestResponseSchema,
   refreshResponseSchema,
   desktopRefreshResponseSchema,
   type LogoutResponse,
+  type MagicLinkRequestResponse,
   type OtpRequestResponse,
   type RefreshResponse,
   type DesktopRefreshResponse,
@@ -40,6 +42,22 @@ export async function verifyOtp(
       body: JSON.stringify({ email, code }),
     },
     schema,
+  );
+}
+
+export async function requestMagicLink(
+  email: string,
+  next?: string,
+): Promise<MagicLinkRequestResponse> {
+  const qs = next ? `?next=${encodeURIComponent(next)}` : '';
+  return apiFetch<MagicLinkRequestResponse>(
+    `/auth/magic/request${qs}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    },
+    magicLinkRequestResponseSchema,
   );
 }
 

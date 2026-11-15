@@ -10,3 +10,4 @@ export * from './google-oauth-tokens.js';
 export * from './commerce.js';
 export * from './otp-codes.js';
 export * from './passkeys.js';
+export * from './magic-links.js';

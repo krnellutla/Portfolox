@@ -46,6 +46,7 @@ export async function registerPasskey(friendlyName?: string): Promise<PasskeyCre
 
 export async function authenticateWithPasskey(
   email?: string,
+  autoFill = false,
 ): Promise<RefreshResponse | DesktopRefreshResponse> {
   // 1. Get challenge
   const options = await apiFetch('/auth/passkey/auth/begin', {
@@ -54,8 +55,12 @@ export async function authenticateWithPasskey(
     body: JSON.stringify(email ? { email } : {}),
   });
 
-  // 2. Browser WebAuthn prompt
-  const authResponse: AuthenticationResponseJSON = await startAuthentication({ optionsJSON: options as never });
+  // 2. Browser WebAuthn prompt (autoFill=true uses conditional mediation for
+  //    browser-native passkey autofill on autocomplete="email webauthn" inputs)
+  const authResponse: AuthenticationResponseJSON = await startAuthentication({
+    optionsJSON: options as never,
+    useBrowserAutofill: autoFill,
+  });
 
   // 3. Send assertion to server
   const path = isDesktop()

@@ -9,7 +9,8 @@ import { getDesktopRefreshTokenHeader } from '../lib/desktop-auth.js';
 import { signAccessToken } from '../lib/jwt.js';
 import { createRefreshTokenFamily, revokeRefreshToken, revokeTokenFamily, rotateRefreshToken, ReuseDetectedError } from '../lib/refresh-tokens.js';
 import { otpRequestRateLimit } from '../middleware/rate-limit.js';
-import { sendOtpEmail } from '../services/email.js';
+import { sendMagicLinkEmail, sendOtpEmail } from '../services/email.js';
+import { createMagicLink, verifyMagicLink, MAGIC_LINK_TTL_MS } from '../services/magic-links.js';
 import { createOtpCode, verifyOtpCode, OTP_TTL_MS } from '../services/otp.js';
 import { findTenantById } from '../services/tenants.js';
 import { findOrCreateUserByEmail, findUserById } from '../services/users.js';
@@ -160,6 +161,87 @@ authRouter.post(
       };
       res.json(response);
     }
+  }),
+);
+
+// POST /auth/magic/request — send a one-click sign-in link to the given email
+authRouter.post(
+  '/auth/magic/request',
+  otpRequestRateLimit,
+  asyncHandler(async (req, res) => {
+    const tenant = req.tenant;
+    if (!tenant || !req.withTenant) {
+      throw AppError.notFound('Tenant not found for this host');
+    }
+
+    const parsed = otpRequestSchema.safeParse(req.body);
+    if (!parsed.success) {
+      throw AppError.badRequest('Invalid request');
+    }
+    const { email } = parsed.data;
+
+    const { token, expiresAt, tenantName } = await req.withTenant(async (client) => {
+      const [link, tenantRow] = await Promise.all([
+        createMagicLink(client, { tenantId: tenant.id, email, ip: req.ip ?? null }),
+        findTenantById(client, tenant.id),
+      ]);
+      return { ...link, tenantName: tenantRow?.name ?? '' };
+    });
+
+    const rawNext = typeof req.query.next === 'string' ? req.query.next : '/studio/dashboard';
+    const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/studio/dashboard';
+    const verifyUrl = `${env.WEB_APP_URL}/api/auth/magic/verify?token=${encodeURIComponent(token)}&next=${encodeURIComponent(next)}`;
+
+    await sendMagicLinkEmail({
+      to: email,
+      url: verifyUrl,
+      tenantName,
+      expiresInMinutes: Math.ceil(MAGIC_LINK_TTL_MS / 60_000),
+    });
+
+    const response: ApiEnvelope<{ expiresAt: string }> = {
+      data: { expiresAt: expiresAt.toISOString() },
+      error: null,
+    };
+    res.json(response);
+  }),
+);
+
+// GET /auth/magic/verify — verify token, set refresh cookie, redirect to SPA
+authRouter.get(
+  '/auth/magic/verify',
+  asyncHandler(async (req, res) => {
+    const tenant = req.tenant;
+    if (!tenant || !req.withTenant) {
+      throw AppError.notFound('Tenant not found for this host');
+    }
+
+    const rawToken = typeof req.query.token === 'string' ? req.query.token : null;
+    const rawNext = typeof req.query.next === 'string' ? req.query.next : '/studio/dashboard';
+    const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/studio/dashboard';
+
+    if (!rawToken) {
+      return res.redirect(302, `/login?error=invalid_link`);
+    }
+
+    try {
+      await req.withTenant(async (client) => {
+        const { email } = await verifyMagicLink(client, { tenantId: tenant.id, token: rawToken });
+        const user = await findOrCreateUserByEmail(client, { tenantId: tenant.id, email });
+        const { token: refreshToken, expiresAt } = await createRefreshTokenFamily(client, {
+          tenantId: tenant.id,
+          userId: user.id,
+          ttlDays: env.REFRESH_TOKEN_TTL_DAYS,
+          userAgent: req.headers['user-agent'] ?? null,
+          ip: req.ip ?? null,
+        });
+        setRefreshTokenCookie(res, refreshToken, expiresAt);
+      });
+    } catch {
+      return res.redirect(302, `/login?error=invalid_link`);
+    }
+
+    return res.redirect(302, `/auth/magic/callback?next=${encodeURIComponent(next)}`);
   }),
 );
 

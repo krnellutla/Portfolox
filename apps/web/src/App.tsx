@@ -6,6 +6,7 @@ import { ThemeProvider } from './components/ThemeProvider.js';
 import { MobileTabBar } from './components/nav/MobileTabBar.js';
 import { StateView } from './components/ui/StateView.js';
 import AuthCallback from './pages/auth/AuthCallback.js';
+import MagicLinkCallback from './pages/auth/MagicLinkCallback.js';
 import ClientLogin from './pages/client-login/ClientLogin.js';
 import Login from './pages/login/Login.js';
 
@@ -59,6 +60,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/client-login" element={<ClientLogin />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/auth/magic/callback" element={<MagicLinkCallback />} />
             <Route path="/lightbox" element={<LightboxPage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />

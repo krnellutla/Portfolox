@@ -42,3 +42,8 @@ export const logoutResponseSchema = z.object({
   success: z.literal(true),
 });
 export type LogoutResponse = z.infer<typeof logoutResponseSchema>;
+
+export const magicLinkRequestResponseSchema = z.object({
+  expiresAt: z.string().datetime(),
+});
+export type MagicLinkRequestResponse = z.infer<typeof magicLinkRequestResponseSchema>;
