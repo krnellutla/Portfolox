@@ -42,7 +42,11 @@ export const requestLogging: HttpLogger<Request, Response> = pinoHttp<Request, R
   serializers: {
     // Strip query strings (e.g. OAuth `code`/`state` on /auth/*/callback)
     // before the request hits the log.
-    req: (req) => ({ ...req, url: req.url?.split('?')[0] }),
+    req: (req) => {
+      // Strip giant Vercel OIDC header so the error field isn't truncated in logs
+      const { 'x-vercel-oidc-token': _oidc, ...headers } = req.headers ?? {};
+      return { ...req, url: req.url?.split('?')[0], headers };
+    },
     res: stripLocationQuery,
   },
 });
