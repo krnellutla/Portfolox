@@ -34,10 +34,8 @@ authRouter.post(
     const { email } = parsed.data;
 
     const { code, expiresAt, tenantName } = await req.withTenant(async (client) => {
-      const [otp, tenantRow] = await Promise.all([
-        createOtpCode(client, { tenantId: tenant.id, email, ip: req.ip ?? null }),
-        findTenantById(client, tenant.id),
-      ]);
+      const otp = await createOtpCode(client, { tenantId: tenant.id, email, ip: req.ip ?? null });
+      const tenantRow = await findTenantById(client, tenant.id);
       return { ...otp, tenantName: tenantRow?.name ?? '' };
     });
 
@@ -181,10 +179,8 @@ authRouter.post(
     const { email } = parsed.data;
 
     const { token, expiresAt, tenantName } = await req.withTenant(async (client) => {
-      const [link, tenantRow] = await Promise.all([
-        createMagicLink(client, { tenantId: tenant.id, email, ip: req.ip ?? null }),
-        findTenantById(client, tenant.id),
-      ]);
+      const link = await createMagicLink(client, { tenantId: tenant.id, email, ip: req.ip ?? null });
+      const tenantRow = await findTenantById(client, tenant.id);
       return { ...link, tenantName: tenantRow?.name ?? '' };
     });
 
